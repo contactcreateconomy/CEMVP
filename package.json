@@ -7,6 +7,18 @@
     "build": "pnpm --filter ./apps/forum build",
     "start": "pnpm --filter ./apps/forum start",
     "lint": "pnpm --filter ./apps/forum lint",
-    "typecheck": "pnpm --filter ./apps/forum typecheck"
+    "typecheck": "pnpm --filter ./apps/forum typecheck",
+    "dev:seller": "pnpm --filter @cemvp/seller dev",
+    "dev:admin": "pnpm --filter @cemvp/admin dev",
+    "dev:marketplace": "pnpm --filter @cemvp/marketplace dev",
+    "build:seller": "pnpm --filter @cemvp/seller build",
+    "build:admin": "pnpm --filter @cemvp/admin build",
+    "build:marketplace": "pnpm --filter @cemvp/marketplace build",
+    "lint:seller": "pnpm --filter @cemvp/seller lint",
+    "lint:admin": "pnpm --filter @cemvp/admin lint",
+    "lint:marketplace": "pnpm --filter @cemvp/marketplace lint",
+    "typecheck:seller": "pnpm --filter @cemvp/seller typecheck",
+    "typecheck:admin": "pnpm --filter @cemvp/admin typecheck",
+    "typecheck:marketplace": "pnpm --filter @cemvp/marketplace typecheck"
   }
 }
