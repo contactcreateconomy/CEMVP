@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+
+# monorepo build outputs
+apps/*/node_modules/
+apps/*/.next/
+apps/*/out/
+apps/*/build/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# local env files
+.env*.local
+
+# OS / misc
+.DS_Store
+*.pem
+
+# Vercel
+.vercel/
+
+# TypeScript
+*.tsbuildinfo

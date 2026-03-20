@@ -1,0 +1,12 @@
+{
+  "name": "cemvp",
+  "private": true,
+  "packageManager": "pnpm@10.17.0",
+  "scripts": {
+    "dev": "pnpm --filter ./apps/forum dev",
+    "build": "pnpm --filter ./apps/forum build",
+    "start": "pnpm --filter ./apps/forum start",
+    "lint": "pnpm --filter ./apps/forum lint",
+    "typecheck": "pnpm --filter ./apps/forum typecheck"
+  }
+}
