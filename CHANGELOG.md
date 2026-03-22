@@ -30,4 +30,15 @@
   - `apps/forum/src/components/feed/comments-preview-cycler.tsx`
   - `apps/forum/src/lib/mock-data/posts.ts`
   - `apps/forum/src/lib/mock-data/top-post-hero.ts`
-- Validation: `pnpm lint`, `pnpm typecheck`, and `pnpm build` passed for `apps/forum`.
+- Added root Convex monorepo baseline for one shared backend (`convex/`, `convex.json`) and initial schema.
+- Expanded workspace to include `packages/*` and added shared package `@cemvp/convex-client`.
+- Wired Convex providers into all app layouts (`forum`, `seller`, `admin`, `marketplace`) with no-op behavior when `NEXT_PUBLIC_CONVEX_URL` is unset.
+- Switched auth setup from Auth0 to Convex Auth (`@convex-dev/auth`) and updated `convex/auth.config.ts` + `convex/schema.ts` (`authTables`).
+- Added Convex dependencies and root scripts (`convex:dev`, `convex:codegen`, `convex:deploy:prod`).
+- Validation:
+  - `pnpm install` passed.
+  - `pnpm convex:codegen` passed.
+  - `pnpm typecheck`, `pnpm typecheck:seller`, `pnpm typecheck:admin`, `pnpm typecheck:marketplace` passed.
+  - `pnpm build` (forum) passed.
+- 20:27: updated .
+- .gitignore: updated .

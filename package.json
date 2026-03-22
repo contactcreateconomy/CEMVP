@@ -19,6 +19,16 @@
     "lint:marketplace": "pnpm --filter @cemvp/marketplace lint",
     "typecheck:seller": "pnpm --filter @cemvp/seller typecheck",
     "typecheck:admin": "pnpm --filter @cemvp/admin typecheck",
-    "typecheck:marketplace": "pnpm --filter @cemvp/marketplace typecheck"
+    "typecheck:marketplace": "pnpm --filter @cemvp/marketplace typecheck",
+    "convex:dev": "convex dev",
+    "convex:codegen": "convex codegen",
+    "convex:deploy:prod": "convex deploy"
+  },
+  "devDependencies": {
+    "convex": "^1.28.0"
+  },
+  "dependencies": {
+    "@auth/core": "0.37.0",
+    "@convex-dev/auth": "^0.0.91"
   }
 }
