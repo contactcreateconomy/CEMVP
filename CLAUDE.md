@@ -122,6 +122,12 @@ Forum is the architectural reference for conventions used by placeholder apps.
   - any command/check results that matter.
 - Keep changelog entries concise and chronological.
 
+### Frontend source-of-truth sync rule
+
+- Frontend/UI updates for `apps/forum` must be replicated from `/Users/suren/Documents/GitHub/CEfrontend`.
+- Target outcome is pixel-perfect parity with the source frontend for UI behavior, component structure, and design-system language.
+- Ignore software/tool version alignment between repos; use latest versions in this repository.
+
 ### Branching rule for new plans
 
 - Whenever starting a new implementation plan (plan mode / non-trivial scoped task), create and switch to a dedicated branch before making code changes.

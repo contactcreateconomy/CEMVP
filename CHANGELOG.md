@@ -20,3 +20,14 @@
 - Dev servers were started successfully for all 4 apps and then stopped on request.
 - 22:59: updated .
 - .gitignore: updated .
+
+## 2026-03-22
+- Added Claude Code skill `sync-forum-ui` at `.claude/skills/sync-forum-ui/SKILL.md` to replicate frontend updates from `/Users/suren/Documents/GitHub/CEfrontend` into `apps/forum` with pixel-perfect/design-language parity guardrails and latest-tool-version policy.
+- Added `CLAUDE.md` workflow rule that `apps/forum` frontend/UI updates must be replicated from `/Users/suren/Documents/GitHub/CEfrontend` with pixel-perfect parity and matching web component/system design language, while using latest local tool versions.
+- Synced forum feed parity from CEfrontend in:
+  - `apps/forum/src/components/feed/post-card.tsx`
+  - `apps/forum/src/components/feed/post-interaction-row.tsx`
+  - `apps/forum/src/components/feed/comments-preview-cycler.tsx`
+  - `apps/forum/src/lib/mock-data/posts.ts`
+  - `apps/forum/src/lib/mock-data/top-post-hero.ts`
+- Validation: `pnpm lint`, `pnpm typecheck`, and `pnpm build` passed for `apps/forum`.
