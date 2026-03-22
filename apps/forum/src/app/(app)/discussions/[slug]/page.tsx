@@ -14,13 +14,14 @@ import { formatRelativeDate } from "@/lib/format";
 import { getCommentsByPostId, getPostBySlug, getUserById } from "@/lib/adapters/content";
 
 interface DiscussionPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
-export default function DiscussionPage({ params }: DiscussionPageProps) {
-  const post = getPostBySlug(params.slug);
+export default async function DiscussionPage({ params }: DiscussionPageProps) {
+  const { slug } = await params;
+  const post = getPostBySlug(slug);
 
   if (!post) {
     notFound();
@@ -34,17 +35,17 @@ export default function DiscussionPage({ params }: DiscussionPageProps) {
       <Card>
         <CardHeader>
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold text-[var(--text-primary)]">{post.title}</h1>
-            <p className="text-sm text-[var(--text-muted)]">
+            <h1 className="text-2xl font-semibold text-(--text-primary)">{post.title}</h1>
+            <p className="text-sm text-(--text-muted)">
               by {author?.name ?? "Unknown author"} · {formatRelativeDate(post.createdAt)}
             </p>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <p className="text-sm leading-6 text-[var(--text-secondary)]">{post.body}</p>
+          <p className="text-sm leading-6 text-(--text-secondary)">{post.body}</p>
 
-          <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-3 text-xs text-[var(--text-muted)]">
+          <div className="rounded-md border border-(--border-default) bg-(--bg-surface) p-3 text-xs text-(--text-muted)">
             <p>Category: {post.category}</p>
             <p className="mt-1">{post.views.toLocaleString()} views · {post.upvotes.toLocaleString()} upvotes</p>
           </div>
@@ -53,7 +54,7 @@ export default function DiscussionPage({ params }: DiscussionPageProps) {
 
       <Card>
         <CardHeader>
-          <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)]">
+          <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-(--text-primary)">
             <MessageSquare className="h-4 w-4" /> Comments ({postComments.length})
           </h2>
         </CardHeader>
@@ -63,12 +64,12 @@ export default function DiscussionPage({ params }: DiscussionPageProps) {
             const commentAuthor = getUserById(comment.authorId);
 
             return (
-              <div key={comment.id} className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-3">
-                <p className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--text-primary)]">
+              <div key={comment.id} className="rounded-md border border-(--border-default) bg-(--bg-surface) p-3">
+                <p className="inline-flex items-center gap-1 text-xs font-semibold text-(--text-primary)">
                   <UserRound className="h-3.5 w-3.5" />
                   {commentAuthor?.name ?? "Unknown user"}
                 </p>
-                <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">{comment.body}</p>
+                <p className="mt-1 text-xs leading-5 text-(--text-secondary)">{comment.body}</p>
               </div>
             );
           })}

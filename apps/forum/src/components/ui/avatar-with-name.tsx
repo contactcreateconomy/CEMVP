@@ -111,7 +111,7 @@ export function Component({
           style={avatarStyle}
         >
           {icon ? null : <AvatarImage src={src || "/placeholder.svg"} alt={name} />}
-          <AvatarFallback className={cn("font-semibold", icon ? "text-[var(--text-primary)]" : "text-muted-foreground")}>
+          <AvatarFallback className={cn("font-semibold", icon ? "text-(--text-primary)" : "text-muted-foreground")}>
             {icon ?? fallback ?? getInitials(name)}
           </AvatarFallback>
         </Avatar>
@@ -131,7 +131,7 @@ export function Component({
               filter: { duration: 0.2 },
             }}
             className={cn(
-              "pointer-events-none absolute z-10 whitespace-nowrap rounded-md border bg-popover text-popover-foreground shadow-lg",
+              "pointer-events-none absolute z-10 whitespace-nowrap rounded-md border border-gray-200 bg-popover text-popover-foreground shadow-lg",
               nameSizeVariants[size],
               positionClasses[direction],
               nameClassName,

@@ -15,12 +15,12 @@ export default function ProfilePage() {
     <section className="animate-route-emerge space-y-4">
       <Card>
         <CardHeader>
-          <h1 className="inline-flex items-center gap-2 text-2xl font-semibold text-[var(--text-primary)]">
+          <h1 className="inline-flex items-center gap-2 text-2xl font-semibold text-(--text-primary)">
             <UserCircle2 className="h-5 w-5" /> Profile
           </h1>
         </CardHeader>
 
-        <CardContent className="space-y-3 text-sm text-[var(--text-secondary)]">
+        <CardContent className="space-y-3 text-sm text-(--text-secondary)">
           <p>
             Profile workspace placeholder. This is where creator identity, account metadata, and public preferences will be managed.
           </p>
@@ -29,12 +29,12 @@ export default function ProfilePage() {
 
       <Card id="notifications" className="scroll-mt-28">
         <CardHeader>
-          <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-[var(--text-primary)]">
+          <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-(--text-primary)">
             <Bell className="h-5 w-5" /> Notifications
           </h2>
         </CardHeader>
 
-        <CardContent className="space-y-2 text-sm text-[var(--text-secondary)]">
+        <CardContent className="space-y-2 text-sm text-(--text-secondary)">
           <p>
             Notification controls placeholder. &quot;View all notifications&quot; from the top-nav dropdown lands here for now until
             full profile notification management is wired.

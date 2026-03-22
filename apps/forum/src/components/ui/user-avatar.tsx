@@ -48,7 +48,7 @@ export function UserAvatar({ user, size = "md", className }: UserAvatarProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center rounded-full bg-[var(--bg-canvas)] transition-transform duration-150 hover:-translate-y-0.5",
+        "inline-flex items-center justify-center rounded-full bg-(--bg-canvas) transition-transform duration-150 hover:-translate-y-0.5",
         className,
       )}
       style={{ boxShadow: ringShadow }}
@@ -66,7 +66,7 @@ export function UserAvatar({ user, size = "md", className }: UserAvatarProps) {
         />
       ) : (
         <span
-          className={`${sizeClassMap[size]} inline-flex items-center justify-center rounded-full bg-[var(--bg-overlay)] text-[10px] font-semibold text-[var(--text-primary)]`}
+          className={`${sizeClassMap[size]} inline-flex items-center justify-center rounded-full bg-(--bg-overlay) text-[10px] font-semibold text-(--text-primary)`}
         >
           {initials}
         </span>

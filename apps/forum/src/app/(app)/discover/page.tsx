@@ -17,7 +17,7 @@ export default function DiscoverPage() {
     <section className="animate-route-emerge space-y-4">
       <Card>
         <CardHeader>
-          <h1 className="inline-flex items-center gap-2 text-2xl font-semibold text-[var(--text-primary)]">
+          <h1 className="inline-flex items-center gap-2 text-2xl font-semibold text-(--text-primary)">
             <Compass className="h-5 w-5" /> Discover
           </h1>
         </CardHeader>
@@ -27,10 +27,10 @@ export default function DiscoverPage() {
             <Link
               key={category.key}
               href={`/feed?category=${category.key}`}
-              className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-3 transition-colors hover:border-[var(--border-active)] hover:bg-[var(--bg-overlay)]"
+              className="rounded-md border border-(--border-default) bg-(--bg-surface) p-3 transition-colors hover:border-(--border-active) hover:bg-(--bg-overlay)"
             >
-              <p className="text-sm font-semibold text-[var(--text-primary)]">{category.name}</p>
-              <p className="mt-1 text-xs text-[var(--text-muted)]">{category.description}</p>
+              <p className="text-sm font-semibold text-(--text-primary)">{category.name}</p>
+              <p className="mt-1 text-xs text-(--text-muted)">{category.description}</p>
             </Link>
           ))}
         </CardContent>

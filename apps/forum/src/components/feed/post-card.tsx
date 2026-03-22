@@ -55,7 +55,7 @@ export function PostCard({
 
   return (
     <article
-      className="card-surface group animate-soft-float relative overflow-hidden border border-[var(--border-subtle)] p-4 transition-transform duration-200 hover:-translate-y-[2px] hover:border-[var(--border-active)]/60 hover:shadow-[0_8px_24px_rgba(14,165,233,0.16)]"
+      className="card-surface group animate-soft-float relative overflow-hidden border border-(--border-subtle) p-4 transition-transform duration-200 hover:-translate-y-[2px] hover:border-(--border-active)/60 hover:shadow-[0_8px_24px_rgba(14,165,233,0.16)]"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onFocus={() => setIsHovered(true)}
@@ -71,10 +71,10 @@ export function PostCard({
             <div className="flex min-w-0 items-center gap-2.5">
               <UserAvatar user={author} size="md" />
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
+                <p className="truncate text-sm font-semibold text-(--text-primary)">
                   {author?.name ?? "Unknown author"}
                 </p>
-                <p className="truncate font-mono text-[11px] font-light text-[var(--text-muted)]">
+                <p className="truncate font-mono text-[11px] font-light text-(--text-muted)">
                   @{author?.handle ?? "unknown"}
                 </p>
               </div>
@@ -84,9 +84,9 @@ export function PostCard({
           <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_208px] md:items-end">
             <div className="min-w-0">
               <Link href={`/discussions/${post.slug}`} className="block">
-                <h3 className="text-xl font-bold leading-snug text-[var(--text-primary)]">{post.title}</h3>
+                <h3 className="text-xl font-bold leading-snug text-(--text-primary)">{post.title}</h3>
               </Link>
-              <p className="mt-2 break-words text-sm text-[var(--text-secondary)]">{post.summary}</p>
+              <p className="mt-2 wrap-break-word text-sm text-(--text-secondary)">{post.summary}</p>
 
               <div className="mt-4">
                 <CommentsPreviewCycler comments={previewComments} isActive={isHovered} />
@@ -110,10 +110,10 @@ export function PostCard({
             <div className="flex min-w-0 items-center gap-2.5">
               <UserAvatar user={author} size="md" />
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
+                <p className="truncate text-sm font-semibold text-(--text-primary)">
                   {author?.name ?? "Unknown author"}
                 </p>
-                <p className="truncate font-mono text-[11px] font-light text-[var(--text-muted)]">
+                <p className="truncate font-mono text-[11px] font-light text-(--text-muted)">
                   @{author?.handle ?? "unknown"}
                 </p>
               </div>
@@ -121,9 +121,9 @@ export function PostCard({
           </div>
 
           <Link href={`/discussions/${post.slug}`} className="block">
-            <h3 className="text-xl font-bold leading-snug text-[var(--text-primary)]">{post.title}</h3>
+            <h3 className="text-xl font-bold leading-snug text-(--text-primary)">{post.title}</h3>
           </Link>
-          <p className="mt-2 text-sm text-[var(--text-secondary)]">{post.summary}</p>
+          <p className="mt-2 text-sm text-(--text-secondary)">{post.summary}</p>
 
           <div className="mt-4">
             <CommentsPreviewCycler comments={previewComments} isActive={isHovered} />

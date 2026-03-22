@@ -22,30 +22,44 @@
 - .gitignore: updated .
 
 ## 2026-03-22
-- Added Claude Code skill `sync-forum-ui` at `.claude/skills/sync-forum-ui/SKILL.md` to replicate frontend updates from `/Users/suren/Documents/GitHub/CEfrontend` into `apps/forum` with pixel-perfect/design-language parity guardrails and latest-tool-version policy.
-- Added `CLAUDE.md` workflow rule that `apps/forum` frontend/UI updates must be replicated from `/Users/suren/Documents/GitHub/CEfrontend` with pixel-perfect parity and matching web component/system design language, while using latest local tool versions.
-- Synced forum feed parity from CEfrontend in:
-  - `apps/forum/src/components/feed/post-card.tsx`
-  - `apps/forum/src/components/feed/post-interaction-row.tsx`
-  - `apps/forum/src/components/feed/comments-preview-cycler.tsx`
-  - `apps/forum/src/lib/mock-data/posts.ts`
-  - `apps/forum/src/lib/mock-data/top-post-hero.ts`
-- Added root Convex monorepo baseline for one shared backend (`convex/`, `convex.json`) and initial schema.
-- Expanded workspace to include `packages/*` and added shared package `@cemvp/convex-client`.
-- Wired Convex providers into all app layouts (`forum`, `seller`, `admin`, `marketplace`) with no-op behavior when `NEXT_PUBLIC_CONVEX_URL` is unset.
-- Switched auth setup from Auth0 to Convex Auth (`@convex-dev/auth`) and updated `convex/auth.config.ts` + `convex/schema.ts` (`authTables`).
-- Added Convex dependencies and root scripts (`convex:dev`, `convex:codegen`, `convex:deploy:prod`).
-- Tooling modernization phase 1:
-  - Upgraded app runtime stack to `next@16.1.6`, `react@19.2.4`, `react-dom@19.2.4`.
-  - Upgraded lint/type tooling to `eslint@9.39.2`, `eslint-config-next@16.1.6`, `typescript@5.9.3`, and `@types/react/@types/react-dom` 19.x.
-  - Updated root `packageManager` to `pnpm@10.28.2`.
-  - Migrated app lint setup to flat config via `eslint.config.mjs` in all 4 apps.
-  - Refactored all `convex-provider.tsx` files to `useMemo` client initialization for React/ESLint 9 hook rule compatibility without UI behavior changes.
-  - Kept `tailwindcss` on 3.4.x by design for phased migration safety (Tailwind v4 deferred).
+- Migrated `apps/forum` from Tailwind CSS v3 to v4.2 using `npx @tailwindcss/upgrade@latest --force`, including PostCSS migration to `@tailwindcss/postcss` and removal of legacy `tailwind.config.ts`.
+- Updated `apps/forum/src/app/globals.css` to v4 + shadcn-compatible token structure (`@theme inline`, `:root`/`.dark` token blocks, HSL color tokens) and retained visual parity styling.
+- Added explicit `border-gray-200` on v4 default-border-risk spots in:
+  - `apps/forum/src/components/ui/glowing-effect.tsx`
+  - `apps/forum/src/components/ui/avatar-with-name.tsx`
+  - `apps/forum/src/components/auth/signup-form.tsx`
+- Tailwind upgrader also rewrote utility syntax across forum pages/components (notably bracket/arbitrary color/style forms) to v4-compatible class forms.
 - Validation:
   - `pnpm install` passed.
-  - `pnpm convex:codegen` passed.
-  - `pnpm lint`, `pnpm typecheck`, `pnpm build` passed for forum.
-  - `pnpm lint:seller`, `pnpm typecheck:seller`, `pnpm build:seller` passed.
-  - `pnpm lint:admin`, `pnpm typecheck:admin`, `pnpm build:admin` passed.
-  - `pnpm lint:marketplace`, `pnpm typecheck:marketplace`, `pnpm build:marketplace` passed.
+  - `pnpm --filter ./apps/forum lint` passed.
+  - `pnpm --filter ./apps/forum typecheck` passed.
+  - `pnpm --filter ./apps/forum build` passed.
+- Manual layout adjustments for `space-x` / `divide-y`: none required (`-space-x-1.5` in `apps/forum/src/components/feed/post-interaction-row.tsx` remained unchanged and did not require manual rewrite).
+- 21:54: updated .
+- /Users/suren/.claude/plans/lexical-knitting-sunrise.md: updated .
+- 22:39: updated .
+- /Users/suren/.claude/plans/precious-herding-scroll.md: updated .
+- 22:46: updated .
+- apps/forum/src/app/globals.css: updated .
+- 22:46: updated .
+- apps/forum/src/components/ui/avatar-with-name.tsx: updated .
+- 22:46: updated .
+- apps/forum/src/components/ui/glowing-effect.tsx: updated .
+- 22:46: updated .
+- apps/forum/src/components/auth/signup-form.tsx: updated .
+- 22:50: updated .
+- apps/forum/src/app/globals.css: updated .
+- 22:57: updated .
+- apps/forum/src/app/(app)/feed/page.tsx: updated .
+- 22:57: updated .
+- apps/forum/src/app/(app)/feed/page.tsx: updated .
+- 23:01: updated .
+- apps/forum/src/app/(app)/discussions/[slug]/page.tsx: updated .
+- 23:01: updated .
+- apps/forum/src/app/(app)/discussions/[slug]/page.tsx: updated .
+- 23:05: updated .
+- apps/forum/src/components/auth/auth-modal.tsx: updated .
+- 23:05: updated .
+- apps/forum/src/components/feed/trend-sorter.tsx: updated .
+- 23:05: updated .
+- apps/forum/src/components/auth/auth-modal.tsx: updated .

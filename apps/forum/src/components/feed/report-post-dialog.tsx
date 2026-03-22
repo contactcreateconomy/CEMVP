@@ -21,10 +21,10 @@ export function ReportPostDialog({ open, onOpenChange, onSubmit }: ReportPostDia
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(520px,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-[16px] border border-[var(--border-default)] bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-lg)]">
-          <Dialog.Title className="text-base font-semibold text-[var(--text-primary)]">Report post</Dialog.Title>
-          <Dialog.Description className="mt-1 text-sm text-[var(--text-secondary)]">
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(520px,92vw)] -translate-x-1/2 -translate-y-1/2 rounded-[16px] border border-(--border-default) bg-(--bg-surface) p-4 shadow-(--shadow-lg)">
+          <Dialog.Title className="text-base font-semibold text-(--text-primary)">Report post</Dialog.Title>
+          <Dialog.Description className="mt-1 text-sm text-(--text-secondary)">
             Select a reason and we will hide this post from your feed.
           </Dialog.Description>
 

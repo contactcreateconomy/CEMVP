@@ -63,11 +63,11 @@ export function PodiumWidget({ rows }: PodiumWidgetProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Podium</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-(--text-muted)">Podium</h2>
 
-        <div className="relative w-[160px] rounded-full border border-[var(--border-default)] bg-[var(--bg-overlay)]/50 p-1">
+        <div className="relative w-[160px] rounded-full border border-(--border-default) bg-(--bg-overlay)/50 p-1">
           <div
-            className="pointer-events-none absolute bottom-1 left-1 top-1 w-[calc((100%-0.5rem)/3)] rounded-full bg-[var(--brand-primary)] transition-transform duration-300 ease-out shadow-[0_8px_20px_rgba(14,165,233,0.24)]"
+            className="pointer-events-none absolute bottom-1 left-1 top-1 w-[calc((100%-0.5rem)/3)] rounded-full bg-(--brand-primary) transition-transform duration-300 ease-out shadow-[0_8px_20px_rgba(14,165,233,0.24)]"
             style={{ transform: `translateX(${activeFilterIndex * 100}%)` }}
           />
 
@@ -81,7 +81,7 @@ export function PodiumWidget({ rows }: PodiumWidgetProps) {
                   onClick={() => setActiveWindow(filter.key)}
                   className={cn(
                     "h-6 rounded-full px-2 text-[10px] font-semibold transition-colors duration-200",
-                    isActive ? "text-black" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
+                    isActive ? "text-black" : "text-(--text-secondary) hover:text-(--text-primary)",
                   )}
                 >
                   {filter.label}
@@ -101,19 +101,19 @@ export function PodiumWidget({ rows }: PodiumWidgetProps) {
           return (
             <div
               key={row.userId}
-              className={`group relative flex items-center justify-between overflow-hidden rounded-[12px] border border-[var(--border-subtle)] bg-[var(--bg-overlay)]/45 px-3 py-2.5 ${
-                showShimmer ? "hover:border-[var(--border-prominent)]" : ""
+              className={`group relative flex items-center justify-between overflow-hidden rounded-[12px] border border-(--border-subtle) bg-(--bg-overlay)/45 px-3 py-2.5 ${
+                showShimmer ? "hover:border-(--border-prominent)" : ""
               }`}
             >
               {showShimmer ? (
-                <span className="pointer-events-none absolute inset-y-0 left-[-35%] w-[35%] -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0 transition-all duration-700 group-hover:left-[120%] group-hover:opacity-100" />
+                <span className="pointer-events-none absolute inset-y-0 left-[-35%] w-[35%] -skew-x-12 bg-linear-to-r from-transparent via-white/25 to-transparent opacity-0 transition-all duration-700 group-hover:left-[120%] group-hover:opacity-100" />
               ) : null}
 
               <div className="relative z-10 flex min-w-0 items-center gap-2.5">
                 <Icon className="h-4 w-4 shrink-0" style={{ color: colors.icon }} />
 
                 <span
-                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--bg-surface)]"
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-(--bg-surface)"
                   style={{ boxShadow: `0 0 0 2px ${colors.ring}` }}
                 >
                   {row.user?.avatar ? (
@@ -125,7 +125,7 @@ export function PodiumWidget({ rows }: PodiumWidgetProps) {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <span className="text-xs font-semibold text-[var(--text-primary)]">
+                    <span className="text-xs font-semibold text-(--text-primary)">
                       {(row.user?.name ?? "U")
                         .split(" ")
                         .map((part) => part[0])
@@ -136,12 +136,12 @@ export function PodiumWidget({ rows }: PodiumWidgetProps) {
                   )}
                 </span>
 
-                <p className="truncate text-sm font-medium text-[var(--text-primary)]">
+                <p className="truncate text-sm font-medium text-(--text-primary)">
                   {row.user?.name ?? "Unknown user"}
                 </p>
               </div>
 
-              <p className="relative z-10 text-xs font-semibold text-[var(--feedback-warning)]">
+              <p className="relative z-10 text-xs font-semibold text-(--feedback-warning)">
                 {formatPoints(row.windowPoints)}
               </p>
             </div>
@@ -153,7 +153,7 @@ export function PodiumWidget({ rows }: PodiumWidgetProps) {
         <Link
           href="/leaderboard"
           aria-label="Open full leaderboard"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[var(--brand-primary)] transition-all duration-200 hover:bg-[var(--bg-overlay)]/55 hover:text-[var(--brand-primary-hover)] hover:shadow-[0_0_12px_rgba(14,165,233,0.3)]"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full text-(--brand-primary) transition-all duration-200 hover:bg-(--bg-overlay)/55 hover:text-(--brand-primary-hover) hover:shadow-[0_0_12px_rgba(14,165,233,0.3)]"
         >
           <ArrowRightCircle className="h-4 w-4" />
         </Link>

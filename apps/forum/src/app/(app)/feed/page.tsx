@@ -18,20 +18,21 @@ import { getFeedData } from "@/lib/adapters/content";
 import type { Post } from "@/types";
 
 interface FeedPageProps {
-  searchParams?: {
+  searchParams?: Promise<{
     category?: string;
     sort?: "top" | "hot" | "new" | "fav";
-  };
+  }>;
 }
 
 function viralityScore(post: Post) {
   return post.upvotes * 1.2 + post.commentsCount * 2 + post.views * 0.06;
 }
 
-export default function FeedPage({ searchParams }: FeedPageProps) {
+export default async function FeedPage({ searchParams }: FeedPageProps) {
   const { posts, comments, users } = getFeedData();
-  const selectedCategory = searchParams?.category;
-  const selectedSort = searchParams?.sort ?? "top";
+  const resolvedSearchParams = await searchParams;
+  const selectedCategory = resolvedSearchParams?.category;
+  const selectedSort = resolvedSearchParams?.sort ?? "top";
 
   const categoryPosts = selectedCategory
     ? posts.filter((post) => post.category === selectedCategory)

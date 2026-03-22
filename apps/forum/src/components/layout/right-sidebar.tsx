@@ -7,7 +7,7 @@ export function RightSidebar() {
   const rows = getLeaderboardWithUsers();
 
   return (
-    <aside className="sticky top-[5rem] hidden h-fit w-[320px] shrink-0 space-y-4 xl:block">
+    <aside className="sticky top-20 hidden h-fit w-[320px] shrink-0 space-y-4 xl:block">
       <WhatsVibingWidget />
 
       <Card className="animate-soft-float" style={{ animationDelay: "100ms" }}>

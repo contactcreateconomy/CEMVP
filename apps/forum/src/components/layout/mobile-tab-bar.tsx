@@ -18,7 +18,7 @@ export function MobileTabBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)]/95 px-3 pb-4 pt-2 backdrop-blur lg:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-(--border-subtle) bg-(--bg-surface)/95 px-3 pb-4 pt-2 backdrop-blur-sm lg:hidden">
       <ul className="mx-auto grid max-w-md grid-cols-5 gap-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -29,18 +29,18 @@ export function MobileTabBar() {
               <Link
                 href={tab.href}
                 className={cn(
-                  "flex flex-col items-center justify-center rounded-[var(--radius-md)] px-2 py-2 text-[11px]",
+                  "flex flex-col items-center justify-center rounded-md px-2 py-2 text-[11px]",
                   tab.highlight
-                    ? "text-[var(--text-inverse)]"
+                    ? "text-(--text-inverse)"
                     : active
-                    ? "text-[var(--brand-primary)]"
-                    : "text-[var(--text-muted)]",
+                    ? "text-(--brand-primary)"
+                    : "text-(--text-muted)",
                 )}
               >
                 <span
                   className={cn(
                     "mb-1 flex h-8 w-8 items-center justify-center rounded-full",
-                    tab.highlight ? "electric-glow bg-[var(--brand-primary)]" : active ? "bg-[var(--bg-overlay)]" : "",
+                    tab.highlight ? "electric-glow bg-(--brand-primary)" : active ? "bg-(--bg-overlay)" : "",
                   )}
                 >
                   <Icon className="h-4 w-4" />
