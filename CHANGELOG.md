@@ -35,10 +35,17 @@
 - Wired Convex providers into all app layouts (`forum`, `seller`, `admin`, `marketplace`) with no-op behavior when `NEXT_PUBLIC_CONVEX_URL` is unset.
 - Switched auth setup from Auth0 to Convex Auth (`@convex-dev/auth`) and updated `convex/auth.config.ts` + `convex/schema.ts` (`authTables`).
 - Added Convex dependencies and root scripts (`convex:dev`, `convex:codegen`, `convex:deploy:prod`).
+- Tooling modernization phase 1:
+  - Upgraded app runtime stack to `next@16.1.6`, `react@19.2.4`, `react-dom@19.2.4`.
+  - Upgraded lint/type tooling to `eslint@9.39.2`, `eslint-config-next@16.1.6`, `typescript@5.9.3`, and `@types/react/@types/react-dom` 19.x.
+  - Updated root `packageManager` to `pnpm@10.28.2`.
+  - Migrated app lint setup to flat config via `eslint.config.mjs` in all 4 apps.
+  - Refactored all `convex-provider.tsx` files to `useMemo` client initialization for React/ESLint 9 hook rule compatibility without UI behavior changes.
+  - Kept `tailwindcss` on 3.4.x by design for phased migration safety (Tailwind v4 deferred).
 - Validation:
   - `pnpm install` passed.
   - `pnpm convex:codegen` passed.
-  - `pnpm typecheck`, `pnpm typecheck:seller`, `pnpm typecheck:admin`, `pnpm typecheck:marketplace` passed.
-  - `pnpm build` (forum) passed.
-- 20:27: updated .
-- .gitignore: updated .
+  - `pnpm lint`, `pnpm typecheck`, `pnpm build` passed for forum.
+  - `pnpm lint:seller`, `pnpm typecheck:seller`, `pnpm build:seller` passed.
+  - `pnpm lint:admin`, `pnpm typecheck:admin`, `pnpm build:admin` passed.
+  - `pnpm lint:marketplace`, `pnpm typecheck:marketplace`, `pnpm build:marketplace` passed.
