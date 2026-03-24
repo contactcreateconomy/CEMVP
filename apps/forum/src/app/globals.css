@@ -9,6 +9,52 @@
   --color-input: var(--border-default);
   --color-ring: var(--border-active);
   --color-muted-foreground: var(--text-muted);
+
+  /* Background colors */
+  --color-bg-canvas: var(--bg-canvas);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-surface-elevated: var(--bg-surface-elevated);
+  --color-bg-overlay: var(--bg-overlay);
+  --color-bg-inset: var(--bg-inset);
+  --color-bg-wash: var(--bg-wash);
+
+  /* Text colors */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-disabled: var(--text-disabled);
+  --color-text-inverse: var(--text-inverse);
+
+  /* Border colors */
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-prominent: var(--border-prominent);
+  --color-border-active: var(--border-active);
+
+  /* Brand colors */
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-hover: var(--brand-primary-hover);
+  --color-brand-primary-pressed: var(--brand-primary-pressed);
+
+  /* Feedback colors */
+  --color-feedback-success: var(--feedback-success);
+  --color-feedback-error: var(--feedback-error);
+  --color-feedback-warning: var(--feedback-warning);
+  --color-feedback-info: var(--feedback-info);
+
+  /* Shadows */
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  /* Glows */
+  --shadow-glow-primary-sm: var(--glow-primary-sm);
+  --shadow-glow-primary-md: var(--glow-primary-md);
+
+  /* Z-index scale */
+  --z-70: 70;
+  --z-80: 80;
 }
 
 :root {

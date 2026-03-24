@@ -67,3 +67,20 @@
 ## 2026-03-23
 - 21:46: updated .
 - /Users/suren/.claude/settings.json: updated .
+- Fixed Tailwind CSS v4 color syntax issues in `apps/forum`:
+  - Updated `@theme` block in `globals.css` with all missing color mappings (text-primary, text-secondary, bg-surface, bg-overlay, brand-primary, feedback-error, etc.)
+  - Migrated button variants from v3 `text-(--var)` syntax to v4 `text-color-name` syntax
+  - Migrated input component from v3 to v4 color syntax
+  - Migrated auth-modal, login-form, and signup-form from v3 to v4 color syntax
+  - Added z-index scale values (z-70, z-80) for modal positioning
+  - Added shadow mappings (shadow-xs through shadow-lg, glow variants)
+- Added `.cursor/` to `.gitignore` (local tooling state)
+- Affected files:
+  - `apps/forum/src/app/globals.css`
+  - `apps/forum/src/components/ui/button.tsx`
+  - `apps/forum/src/components/ui/input.tsx`
+  - `apps/forum/src/components/auth/auth-modal.tsx`
+  - `apps/forum/src/components/auth/login-form.tsx`
+  - `apps/forum/src/components/auth/signup-form.tsx`
+  - `.gitignore`
+

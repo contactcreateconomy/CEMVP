@@ -26,21 +26,21 @@ export function AuthModal() {
   return (
     <Dialog.Root open={isAuthModalOpen} onOpenChange={(open) => (open ? openAuthModal(authMode) : closeAuthModal())}>
       <Dialog.Portal>
-        <Dialog.Overlay className="auth-modal-overlay fixed inset-0 z-70 bg-(--bg-canvas)/68 backdrop-blur-md" />
+        <Dialog.Overlay className="auth-modal-overlay fixed inset-0 z-70 bg-bg-canvas/68 backdrop-blur-md" />
 
         <Dialog.Content
           className={cn(
-            "auth-modal-content fixed left-1/2 top-1/2 z-80 w-[min(520px,94vw)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[20px] border border-(--border-default) bg-(--bg-surface) shadow-(--shadow-lg) outline-hidden",
+            "auth-modal-content fixed left-1/2 top-1/2 z-80 w-[min(520px,94vw)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[20px] border border-border-default bg-bg-surface shadow-lg outline-hidden",
             "origin-center",
           )}
         >
-          <div className="absolute inset-x-0 top-0 h-px bg-(--brand-primary)/70" />
+          <div className="absolute inset-x-0 top-0 h-px bg-brand-primary/70" />
 
           <div className="relative p-5 sm:p-6">
             <Dialog.Close asChild>
               <button
                 type="button"
-                className="absolute right-5 top-5 rounded-full p-1.5 text-(--text-muted) transition-colors hover:bg-(--bg-overlay) hover:text-(--text-primary)"
+                className="absolute right-5 top-5 rounded-full p-1.5 text-text-muted transition-colors hover:bg-bg-overlay hover:text-text-primary"
                 aria-label="Close authentication dialog"
               >
                 <X className="h-4 w-4" />
@@ -48,19 +48,19 @@ export function AuthModal() {
             </Dialog.Close>
 
             <div className="mb-5 text-center">
-              <Dialog.Title className="text-[28px] font-semibold leading-tight text-(--text-primary) sm:text-3xl">
+              <Dialog.Title className="text-[28px] font-semibold leading-tight text-text-primary sm:text-3xl">
                 {authMode === "login" ? "Welcome back" : "Create your account"}
               </Dialog.Title>
-              <Dialog.Description className="mt-2 text-sm text-(--text-secondary)">
+              <Dialog.Description className="mt-2 text-sm text-text-secondary">
                 {authMode === "login"
                   ? "Log in to continue building your creator momentum."
                   : "Join Createconomy and launch your creator stack."}
               </Dialog.Description>
             </div>
 
-            <div className="relative rounded-[12px] bg-(--bg-overlay) p-1">
+            <div className="relative rounded-[12px] bg-bg-overlay p-1">
               <div
-                className="pointer-events-none absolute bottom-1 top-1 w-[calc(50%-0.25rem)] rounded-[10px] bg-(--brand-primary) shadow-[0_8px_24px_rgba(14,165,233,0.24)] transition-transform duration-300 ease-out"
+                className="pointer-events-none absolute bottom-1 top-1 w-[calc(50%-0.25rem)] rounded-[10px] bg-brand-primary shadow-[0_8px_24px_rgba(14,165,233,0.24)] transition-transform duration-300 ease-out"
                 style={{ transform: `translateX(${authMode === "signup" ? "100%" : "0%"})` }}
               />
 
@@ -69,7 +69,7 @@ export function AuthModal() {
                   type="button"
                   className={cn(
                     "rounded-[10px] px-3 py-2 text-xs font-semibold transition-colors duration-200",
-                    authMode === "login" ? "text-white" : "text-(--text-secondary) hover:text-(--text-primary)",
+                    authMode === "login" ? "text-white" : "text-text-secondary hover:text-text-primary",
                   )}
                   onClick={() => {
                     clearAuthError();
@@ -83,7 +83,7 @@ export function AuthModal() {
                   type="button"
                   className={cn(
                     "rounded-[10px] px-3 py-2 text-xs font-semibold transition-colors duration-200",
-                    authMode === "signup" ? "text-white" : "text-(--text-secondary) hover:text-(--text-primary)",
+                    authMode === "signup" ? "text-white" : "text-text-secondary hover:text-text-primary",
                   )}
                   onClick={() => {
                     clearAuthError();
@@ -125,25 +125,25 @@ export function AuthModal() {
               )}
             </div>
 
-            <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-(--text-muted)">
-              <span className="h-px flex-1 bg-(--border-subtle)" />
+            <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-text-muted">
+              <span className="h-px flex-1 bg-border-subtle" />
               <span>or continue with</span>
-              <span className="h-px flex-1 bg-(--border-subtle)" />
+              <span className="h-px flex-1 bg-border-subtle" />
             </div>
 
             <SocialLoginButtons isSubmitting={isSubmitting} onSocialLogin={socialLogin} />
 
-            <div className="mt-4 rounded-[12px] border border-(--border-subtle) bg-(--bg-overlay) px-3 py-2 text-[11px] text-(--text-secondary)">
+            <div className="mt-4 rounded-[12px] border border-border-subtle bg-bg-overlay px-3 py-2 text-[11px] text-text-secondary">
               <p className="inline-flex items-center gap-1.5">
-                <ArrowRight className="h-3.5 w-3.5 text-(--brand-primary)" />
+                <ArrowRight className="h-3.5 w-3.5 text-brand-primary" />
                 Frontend-only mock flow for now. Convex auth integration will replace backend hooks later.
               </p>
             </div>
 
             {authMode === "login" ? (
-              <div className="mt-3 rounded-[12px] border border-(--border-active)/45 bg-(--bg-overlay) px-3 py-2 text-[11px] text-(--text-secondary)">
+              <div className="mt-3 rounded-[12px] border border-border-active/45 bg-bg-overlay px-3 py-2 text-[11px] text-text-secondary">
                 <p>
-                  Test credentials — Email: <span className="font-semibold text-(--text-primary)">Devtest</span> | Pass: <span className="font-semibold text-(--text-primary)">123456</span>
+                  Test credentials — Email: <span className="font-semibold text-text-primary">Devtest</span> | Pass: <span className="font-semibold text-text-primary">123456</span>
                 </p>
               </div>
             ) : null}

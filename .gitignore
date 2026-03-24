@@ -25,6 +25,7 @@ pnpm-debug.log*
 .playwright/
 .playwright-mcp/
 .agents/
+.cursor/
 
 # Vercel
 .vercel/

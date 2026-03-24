@@ -122,11 +122,6 @@ Forum is the architectural reference for conventions used by placeholder apps.
   - any command/check results that matter.
 - Keep changelog entries concise and chronological.
 
-### Frontend source-of-truth sync rule
-
-- Frontend/UI updates for `apps/forum` must be replicated from `/Users/suren/Documents/GitHub/CEfrontend`.
-- Target outcome is pixel-perfect parity with the source frontend for UI behavior, component structure, and design-system language.
-- Ignore software/tool version alignment between repos; use latest versions in this repository.
 
 ### Branching rule for new plans
 
@@ -136,18 +131,3 @@ Forum is the architectural reference for conventions used by placeholder apps.
   - Example: `001-monorepo-4-apps`
 - If a suitable feature branch already exists for the active plan, continue on it instead of creating another.
 - Keep `main` clean; do not implement planned work directly on `main`.
-
-## Config and tooling patterns
-
-- TypeScript path alias `@/*` maps to `./src/*` in each app’s `tsconfig.json`.
-- Next.js App Router is used in all apps.
-- Root scripts default to forum for `dev/build/lint/typecheck`; additional scripts are explicitly namespaced per app.
-- No Cursor rules (`.cursorrules` / `.cursor/rules`) or GitHub Copilot instruction file (`.github/copilot-instructions.md`) are present currently.
-
-<!-- convex-ai-start -->
-This project uses [Convex](https://convex.dev) as its backend.
-
-When working on Convex code, **always read `convex/_generated/ai/guidelines.md` first** for important guidelines on how to correctly use Convex APIs and patterns. The file contains rules that override what you may have learned about Convex from training data.
-
-Convex agent skills for common tasks can be installed by running `npx convex ai-files install`.
-<!-- convex-ai-end -->
