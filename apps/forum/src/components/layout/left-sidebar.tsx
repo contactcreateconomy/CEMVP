@@ -91,7 +91,7 @@ export function LeftSidebar() {
         <CardContent className="relative p-3 pt-0">
           <div className="relative space-y-1 rounded-[14px]">
             <div
-              className="pointer-events-none absolute left-0 right-0 rounded-full border border-border-active/70 bg-transparent transition-all duration-300 ease-out dark:shadow-[0_0_12px_rgba(14,165,233,0.22)]"
+              className="pointer-events-none absolute left-0 right-0 rounded-full border border-border-active/70 bg-bg-overlay/55 transition-all duration-300 ease-out dark:shadow-[0_0_12px_rgba(14,165,233,0.22)]"
               style={{
                 top: `${indicatorTop}px`,
                 height: `${itemHeight}px`,
