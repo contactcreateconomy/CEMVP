@@ -163,8 +163,10 @@ main {
   @apply min-h-screen;
 }
 
-a {
-  color: var(--brand-primary);
+@layer base {
+  a {
+    color: var(--brand-primary);
+  }
 }
 
 :focus-visible {

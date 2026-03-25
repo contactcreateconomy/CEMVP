@@ -105,12 +105,8 @@ export function LeftSidebar() {
                 <Link
                   key={key}
                   href={href}
-                  className={cn(
-                    "relative z-10 flex h-10 w-full items-center gap-2.5 rounded-full px-3 text-sm font-semibold transition-colors duration-200",
-                    isActive
-                      ? "text-text-primary"
-                      : "text-text-primary hover:bg-bg-overlay/55",
-                  )}
+                  className="relative z-10 flex h-10 w-full items-center gap-2.5 rounded-full px-3 text-sm font-semibold transition-colors duration-200 hover:bg-bg-overlay/55"
+                  style={{ color: "var(--text-primary)" }}
                 >
                   <Icon className={cn("h-4 w-4", isActive && "scale-105")} strokeWidth={2.5} />
                   <span>{label}</span>
