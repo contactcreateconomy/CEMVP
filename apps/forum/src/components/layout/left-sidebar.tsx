@@ -108,8 +108,8 @@ export function LeftSidebar() {
                   className={cn(
                     "relative z-10 flex h-10 w-full items-center gap-2.5 rounded-full px-3 text-sm font-semibold transition-colors duration-200",
                     isActive
-                      ? "text-brand-primary"
-                      : "text-text-primary hover:bg-bg-overlay/55 hover:text-brand-primary dark:hover:text-brand-primary-hover dark:hover:drop-shadow-[0_0_8px_rgba(14,165,233,0.35)]",
+                      ? "text-text-primary"
+                      : "text-text-primary hover:bg-bg-overlay/55",
                   )}
                 >
                   <Icon className={cn("h-4 w-4", isActive && "scale-105")} strokeWidth={2.5} />
