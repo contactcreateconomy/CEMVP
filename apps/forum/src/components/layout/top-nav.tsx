@@ -103,16 +103,16 @@ export function TopNav() {
                 markColor="var(--text-primary)"
                 className="transition-[filter] duration-200 group-hover:drop-shadow-[0_0_8px_rgba(9,9,11,0.42)] dark:group-hover:drop-shadow-[0_0_6px_rgba(250,250,250,0.35)]"
               />
-              <span className="text-sm font-semibold tracking-tight text-(--text-primary) sm:text-base">Createconomy</span>
+              <span className="text-sm font-semibold tracking-tight text-text-primary sm:text-base">Createconomy</span>
             </Link>
 
             <div className="hidden flex-1 justify-center px-2 md:flex">
               <label className="relative w-full max-w-[480px]" aria-label="Search">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--text-muted)" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
                 <input
                   type="search"
                   placeholder="Search"
-                  className="h-9 w-full appearance-none rounded-full border border-(--border-default) bg-(--bg-surface) pl-9 pr-3 text-sm text-(--text-primary) outline-hidden transition-[border-color] duration-200 placeholder:text-(--text-muted) hover:border-(--border-prominent) focus:border-(--border-active) focus:outline-hidden focus:ring-0 focus-visible:outline-hidden focus-visible:ring-0"
+                  className="h-9 w-full appearance-none rounded-full border border-(--border-default) bg-(--bg-surface) pl-9 pr-3 text-sm text-text-primary outline-hidden transition-[border-color] duration-200 placeholder:text-text-muted hover:border-(--border-prominent) focus:border-(--border-active) focus:outline-hidden focus:ring-0 focus-visible:outline-hidden focus-visible:ring-0"
                 />
               </label>
             </div>
@@ -122,8 +122,8 @@ export function TopNav() {
                 href="/new-post"
                 aria-label="Create"
                 className={cn(
-                  "inline-flex rounded-full p-2 text-(--text-secondary) transition-[transform,colors] duration-200 hover:-translate-y-px hover:bg-(--bg-overlay) hover:text-(--text-primary)",
-                  pathname === "/new-post" && "text-(--brand-primary)",
+                  "inline-flex rounded-full p-2 text-text-secondary transition-[transform,colors] duration-200 hover:-translate-y-px hover:bg-(--bg-overlay) hover:text-text-primary",
+                  pathname === "/new-post" && "text-brand-primary",
                 )}
               >
                 <Plus className="h-4 w-4" />
@@ -132,7 +132,7 @@ export function TopNav() {
               <button
                 aria-label="Toggle theme"
                 onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-                className="rounded-full p-2 text-(--text-secondary) transition-[transform,colors] duration-200 hover:-translate-y-px hover:bg-(--bg-overlay) hover:text-(--text-primary)"
+                className="rounded-full p-2 text-text-secondary transition-[transform,colors] duration-200 hover:-translate-y-px hover:bg-(--bg-overlay) hover:text-text-primary"
               >
                 {!mounted ? <Moon className="h-4 w-4" /> : resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
@@ -147,8 +147,8 @@ export function TopNav() {
                         : "Notifications. Sign in to unlock"
                     }
                     className={cn(
-                      "relative rounded-full p-2 text-(--text-secondary) transition-[transform,colors] duration-200 hover:-translate-y-px hover:bg-(--bg-overlay) hover:text-(--text-primary)",
-                      (pathname === "/notifications" || notificationsOpen) && "text-(--brand-primary)",
+                      "relative rounded-full p-2 text-text-secondary transition-[transform,colors] duration-200 hover:-translate-y-px hover:bg-(--bg-overlay) hover:text-text-primary",
+                      (pathname === "/notifications" || notificationsOpen) && "text-brand-primary",
                     )}
                   >
                     <Bell className={cn("h-4 w-4", unread > 0 && !notificationsOpen && "animate-pulse-glow")} />
@@ -170,8 +170,8 @@ export function TopNav() {
                       <>
                         <div className="h-0.5 w-full bg-(--brand-primary)/85" />
                         <div className="flex items-center justify-between border-b border-(--border-subtle) px-4 py-3">
-                          <p className="text-sm font-semibold text-(--text-primary)">Latest notifications</p>
-                          <span className="rounded-full bg-(--bg-overlay) px-2 py-0.5 text-[11px] font-medium text-(--text-secondary)">
+                          <p className="text-sm font-semibold text-text-primary">Latest notifications</p>
+                          <span className="rounded-full bg-(--bg-overlay) px-2 py-0.5 text-[11px] font-medium text-text-secondary">
                             {unread} unread
                           </span>
                         </div>
@@ -190,13 +190,13 @@ export function TopNav() {
                                       notification.read ? "bg-(--border-default)" : TYPE_ACCENT_CLASS[notification.type],
                                     )}
                                   />
-                                  <p className={cn("text-sm text-(--text-primary)", !notification.read && "font-semibold")}>
+                                  <p className={cn("text-sm text-text-primary", !notification.read && "font-semibold")}>
                                     {notification.title}
                                   </p>
                                 </div>
-                                <p className="mt-1 line-clamp-2 pl-3.5 text-xs text-(--text-secondary)">{notification.message}</p>
+                                <p className="mt-1 line-clamp-2 pl-3.5 text-xs text-text-secondary">{notification.message}</p>
                               </div>
-                              <span className="absolute right-3 top-2.5 text-[11px] text-(--text-muted)">
+                              <span className="absolute right-3 top-2.5 text-[11px] text-text-muted">
                                 {formatRelativeNotificationTime(notification.createdAt)}
                               </span>
                             </DropdownMenu.Item>
@@ -207,7 +207,7 @@ export function TopNav() {
                           <DropdownMenu.Item asChild>
                             <Link
                               href="/profile#notifications"
-                              className="flex w-full items-center justify-between rounded-[10px] px-3 py-2 text-sm font-medium text-(--brand-primary) outline-hidden transition-colors hover:bg-(--bg-overlay) focus:bg-(--bg-overlay)"
+                              className="flex w-full items-center justify-between rounded-[10px] px-3 py-2 text-sm font-medium text-brand-primary outline-hidden transition-colors hover:bg-(--bg-overlay) focus:bg-(--bg-overlay)"
                             >
                               <span>View all notifications</span>
                               <span aria-hidden="true">→</span>
@@ -217,8 +217,8 @@ export function TopNav() {
                       </>
                     ) : (
                       <div className="space-y-3 p-4">
-                        <p className="text-sm font-semibold text-(--text-primary)">Sign in to view notifications</p>
-                        <p className="text-xs text-(--text-secondary)">
+                        <p className="text-sm font-semibold text-text-primary">Sign in to view notifications</p>
+                        <p className="text-xs text-text-secondary">
                           Stay synced with comments, milestones, and creator activity in one place.
                         </p>
                         <button
@@ -244,13 +244,13 @@ export function TopNav() {
                       type="button"
                       aria-label="Account menu"
                       className={cn(
-                        "rounded-full p-0.5 text-(--text-secondary) transition-[transform,colors] duration-200 hover:-translate-y-px hover:bg-(--bg-overlay) hover:text-(--text-primary)",
+                        "rounded-full p-0.5 text-text-secondary transition-[transform,colors] duration-200 hover:-translate-y-px hover:bg-(--bg-overlay) hover:text-text-primary",
                         profileMenuOpen && "bg-(--bg-overlay)",
                       )}
                     >
                       <Avatar className="h-8 w-8 border border-(--border-default)">
                         {user.avatar ? <AvatarImage src={user.avatar} alt={`${user.name} avatar`} /> : null}
-                        <AvatarFallback className="bg-(--bg-overlay) text-[11px] font-semibold text-(--text-primary)">
+                        <AvatarFallback className="bg-(--bg-overlay) text-[11px] font-semibold text-text-primary">
                           {getInitials(user.name)}
                         </AvatarFallback>
                       </Avatar>
@@ -264,17 +264,17 @@ export function TopNav() {
                       className="animate-soft-float z-50 w-[252px] overflow-hidden rounded-[14px] border border-(--border-default) bg-(--bg-surface) p-1.5 shadow-(--shadow-lg)"
                     >
                       <div className="rounded-[10px] border border-(--border-subtle) bg-(--bg-overlay) px-3 py-2.5">
-                        <p className="text-sm font-semibold text-(--text-primary)">{user.name}</p>
-                        <p className="mt-0.5 text-xs text-(--text-secondary)">@{user.handle}</p>
+                        <p className="text-sm font-semibold text-text-primary">{user.name}</p>
+                        <p className="mt-0.5 text-xs text-text-secondary">@{user.handle}</p>
                       </div>
 
                       <div className="mt-1.5 space-y-0.5">
                         <DropdownMenu.Item asChild>
                           <Link
                             href="/profile"
-                            className="flex items-center gap-2 rounded-[9px] px-2.5 py-2 text-sm text-(--text-primary) outline-hidden transition-colors data-highlighted:bg-(--bg-overlay)"
+                            className="flex items-center gap-2 rounded-[9px] px-2.5 py-2 text-sm text-text-primary outline-hidden transition-colors data-highlighted:bg-(--bg-overlay)"
                           >
-                            <UserCircle2 className="h-4 w-4 text-(--text-secondary)" />
+                            <UserCircle2 className="h-4 w-4 text-text-secondary" />
                             <span>Profile</span>
                           </Link>
                         </DropdownMenu.Item>
@@ -282,9 +282,9 @@ export function TopNav() {
                         <DropdownMenu.Item asChild>
                           <Link
                             href="/settings"
-                            className="flex items-center gap-2 rounded-[9px] px-2.5 py-2 text-sm text-(--text-primary) outline-hidden transition-colors data-highlighted:bg-(--bg-overlay)"
+                            className="flex items-center gap-2 rounded-[9px] px-2.5 py-2 text-sm text-text-primary outline-hidden transition-colors data-highlighted:bg-(--bg-overlay)"
                           >
-                            <Settings className="h-4 w-4 text-(--text-secondary)" />
+                            <Settings className="h-4 w-4 text-text-secondary" />
                             <span>Settings</span>
                           </Link>
                         </DropdownMenu.Item>
@@ -292,9 +292,9 @@ export function TopNav() {
                         <DropdownMenu.Item asChild>
                           <Link
                             href="/notifications"
-                            className="flex items-center gap-2 rounded-[9px] px-2.5 py-2 text-sm text-(--text-primary) outline-hidden transition-colors data-highlighted:bg-(--bg-overlay)"
+                            className="flex items-center gap-2 rounded-[9px] px-2.5 py-2 text-sm text-text-primary outline-hidden transition-colors data-highlighted:bg-(--bg-overlay)"
                           >
-                            <Bell className="h-4 w-4 text-(--text-secondary)" />
+                            <Bell className="h-4 w-4 text-text-secondary" />
                             <span>Notifications</span>
                           </Link>
                         </DropdownMenu.Item>
@@ -303,7 +303,7 @@ export function TopNav() {
                       <DropdownMenu.Separator className="my-1.5 h-px bg-(--border-subtle)" />
 
                       <DropdownMenu.Item
-                        className="flex cursor-pointer items-center gap-2 rounded-[9px] px-2.5 py-2 text-sm text-(--feedback-error) outline-hidden transition-colors data-highlighted:bg-(--bg-overlay)"
+                        className="flex cursor-pointer items-center gap-2 rounded-[9px] px-2.5 py-2 text-sm text-feedback-error outline-hidden transition-colors data-highlighted:bg-(--bg-overlay)"
                         onSelect={() => logout()}
                       >
                         <LogOut className="h-4 w-4" />
@@ -316,7 +316,7 @@ export function TopNav() {
                 <button
                   type="button"
                   onClick={() => openAuthModal("login")}
-                  className="inline-flex h-9 items-center rounded-full border border-(--border-default) bg-(--bg-surface) px-4 text-sm font-semibold text-(--text-primary) transition-[transform,colors] duration-200 hover:-translate-y-px hover:border-(--border-active) hover:bg-(--bg-overlay)"
+                  className="inline-flex h-9 items-center rounded-full border border-(--border-default) bg-(--bg-surface) px-4 text-sm font-semibold text-text-primary transition-[transform,colors] duration-200 hover:-translate-y-px hover:border-(--border-active) hover:bg-(--bg-overlay)"
                 >
                   Login
                 </button>
