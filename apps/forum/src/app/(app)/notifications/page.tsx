@@ -20,7 +20,7 @@ export default function NotificationsPage() {
     <section className="animate-route-emerge space-y-4">
       <Card>
         <CardHeader>
-          <h1 className="inline-flex items-center gap-2 text-2xl font-semibold text-[var(--text-primary)]">
+          <h1 className="inline-flex items-center gap-2 text-2xl font-semibold text-(--text-primary)">
             <Bell className="h-5 w-5" /> Notifications
           </h1>
         </CardHeader>
@@ -28,14 +28,14 @@ export default function NotificationsPage() {
         <CardContent className="space-y-2">
           {viewerNotifications.map((notification) => {
             const wrapperClass = notification.read
-              ? "rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-surface)] p-3"
-              : "rounded-[var(--radius-md)] border border-[var(--border-active)] bg-[var(--bg-overlay)] p-3";
+              ? "rounded-md border border-(--border-default) bg-(--bg-surface) p-3"
+              : "rounded-md border border-(--border-active) bg-(--bg-overlay) p-3";
 
             const content = (
               <>
-                <p className="text-sm font-semibold text-[var(--text-primary)]">{notification.title}</p>
-                <p className="mt-1 text-xs text-[var(--text-secondary)]">{notification.message}</p>
-                <p className="mt-2 text-[11px] text-[var(--text-muted)]">{formatRelativeDate(notification.createdAt)}</p>
+                <p className="text-sm font-semibold text-(--text-primary)">{notification.title}</p>
+                <p className="mt-1 text-xs text-(--text-secondary)">{notification.message}</p>
+                <p className="mt-2 text-[11px] text-(--text-muted)">{formatRelativeDate(notification.createdAt)}</p>
               </>
             );
 

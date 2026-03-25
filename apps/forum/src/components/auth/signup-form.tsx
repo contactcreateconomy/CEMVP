@@ -25,7 +25,7 @@ function getPasswordStrength(password: string): PasswordStrength {
   if (!password.length) {
     return {
       label: "Very weak",
-      statusClass: "border-[var(--border-subtle)] bg-[var(--bg-overlay)] text-[var(--text-muted)]",
+      statusClass: "border-border-subtle bg-bg-overlay text-text-muted",
       inputClass: "",
     };
   }
@@ -41,8 +41,8 @@ function getPasswordStrength(password: string): PasswordStrength {
   if (score <= 1) {
     return {
       label: "Weak",
-      statusClass: "border-[var(--feedback-error)]/40 bg-[var(--feedback-error)]/12 text-[var(--feedback-error)]",
-      inputClass: "border-[var(--feedback-error)]/70 focus:border-[var(--feedback-error)]",
+      statusClass: "border-feedback-error/40 bg-feedback-error/12 text-feedback-error",
+      inputClass: "border-feedback-error/70 focus:border-feedback-error",
     };
   }
 
@@ -64,8 +64,8 @@ function getPasswordStrength(password: string): PasswordStrength {
 
   return {
     label: "Strong",
-    statusClass: "border-[var(--feedback-success)]/45 bg-[var(--feedback-success)]/12 text-[var(--feedback-success)]",
-    inputClass: "border-[var(--feedback-success)]/70 focus:border-[var(--feedback-success)]",
+    statusClass: "border-feedback-success/45 bg-feedback-success/12 text-feedback-success",
+    inputClass: "border-feedback-success/70 focus:border-feedback-success",
   };
 }
 
@@ -227,7 +227,7 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
   return (
     <form className="space-y-4" onSubmit={handleSubmit} noValidate>
       <div className="space-y-1.5">
-        <label htmlFor="auth-signup-name" className="text-xs font-medium text-[var(--text-secondary)]">
+        <label htmlFor="auth-signup-name" className="text-xs font-medium text-text-secondary">
           Full name
         </label>
         <Input
@@ -241,14 +241,14 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
           disabled={isSubmitting}
         />
         {nameError ? (
-          <p id="auth-signup-name-error" className="text-xs text-[var(--feedback-error)]">
+          <p id="auth-signup-name-error" className="text-xs text-feedback-error">
             {nameError}
           </p>
         ) : null}
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor="auth-signup-email" className="text-xs font-medium text-[var(--text-secondary)]">
+        <label htmlFor="auth-signup-email" className="text-xs font-medium text-text-secondary">
           Email
         </label>
         <div className="relative">
@@ -268,15 +268,15 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
             type="button"
             onClick={requestOtp}
             disabled={isSubmitting || sendingOtp}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-[var(--bg-overlay)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-primary)] transition-colors hover:bg-[var(--border-subtle)] disabled:opacity-60"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-bg-overlay px-2.5 py-1 text-[11px] font-semibold text-text-primary transition-colors hover:bg-border-subtle disabled:opacity-60"
           >
             {sendingOtp ? "Sending..." : emailVerified ? "Verified" : "Verify"}
           </button>
         </div>
 
         {otpRequested ? (
-          <div className="animate-soft-float space-y-2 rounded-[10px] border border-[var(--border-subtle)] bg-[var(--bg-overlay)]/55 p-2.5">
-            <label htmlFor="auth-signup-otp" className="text-[11px] font-medium text-[var(--text-secondary)]">
+          <div className="animate-soft-float space-y-2 rounded-[10px] border border-border-subtle bg-bg-overlay/55 p-2.5">
+            <label htmlFor="auth-signup-otp" className="text-[11px] font-medium text-text-secondary">
               OTP verification code
             </label>
             <div className="flex gap-2">
@@ -305,28 +305,28 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
 
             <div className="min-h-[18px] text-xs">
               {sendingOtp ? (
-                <span className="inline-flex items-center gap-1.5 text-[var(--text-secondary)]">
+                <span className="inline-flex items-center gap-1.5 text-text-secondary">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   Waiting for OTP delivery...
                 </span>
               ) : null}
 
               {!sendingOtp && otpMessage ? (
-                <span className="inline-flex items-center gap-1.5 text-[var(--feedback-success)]">
+                <span className="inline-flex items-center gap-1.5 text-feedback-success">
                   <ShieldCheck className="h-3.5 w-3.5" />
                   {otpMessage}
                 </span>
               ) : null}
 
               {!sendingOtp && otpError ? (
-                <span className="inline-flex items-center gap-1.5 text-[var(--feedback-error)]">
+                <span className="inline-flex items-center gap-1.5 text-feedback-error">
                   <ShieldX className="h-3.5 w-3.5" />
                   {otpError}
                 </span>
               ) : null}
 
               {!sendingOtp && !otpMessage && !otpError && otpRequested ? (
-                <span className="inline-flex items-center gap-1.5 text-[var(--text-muted)]">
+                <span className="inline-flex items-center gap-1.5 text-text-muted">
                   <ShieldEllipsis className="h-3.5 w-3.5" />
                   Use 123456 for this frontend mock flow.
                 </span>
@@ -336,14 +336,14 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
         ) : null}
 
         {emailError ? (
-          <p id="auth-signup-email-error" className="text-xs text-[var(--feedback-error)]">
+          <p id="auth-signup-email-error" className="text-xs text-feedback-error">
             {emailError}
           </p>
         ) : null}
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor="auth-signup-password" className="text-xs font-medium text-[var(--text-secondary)]">
+        <label htmlFor="auth-signup-password" className="text-xs font-medium text-text-secondary">
           Password
         </label>
         <div className="relative">
@@ -357,7 +357,7 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
             className={cn(
               "pr-[126px]",
               !passwordError && password.length > 0 ? passwordStrength.inputClass : undefined,
-              passwordError ? "border-[var(--feedback-error)]/70 focus:border-[var(--feedback-error)]" : undefined,
+              passwordError ? "border-feedback-error/70 focus:border-feedback-error" : undefined,
             )}
             aria-invalid={Boolean(passwordError)}
             aria-describedby={
@@ -370,7 +370,7 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
             <span
               id="auth-signup-password-status"
               className={cn(
-                "pointer-events-none absolute right-10 top-1/2 -translate-y-1/2 rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] transition-colors duration-200",
+                "pointer-events-none absolute right-10 top-1/2 -translate-y-1/2 rounded-md border border-gray-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] transition-colors duration-200",
                 passwordStrength.statusClass,
               )}
             >
@@ -380,7 +380,7 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
 
           <button
             type="button"
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted transition-colors hover:text-text-primary"
             aria-label={showPassword ? "Hide password" : "Show password"}
             onClick={() => setShowPassword((previous) => !previous)}
             disabled={isSubmitting}
@@ -390,14 +390,14 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
         </div>
 
         {passwordError ? (
-          <p id="auth-signup-password-error" className="text-xs text-[var(--feedback-error)]">
+          <p id="auth-signup-password-error" className="text-xs text-feedback-error">
             {passwordError}
           </p>
         ) : null}
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor="auth-signup-confirm-password" className="text-xs font-medium text-[var(--text-secondary)]">
+        <label htmlFor="auth-signup-confirm-password" className="text-xs font-medium text-text-secondary">
           Confirm password
         </label>
         <div className="relative">
@@ -411,7 +411,7 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
             className={cn(
               "pr-[132px]",
               confirmPassword.length > 0 && passwordsMatch
-                ? "border-[var(--feedback-success)]/70 focus:border-[var(--feedback-success)]"
+                ? "border-feedback-success/70 focus:border-feedback-success"
                 : undefined,
               confirmPassword.length > 0 && !passwordsMatch ? "border-orange-400/70 focus:border-orange-300" : undefined,
             )}
@@ -430,9 +430,9 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
             <span
               id="auth-signup-confirm-password-status"
               className={cn(
-                "pointer-events-none absolute right-10 top-1/2 -translate-y-1/2 rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] transition-colors duration-200",
+                "pointer-events-none absolute right-10 top-1/2 -translate-y-1/2 rounded-md border border-gray-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] transition-colors duration-200",
                 passwordsMatch
-                  ? "border-[var(--feedback-success)]/45 bg-[var(--feedback-success)]/12 text-[var(--feedback-success)]"
+                  ? "border-feedback-success/45 bg-feedback-success/12 text-feedback-success"
                   : "border-orange-400/45 bg-orange-400/12 text-orange-300",
               )}
             >
@@ -442,7 +442,7 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
 
           <button
             type="button"
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted transition-colors hover:text-text-primary"
             aria-label={showConfirmPassword ? "Hide password" : "Show password"}
             onClick={() => setShowConfirmPassword((previous) => !previous)}
             disabled={isSubmitting}
@@ -452,30 +452,30 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
         </div>
 
         {confirmPasswordError ? (
-          <p id="auth-signup-confirm-password-error" className="text-xs text-[var(--feedback-error)]">
+          <p id="auth-signup-confirm-password-error" className="text-xs text-feedback-error">
             {confirmPasswordError}
           </p>
         ) : null}
       </div>
 
       <div className="space-y-1.5">
-        <label className="inline-flex items-start gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="inline-flex items-start gap-2 text-xs text-text-secondary">
           <input
             type="checkbox"
             checked={acceptedTerms}
             onChange={(event) => setAcceptedTerms(event.target.checked)}
-            className="mt-0.5 h-3.5 w-3.5 rounded border border-[var(--border-default)]"
+            className="mt-0.5 h-3.5 w-3.5 rounded-sm border border-border-default"
             disabled={isSubmitting}
           />
           <span>
-            I agree to the <span className="font-medium text-[var(--text-primary)]">Terms</span> and <span className="font-medium text-[var(--text-primary)]">Privacy Policy</span>.
+            I agree to the <span className="font-medium text-text-primary">Terms</span> and <span className="font-medium text-text-primary">Privacy Policy</span>.
           </span>
         </label>
-        {termsError ? <p className="text-xs text-[var(--feedback-error)]">{termsError}</p> : null}
+        {termsError ? <p className="text-xs text-feedback-error">{termsError}</p> : null}
       </div>
 
       {authError ? (
-        <p className="rounded-[var(--radius-sm)] border border-[var(--feedback-error)]/40 bg-[var(--feedback-error)]/10 px-3 py-2 text-xs text-[var(--feedback-error)]">
+        <p className="rounded-sm border border-feedback-error/40 bg-feedback-error/10 px-3 py-2 text-xs text-feedback-error">
           {authError}
         </p>
       ) : null}
@@ -494,11 +494,11 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
         )}
       </Button>
 
-      <p className="text-center text-xs text-[var(--text-secondary)]">
+      <p className="text-center text-xs text-text-secondary">
         Already have an account?{" "}
         <button
           type="button"
-          className="font-semibold text-[var(--brand-primary)] hover:underline"
+          className="font-semibold text-brand-primary hover:underline"
           onClick={onSwitchToLogin}
           disabled={isSubmitting}
         >

@@ -20,6 +20,13 @@ pnpm-debug.log*
 .DS_Store
 *.pem
 
+# local tooling state
+.claude/
+.playwright/
+.playwright-mcp/
+.agents/
+.cursor/
+
 # Vercel
 .vercel/
 

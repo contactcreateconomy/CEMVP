@@ -15,7 +15,7 @@ export function PostActionsMenu({ onShare, onHide, onReport }: PostActionsMenuPr
       <DropdownMenu.Trigger asChild>
         <button
           type="button"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[var(--text-secondary)] transition-colors duration-200 hover:bg-[var(--bg-overlay)] hover:text-[var(--text-primary)]"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full text-(--text-secondary) transition-colors duration-200 hover:bg-(--bg-overlay) hover:text-(--text-primary)"
           aria-label="Post actions"
         >
           <MoreHorizontal className="h-4 w-4" />
@@ -26,23 +26,23 @@ export function PostActionsMenu({ onShare, onHide, onReport }: PostActionsMenuPr
         <DropdownMenu.Content
           align="end"
           sideOffset={8}
-          className="z-50 min-w-[170px] rounded-[12px] border border-[var(--border-default)] bg-[var(--bg-surface)] p-1 shadow-[var(--shadow-lg)]"
+          className="z-50 min-w-[170px] rounded-[12px] border border-(--border-default) bg-(--bg-surface) p-1 shadow-(--shadow-lg)"
         >
           <DropdownMenu.Item
             onSelect={onShare}
-            className="cursor-pointer rounded-[8px] px-2 py-2 text-sm text-[var(--text-primary)] outline-none transition-colors data-[highlighted]:bg-[var(--bg-overlay)]"
+            className="cursor-pointer rounded-[8px] px-2 py-2 text-sm text-(--text-primary) outline-hidden transition-colors data-highlighted:bg-(--bg-overlay)"
           >
             Share
           </DropdownMenu.Item>
           <DropdownMenu.Item
             onSelect={onHide}
-            className="cursor-pointer rounded-[8px] px-2 py-2 text-sm text-[var(--text-primary)] outline-none transition-colors data-[highlighted]:bg-[var(--bg-overlay)]"
+            className="cursor-pointer rounded-[8px] px-2 py-2 text-sm text-(--text-primary) outline-hidden transition-colors data-highlighted:bg-(--bg-overlay)"
           >
             Hide
           </DropdownMenu.Item>
           <DropdownMenu.Item
             onSelect={onReport}
-            className="cursor-pointer rounded-[8px] px-2 py-2 text-sm text-[var(--feedback-error)] outline-none transition-colors data-[highlighted]:bg-[var(--bg-overlay)]"
+            className="cursor-pointer rounded-[8px] px-2 py-2 text-sm text-(--feedback-error) outline-hidden transition-colors data-highlighted:bg-(--bg-overlay)"
           >
             Report
           </DropdownMenu.Item>

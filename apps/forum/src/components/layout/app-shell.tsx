@@ -16,7 +16,7 @@ const topPostHeroSlides = getTopPostHeroSlides();
 
 export function AppShell({ children }: AppShellProps) {
   return (
-    <div className="relative min-h-screen bg-[var(--bg-canvas)] text-[var(--text-primary)]">
+    <div className="relative min-h-screen bg-(--bg-canvas) text-(--text-primary)">
       <div className="canvas-dot-grid pointer-events-none absolute inset-0" />
       <div className="relative z-10">
         <TopNav />

@@ -94,7 +94,7 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
   return (
     <form className="space-y-4" onSubmit={handleSubmit} noValidate>
       <div className="space-y-1.5">
-        <label htmlFor="auth-login-email" className="text-xs font-medium text-[var(--text-secondary)]">
+        <label htmlFor="auth-login-email" className="text-xs font-medium text-text-secondary">
           Email
         </label>
         <Input
@@ -109,14 +109,14 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
           disabled={isSubmitting}
         />
         {emailError ? (
-          <p id="auth-login-email-error" className="text-xs text-[var(--feedback-error)]">
+          <p id="auth-login-email-error" className="text-xs text-feedback-error">
             {emailError}
           </p>
         ) : null}
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor="auth-login-password" className="text-xs font-medium text-[var(--text-secondary)]">
+        <label htmlFor="auth-login-password" className="text-xs font-medium text-text-secondary">
           Password
         </label>
         <div className="relative">
@@ -134,7 +134,7 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
           />
           <button
             type="button"
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted transition-colors hover:text-text-primary"
             aria-label={showPassword ? "Hide password" : "Show password"}
             onClick={() => setShowPassword((previous) => !previous)}
             disabled={isSubmitting}
@@ -143,19 +143,19 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
           </button>
         </div>
         {passwordError ? (
-          <p id="auth-login-password-error" className="text-xs text-[var(--feedback-error)]">
+          <p id="auth-login-password-error" className="text-xs text-feedback-error">
             {passwordError}
           </p>
         ) : null}
       </div>
 
       <div className="flex items-center justify-between gap-3">
-        <label className="inline-flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+        <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
           <input
             type="checkbox"
             checked={rememberMe}
             onChange={(event) => setRememberMe(event.target.checked)}
-            className="h-3.5 w-3.5 rounded border border-[var(--border-default)]"
+            className="h-3.5 w-3.5 rounded-sm border border-border-default"
             disabled={isSubmitting}
           />
           Remember me
@@ -163,7 +163,7 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
 
         <button
           type="button"
-          className="text-xs font-medium text-[var(--brand-primary)] hover:underline"
+          className="text-xs font-medium text-brand-primary hover:underline"
           onClick={() => setForgotPasswordMessage("If that email is registered, we will send reset instructions.")}
           disabled={isSubmitting}
         >
@@ -171,10 +171,10 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
         </button>
       </div>
 
-      {forgotPasswordMessage ? <p className="text-xs text-[var(--text-secondary)]">{forgotPasswordMessage}</p> : null}
+      {forgotPasswordMessage ? <p className="text-xs text-text-secondary">{forgotPasswordMessage}</p> : null}
 
       {authError ? (
-        <p className="rounded-[var(--radius-sm)] border border-[var(--feedback-error)]/40 bg-[var(--feedback-error)]/10 px-3 py-2 text-xs text-[var(--feedback-error)]">
+        <p className="rounded-sm border border-feedback-error/40 bg-feedback-error/10 px-3 py-2 text-xs text-feedback-error">
           {authError}
         </p>
       ) : null}
@@ -190,11 +190,11 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
         )}
       </Button>
 
-      <p className="text-center text-xs text-[var(--text-secondary)]">
+      <p className="text-center text-xs text-text-secondary">
         New to Createconomy?{" "}
         <button
           type="button"
-          className="font-semibold text-[var(--brand-primary)] hover:underline"
+          className="font-semibold text-brand-primary hover:underline"
           onClick={onSwitchToSignup}
           disabled={isSubmitting}
         >

@@ -41,12 +41,12 @@ export function CommentsPreviewCycler({ comments, isActive }: CommentsPreviewCyc
   const activeComment = visibleComments[index];
 
   return (
-    <div className="rounded-[12px] border border-[var(--border-subtle)] bg-[var(--bg-overlay)]/25 px-3 py-2">
+    <div className="flex h-10 items-center rounded-[12px] border border-(--border-subtle) bg-(--bg-overlay)/25 px-3">
       <p
         key={activeComment.id}
-        className="text-sm text-[var(--text-secondary)]"
+        className="block w-full truncate text-sm text-(--text-secondary)"
       >
-        <span className="font-mono text-xs text-[var(--text-muted)]">@{activeComment.handle}</span>{" "}
+        <span className="font-mono text-xs text-(--text-muted)">@{activeComment.handle}</span>{" "}
         {activeComment.body}
       </p>
     </div>

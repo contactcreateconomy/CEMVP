@@ -22,9 +22,9 @@ export function TrendSorter() {
   const activeIndex = sortItems.findIndex((item) => item.key === selectedSort);
 
   return (
-    <div className="relative mx-auto w-full max-w-[864px] rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)]/70 p-1 backdrop-blur-md">
+    <div className="relative mx-auto w-full max-w-[864px] rounded-full border border-border-default bg-bg-surface/70 p-1 backdrop-blur-md">
       <div
-        className="pointer-events-none absolute bottom-1 left-1 top-1 w-[calc(25%-0.25rem)] rounded-full bg-[var(--brand-primary)] transition-transform duration-300 ease-out shadow-[0_8px_24px_rgba(14,165,233,0.28)]"
+        className="pointer-events-none absolute bottom-1 left-1 top-1 w-[calc(25%-0.25rem)] rounded-full bg-brand-primary transition-transform duration-300 ease-out shadow-[0_8px_24px_rgba(14,165,233,0.28)]"
         style={{ transform: `translateX(${activeIndex * 100}%)` }}
       />
 
@@ -38,12 +38,8 @@ export function TrendSorter() {
             <Link
               key={key}
               href={`${pathname}?${next.toString()}`}
-              className={cn(
-                "flex h-9 items-center justify-center gap-1.5 rounded-full text-base font-semibold transition-colors duration-200",
-                isActive
-                  ? "text-black"
-                  : "text-[var(--text-primary)] hover:text-[var(--brand-primary)]",
-              )}
+              className="flex h-9 items-center justify-center gap-1.5 rounded-full text-base font-semibold transition-colors duration-200"
+              style={{ color: isActive ? "black" : "var(--text-primary)" }}
             >
               <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
               <span>{label}</span>

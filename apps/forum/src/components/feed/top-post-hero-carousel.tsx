@@ -99,7 +99,7 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
                 <Link
                   href={`/discussions/${currentSlide.slug}`}
                   aria-label={`Open featured post ${currentSlide.title}`}
-                  className="group/image relative block h-full overflow-hidden rounded-[24px] border border-[var(--border-default)]/70 bg-[var(--bg-overlay)]/45 shadow-[0_10px_24px_rgba(9,9,11,0.12)] transition-transform duration-300"
+                  className="group/image relative block h-full overflow-hidden rounded-[24px] border border-(--border-default)/70 bg-(--bg-overlay)/45 shadow-[0_10px_24px_rgba(9,9,11,0.12)] transition-transform duration-300"
                 >
                   <div
                     className="pointer-events-none absolute -inset-12 opacity-75 blur-3xl transition-transform duration-700 group-hover/image:-translate-y-1 group-hover/image:translate-x-2"
@@ -118,9 +118,9 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
                       priority={activeIndex === 0}
                     />
                   ) : (
-                    <div className="h-full w-full bg-[var(--bg-overlay)]" />
+                    <div className="h-full w-full bg-(--bg-overlay)" />
                   )}
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[rgba(2,7,17,0.45)] via-transparent to-transparent" />
+                  <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-[rgba(2,7,17,0.45)] via-transparent to-transparent" />
                 </Link>
               </motion.div>
 
@@ -130,29 +130,29 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
                 transition={{ duration: prefersReducedMotion ? 0.2 : 0.35, delay: 0.1, ease: "easeOut" }}
                 className="flex min-w-0 flex-col justify-center"
               >
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">{currentSlide.eyebrow}</p>
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-(--text-muted)">{currentSlide.eyebrow}</p>
 
                 <Link href={`/discussions/${currentSlide.slug}`} className="group/title block">
-                  <h2 className="line-clamp-2 text-3xl font-semibold leading-[1.12] text-[var(--text-primary)] drop-shadow-[0_3px_10px_rgba(9,9,11,0.16)] transition-colors duration-200 group-hover/title:text-[var(--brand-primary)] lg:text-5xl">
+                  <h2 className="line-clamp-2 text-3xl font-semibold leading-[1.12] text-(--text-primary) drop-shadow-[0_3px_10px_rgba(9,9,11,0.16)] transition-colors duration-200 group-hover/title:text-(--brand-primary) lg:text-5xl">
                     {currentSlide.title}
                   </h2>
                 </Link>
 
-                <p className="mt-3 line-clamp-3 max-w-[66ch] text-base leading-relaxed text-[var(--text-secondary)] lg:text-lg">
+                <p className="mt-3 line-clamp-3 max-w-[66ch] text-base leading-relaxed text-(--text-secondary) lg:text-lg">
                   {currentSlide.summary}
                 </p>
 
                 <div className="mt-5 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-default)]/80 bg-[var(--bg-overlay)]/65 px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)]">
-                    <BarChart3 className="h-3.5 w-3.5 text-[var(--brand-primary)]" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-(--border-default)/80 bg-(--bg-overlay)/65 px-3 py-1.5 text-xs font-semibold text-(--text-secondary)">
+                    <BarChart3 className="h-3.5 w-3.5 text-(--brand-primary)" />
                     {formatMetric(currentSlide.reads)} reads
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-default)]/80 bg-[var(--bg-overlay)]/65 px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)]">
-                    <MessageSquare className="h-3.5 w-3.5 text-[var(--brand-primary)]" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-(--border-default)/80 bg-(--bg-overlay)/65 px-3 py-1.5 text-xs font-semibold text-(--text-secondary)">
+                    <MessageSquare className="h-3.5 w-3.5 text-(--brand-primary)" />
                     {formatMetric(currentSlide.comments)} comments
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-default)]/80 bg-[var(--bg-overlay)]/65 px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)]">
-                    <Share2 className="h-3.5 w-3.5 text-[var(--brand-primary)]" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-(--border-default)/80 bg-(--bg-overlay)/65 px-3 py-1.5 text-xs font-semibold text-(--text-secondary)">
+                    <Share2 className="h-3.5 w-3.5 text-(--brand-primary)" />
                     {formatMetric(currentSlide.shares)} shares
                   </span>
                 </div>
@@ -190,15 +190,15 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
         </AnimatePresence>
 
         <div className="absolute right-5 bottom-5 z-20 flex items-center gap-2 md:right-6 md:bottom-6">
-          <span className="rounded-full border border-[var(--border-default)]/80 bg-[var(--bg-overlay)]/75 px-3 py-1 text-[11px] font-semibold text-[var(--text-secondary)] backdrop-blur-sm">
+          <span className="rounded-full border border-(--border-default)/80 bg-(--bg-overlay)/75 px-3 py-1 text-[11px] font-semibold text-(--text-secondary) backdrop-blur-xs">
             {(activeIndex + 1).toString().padStart(2, "0")} / {slides.length.toString().padStart(2, "0")}
           </span>
-          <div className="inline-flex items-center gap-1 rounded-full border border-[var(--border-default)]/80 bg-[var(--bg-overlay)]/75 p-1 backdrop-blur-sm">
+          <div className="inline-flex items-center gap-1 rounded-full border border-(--border-default)/80 bg-(--bg-overlay)/75 p-1 backdrop-blur-xs">
             <Button
               type="button"
               variant="ghost"
               size="xs"
-              className="h-8 w-8 rounded-full p-0 text-[var(--text-primary)] hover:bg-[var(--bg-overlay)]/80"
+              className="h-8 w-8 rounded-full p-0 text-(--text-primary) hover:bg-(--bg-overlay)/80"
               onClick={handlePrevious}
               aria-label="Show previous featured post"
             >
@@ -208,7 +208,7 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
               type="button"
               variant="ghost"
               size="xs"
-              className="h-8 w-8 rounded-full p-0 text-[var(--text-primary)] hover:bg-[var(--bg-overlay)]/80"
+              className="h-8 w-8 rounded-full p-0 text-(--text-primary) hover:bg-(--bg-overlay)/80"
               onClick={handleNext}
               aria-label="Show next featured post"
             >

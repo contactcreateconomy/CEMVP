@@ -41,8 +41,8 @@ export function WhatsVibingWidget() {
       onBlurCapture={() => setIsPaused(false)}
     >
       <CardHeader className="pb-3">
-        <h2 className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
-          <TrendingUp className="h-4 w-4 text-[var(--brand-primary)]" /> What&apos;s Vibing
+        <h2 className="inline-flex items-center gap-2 text-sm font-semibold text-(--text-primary)">
+          <TrendingUp className="h-4 w-4 text-(--brand-primary)" /> What&apos;s Vibing
         </h2>
       </CardHeader>
 
@@ -57,8 +57,8 @@ export function WhatsVibingWidget() {
                 href={item.href}
                 aria-label={`Open trending post ${item.label}`}
                 className={cn(
-                  "group absolute inset-0 flex h-full cursor-pointer flex-col justify-between rounded-[24px] border border-[var(--border-prominent)] bg-[var(--bg-overlay)]/24 p-4 transition-all duration-500",
-                  "hover:border-[var(--border-active)]/45",
+                  "group absolute inset-0 flex h-full cursor-pointer flex-col justify-between rounded-[24px] border border-(--border-prominent) bg-(--bg-overlay)/24 p-4 transition-all duration-500",
+                  "hover:border-(--border-active)/45",
                   index === activeIndex
                     ? "z-10 translate-y-0 scale-100 opacity-100"
                     : index < activeIndex
@@ -67,17 +67,17 @@ export function WhatsVibingWidget() {
                 )}
               >
                 <div className="space-y-2">
-                  <span className="block text-xs font-semibold text-[var(--brand-primary)]">Trending in {category}</span>
-                  <h4 className="line-clamp-4 text-sm font-semibold leading-5 text-[var(--text-primary)]">
+                  <span className="block text-xs font-semibold text-(--brand-primary)">Trending in {category}</span>
+                  <h4 className="line-clamp-4 text-sm font-semibold leading-5 text-(--text-primary)">
                     New post → {item.label}
                   </h4>
                 </div>
 
                 <div className="flex items-center justify-between gap-2">
-                  <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                  <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-(--text-muted)">
                     <span>{item.engagedUsers.toLocaleString()} ENGAGED</span>
-                    <span className="inline-flex items-center justify-center text-[var(--text-secondary)] transition-colors duration-200 group-hover:text-[var(--brand-primary)]">
-                      <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:[animation:pulse_1200ms_ease-in-out_infinite] group-hover:drop-shadow-[0_0_8px_rgba(14,165,233,0.55)]" />
+                    <span className="inline-flex items-center justify-center text-(--text-secondary) transition-colors duration-200 group-hover:text-(--brand-primary)">
+                      <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:animate-[pulse_1200ms_ease-in-out_infinite] group-hover:drop-shadow-[0_0_8px_rgba(14,165,233,0.55)]" />
                     </span>
                   </div>
                 </div>

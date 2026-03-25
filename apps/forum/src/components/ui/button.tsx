@@ -4,18 +4,18 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius-md)] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary-hover)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-canvas)] disabled:pointer-events-none disabled:opacity-40",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-primary-hover focus-visible:ring-offset-2 focus-visible:ring-offset-bg-canvas disabled:pointer-events-none disabled:opacity-40",
   {
     variants: {
       variant: {
         primary:
-          "bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-hover)] active:bg-[var(--brand-primary-pressed)] dark:electric-glow",
+          "bg-brand-primary text-white hover:bg-brand-primary-hover active:bg-brand-primary-pressed dark:electric-glow",
         secondary:
-          "border border-[var(--border-prominent)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--bg-overlay)] hover:border-[var(--border-active)]",
+          "border border-border-prominent bg-transparent text-text-primary hover:bg-bg-overlay hover:border-border-active",
         ghost:
-          "bg-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-overlay)] hover:text-[var(--text-primary)]",
+          "bg-transparent text-text-secondary hover:bg-bg-overlay hover:text-text-primary",
         destructive:
-          "bg-[var(--feedback-error)] text-white hover:opacity-90",
+          "bg-feedback-error text-white hover:opacity-90",
       },
       size: {
         xs: "h-7 px-2.5 text-[11px]",
