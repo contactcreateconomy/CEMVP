@@ -39,7 +39,7 @@ export function TrendSorter() {
               key={key}
               href={`${pathname}?${next.toString()}`}
               className="flex h-9 items-center justify-center gap-1.5 rounded-full text-base font-semibold transition-colors duration-200"
-              style={{ color: isActive ? "black" : "var(--text-primary)" }}
+              style={{ color: "var(--text-primary)" }}
             >
               <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
               <span>{label}</span>

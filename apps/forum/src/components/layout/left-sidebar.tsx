@@ -75,7 +75,7 @@ export function LeftSidebar() {
             <Button
               onClick={() => router.push("/new-post")}
               className="relative z-10 h-9 w-full rounded-full text-base font-semibold shadow-[0_8px_24px_rgba(14,165,233,0.28)] transition-all duration-300 hover:shadow-[0_10px_28px_rgba(14,165,233,0.35)]"
-              style={{ color: "black" }}
+              style={{ color: "var(--text-primary)" }}
             >
               + Start Discussion
             </Button>
@@ -106,7 +106,7 @@ export function LeftSidebar() {
                   key={key}
                   href={href}
                   className="relative z-10 flex h-10 w-full items-center gap-2.5 rounded-full px-3 text-sm font-semibold transition-colors duration-200 hover:bg-bg-overlay/55"
-                  style={{ color: "black" }}
+                  style={{ color: "var(--text-primary)" }}
                 >
                   <Icon className={cn("h-4 w-4", isActive && "scale-105")} strokeWidth={2.5} />
                   <span>{label}</span>

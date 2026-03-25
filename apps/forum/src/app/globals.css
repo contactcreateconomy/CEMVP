@@ -294,21 +294,13 @@ main {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
-  }
-
   .electric-glow,
   .animate-pulse-glow {
     box-shadow: none;
     animation: none !important;
   }
 
-  .animate-soft-float,
-  .animate-route-emerge,
+  /* Keep reduced-motion respect limited to our modal + pulse effects. */
   .animate-modal-pop-in,
   .animate-modal-pop-out,
   .animate-overlay-fade-in,
