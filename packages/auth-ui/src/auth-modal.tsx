@@ -15,6 +15,7 @@ export function AuthModal() {
     authMode,
     isSubmitting,
     authError,
+    authEnvironmentNote,
     openAuthModal,
     closeAuthModal,
     clearAuthError,
@@ -26,14 +27,20 @@ export function AuthModal() {
   return (
     <Dialog.Root open={isAuthModalOpen} onOpenChange={(open) => (open ? openAuthModal(authMode) : closeAuthModal())}>
       <Dialog.Portal>
-        <Dialog.Overlay className="auth-modal-overlay fixed inset-0 z-70 bg-bg-canvas/68 backdrop-blur-md" />
+        {/*
+          Flex-center the panel instead of fixed + translate utilities. Tailwind v4 can emit the
+          `translate` property separately from `transform`, which fights our modal keyframes and
+          can leave the dialog at the static position (top-left).
+        */}
+        <div className="auth-modal-portal-root fixed inset-0 z-70 flex items-center justify-center p-[min(1.25rem,4vw)]">
+          <Dialog.Overlay className="auth-modal-overlay absolute inset-0 bg-bg-canvas/68 backdrop-blur-md" />
 
-        <Dialog.Content
-          className={cn(
-            "auth-modal-content fixed left-1/2 top-1/2 z-80 w-[min(520px,94vw)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[20px] border border-border-default bg-bg-surface shadow-lg outline-hidden",
-            "origin-center",
-          )}
-        >
+          <Dialog.Content
+            className={cn(
+              "auth-modal-content relative z-10 w-[min(520px,94vw)] overflow-hidden rounded-[20px] border border-border-default bg-bg-surface shadow-lg outline-hidden",
+              "origin-center",
+            )}
+          >
           <div className="absolute inset-x-0 top-0 h-px bg-brand-primary/70" />
 
           <div className="relative p-5 sm:p-6">
@@ -46,6 +53,15 @@ export function AuthModal() {
                 <X className="h-4 w-4" />
               </button>
             </Dialog.Close>
+
+            {authEnvironmentNote ? (
+              <div
+                role="status"
+                className="mb-4 rounded-[12px] border border-feedback-warning/40 bg-feedback-warning/10 px-3 py-2.5 text-left text-sm text-text-primary"
+              >
+                {authEnvironmentNote}
+              </div>
+            ) : null}
 
             <div className="mb-5 text-center">
               <Dialog.Title className="text-[28px] font-semibold leading-tight text-text-primary sm:text-3xl">
@@ -145,6 +161,7 @@ export function AuthModal() {
             </div>
           </div>
         </Dialog.Content>
+        </div>
       </Dialog.Portal>
     </Dialog.Root>
   );

@@ -7,6 +7,8 @@ import type { AuthMode, AuthStatus, AuthUser, LoginPayload, SignupPayload, Socia
 export interface AuthContextValue {
   authStatus: AuthStatus;
   user: AuthUser | null;
+  /** Shown inside the auth dialog when sign-in cannot reach Convex (e.g. missing env). */
+  authEnvironmentNote: string | null;
   isAuthModalOpen: boolean;
   authMode: AuthMode;
   isSubmitting: boolean;

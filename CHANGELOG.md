@@ -1,11 +1,20 @@
 # Changelog
 
+## 2026-03-28 (auth modal centering / Tailwind v4)
+- [`packages/auth-ui` `AuthModal`](packages/auth-ui/src/auth-modal.tsx): full-screen `auth-modal-portal-root` uses flexbox to center the panel; `Dialog.Content` is `relative` (drops `fixed` + `-translate-x/y-1/2`). Modal keyframes in all four apps’ `globals.css` use **`scale()` only** so animated `transform` does not collide with Tailwind v4’s separate `translate` properties (which was leaving the dialog at the viewport’s top-left).
+
+## 2026-03-28 (offline auth modal)
+- `OfflineAuthProvider` now keeps real modal state and mounts `AuthModal` in all four apps when Convex is not configured, so **Log in / Sign up** opens the dialog; `authEnvironmentNote` on context explains setting `NEXT_PUBLIC_CONVEX_URL`.
+
+## 2026-03-28 (auth modal CSS)
+- Earlier tweak: keyframes briefly combined `translate(-50%, -50%)` with `scale()` while the dialog used fixed + Tailwind translate; superseded by the **2026-03-28 (auth modal centering / Tailwind v4)** flex wrapper + scale-only keyframes.
+
 ## 2026-03-28
 - Branch `006-login-backend`: Convex Auth **Password** provider in [`convex/auth.ts`](convex/auth.ts), HTTP router in [`convex/http.ts`](convex/http.ts); merged `users` table with Convex Auth fields; [`convex/profile.ts`](convex/profile.ts) `current` query; default **memberships** (forum/seller/marketplace `member`, admin via `ADMIN_EMAILS` env) in `afterUserCreatedOrUpdated`.
 - New workspace package [`packages/auth-ui`](packages/auth-ui): shared `AppAuthProvider`, `AuthModal`, login/signup/social UI; forum uses it via `@cemvp/auth-ui` (removed mock `auth-provider` and local auth components).
 - **Tailwind v4** for `apps/seller`, `apps/admin`, `apps/marketplace` (forum-aligned `globals.css`, `@tailwindcss/postcss`, removed `tailwind.config.ts`); `transpilePackages: ["@cemvp/auth-ui"]` on all four apps; placeholder home pages include **Log in / Sign up** entry buttons.
 - Root `devDependencies.convex` bumped to `^1.34.1`.
-- `OfflineAuthProvider` when `NEXT_PUBLIC_CONVEX_URL` is unset so `useAuth` / static builds work without Convex; `AppAuthProvider` + `AuthModal` only when `isConvexConfigured()`.
+- `OfflineAuthProvider` when `NEXT_PUBLIC_CONVEX_URL` is unset so `useAuth` / static builds work without Convex; `AppAuthProvider` when Convex is configured, otherwise `OfflineAuthProvider` + `AuthModal` with an environment note (see 2026-03-28 offline auth modal entry).
 
 ## Validation (006-login-backend)
 - `pnpm exec convex codegen` OK.

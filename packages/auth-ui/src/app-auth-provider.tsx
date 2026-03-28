@@ -150,6 +150,7 @@ export function AppAuthProvider({ children }: { children: ReactNode }) {
     () => ({
       authStatus,
       user,
+      authEnvironmentNote: null,
       isAuthModalOpen,
       authMode,
       isSubmitting,

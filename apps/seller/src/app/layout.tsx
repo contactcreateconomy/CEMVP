@@ -42,7 +42,10 @@ export default function RootLayout({
                 <AuthModal />
               </AppAuthProvider>
             ) : (
-              <OfflineAuthProvider>{children}</OfflineAuthProvider>
+              <OfflineAuthProvider>
+                {children}
+                <AuthModal />
+              </OfflineAuthProvider>
             )}
           </ConvexProvider>
         </ThemeProvider>
