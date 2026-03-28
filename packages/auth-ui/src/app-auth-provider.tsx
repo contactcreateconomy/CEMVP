@@ -132,13 +132,23 @@ export function AppAuthProvider({ children }: { children: ReactNode }) {
     [signIn, closeAuthModal],
   );
 
-  const socialLogin = useCallback(async (_provider: SocialAuthProvider) => {
-    setIsSubmitting(true);
-    setAuthError(null);
-    await new Promise((r) => setTimeout(r, 300));
-    setIsSubmitting(false);
-    setAuthError("OAuth sign-in is not configured yet. Use email and password.");
-  }, []);
+  const socialLogin = useCallback(
+    async (provider: SocialAuthProvider) => {
+      setIsSubmitting(true);
+      setAuthError(null);
+      try {
+        const redirectTo =
+          typeof window !== "undefined" ? window.location.href : undefined;
+        await signIn(provider, redirectTo ? { redirectTo } : {});
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Could not start sign-in.";
+        setAuthError(message);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [signIn],
+  );
 
   const logout = useCallback(async () => {
     setAuthError(null);

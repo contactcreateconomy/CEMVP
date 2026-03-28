@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-03-28 (production forum URL, offline auth modal copy)
+- [`README.md`](README.md), root [`.env.example`](.env.example), [`apps/forum/.env.example`](apps/forum/.env.example), [`CLAUDE.md`](CLAUDE.md): production forum at **https://discuss.createconomy.com/feed**; Convex **`SITE_URL`** for that deploy documented as origin **https://discuss.createconomy.com**.
+- [`packages/auth-ui` `OfflineAuthProvider`](packages/auth-ui/src/offline-auth-provider.tsx): no `authEnvironmentNote` banner in the auth modal; offline submit/social errors use a short hint without “sign-in is unavailable”.
+
+## Validation
+- `pnpm --filter ./apps/forum typecheck` OK.
+
+## 2026-03-28 (Convex URL, OAuth, auth UI)
+- Root [`.env.example`](.env.example) and [`apps/forum/.env.example`](apps/forum/.env.example): `NEXT_PUBLIC_CONVEX_URL` for deployment `watchful-chameleon-570`; [`README.md`](README.md) documents per-app `.env.local`, Vercel, and Convex-side vars (`SITE_URL`, `AUTH_*` for GitHub/Google/Facebook, callback URLs on `.convex.site`).
+- [`convex/auth.ts`](convex/auth.ts): **GitHub**, **Google**, and **Facebook** OAuth via `@auth/core/providers/*` alongside **Password**.
+- [`packages/auth-ui`](packages/auth-ui): `socialLogin` calls `signIn(provider)` with optional `redirectTo`; removed auth modal footer disclaimer.
+
+## Validation
+- `pnpm exec convex codegen` OK; `pnpm --filter ./apps/forum typecheck` OK.
+
 ## 2026-03-28 (auth modal centering / Tailwind v4)
 - [`packages/auth-ui` `AuthModal`](packages/auth-ui/src/auth-modal.tsx): full-screen `auth-modal-portal-root` uses flexbox to center the panel; `Dialog.Content` is `relative` (drops `fixed` + `-translate-x/y-1/2`). Modal keyframes in all four apps’ `globals.css` use **`scale()` only** so animated `transform` does not collide with Tailwind v4’s separate `translate` properties (which was leaving the dialog at the viewport’s top-left).
 

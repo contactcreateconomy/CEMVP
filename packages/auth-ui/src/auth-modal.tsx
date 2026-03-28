@@ -1,7 +1,7 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { ArrowRight, X } from "lucide-react";
+import { X } from "lucide-react";
 
 import { LoginForm } from "./login-form";
 import { SignupForm } from "./signup-form";
@@ -148,13 +148,6 @@ export function AuthModal() {
             </div>
 
             <SocialLoginButtons isSubmitting={isSubmitting} onSocialLogin={socialLogin} />
-
-            <div className="mt-4 rounded-[12px] border border-border-subtle bg-bg-overlay px-3 py-2 text-[11px] text-text-secondary">
-              <p className="inline-flex items-center gap-1.5">
-                <ArrowRight className="h-3.5 w-3.5 text-brand-primary" />
-                Email and password use Convex Auth. OAuth buttons are not wired yet.
-              </p>
-            </div>
 
             <div className="sr-only" aria-live="polite">
               {isSubmitting ? "Processing authentication request" : authError ? authError : "Authentication form ready"}

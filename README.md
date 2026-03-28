@@ -22,6 +22,34 @@ From repository root:
 pnpm install
 ```
 
+## Environment (Convex client URL)
+
+Each Next.js app reads **`NEXT_PUBLIC_CONVEX_URL`** from its own package root (for example [`apps/forum/.env.example`](apps/forum/.env.example)). Copy that file to **`apps/<app>/.env.local`** for forum, seller, admin, and marketplace as needed. The root [`.env.example`](.env.example) documents the same variable for reference.
+
+Set the same variable in **each Vercel project** (Environment Variables) for deployed apps.
+
+**Production forum** (live app): [https://discuss.createconomy.com/feed](https://discuss.createconomy.com/feed). For Convex Auth on that deployment, set **`SITE_URL`** to the site origin **`https://discuss.createconomy.com`** (OAuth redirects use the origin; `/feed` is the main forum route).
+
+## Convex Auth (password + OAuth)
+
+Configure on your **Convex deployment** (Dashboard → Environment variables, or `npx convex env set`):
+
+| Variable | Purpose |
+|----------|--------|
+| `SITE_URL` | App origin for OAuth return redirects (e.g. `http://localhost:3000` for forum dev, or `https://discuss.createconomy.com` for production forum; see link above). |
+| `JWT_PRIVATE_KEY`, `JWKS` | Required by Convex Auth ([manual setup](https://labs.convex.dev/auth/setup/manual)). |
+| `CONVEX_SITE_URL` | JWT issuer domain; usually present on hosted deployments ([`convex/auth.config.ts`](convex/auth.config.ts)). |
+| `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` | GitHub OAuth ([docs](https://labs.convex.dev/auth/config/oauth/github)). |
+| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Google OAuth ([docs](https://labs.convex.dev/auth/config/oauth/google)). |
+| `AUTH_FACEBOOK_ID`, `AUTH_FACEBOOK_SECRET` | Facebook / Meta OAuth (Auth.js provider). |
+| `ADMIN_EMAILS` | Optional comma-separated emails → `admin` membership on first sign-up ([`convex/auth.ts`](convex/auth.ts)). |
+
+OAuth **callback** URLs use your deployment’s **HTTP Actions** host (`.convex.site`, not `.cloud`). For `watchful-chameleon-570`:
+
+- `https://watchful-chameleon-570.convex.site/api/auth/callback/github`
+- `https://watchful-chameleon-570.convex.site/api/auth/callback/google`
+- `https://watchful-chameleon-570.convex.site/api/auth/callback/facebook`
+
 ## Run apps
 
 From repository root:

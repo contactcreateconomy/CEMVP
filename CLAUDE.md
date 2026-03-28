@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - This is a `pnpm` workspace monorepo.
 - Workspace packages are app-only right now (`pnpm-workspace.yaml` includes `apps/*`).
 - Current apps:
-  - `apps/forum` — primary Next.js app with full feature surface.
+  - `apps/forum` — primary Next.js app with full feature surface. Production: https://discuss.createconomy.com/feed.
   - `apps/seller` — placeholder Next.js app.
   - `apps/admin` — placeholder Next.js app.
   - `apps/marketplace` — placeholder Next.js app.

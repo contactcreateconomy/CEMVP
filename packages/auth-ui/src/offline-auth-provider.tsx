@@ -5,8 +5,8 @@ import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { AuthContextProvider, type AuthContextValue } from "./auth-context";
 import type { AuthMode, LoginPayload, SignupPayload, SocialAuthProvider } from "./types";
 
-const OFFLINE_SIGN_IN_MESSAGE =
-  "Sign-in is unavailable: set NEXT_PUBLIC_CONVEX_URL (and run Convex) to enable authentication.";
+const OFFLINE_SUBMIT_HINT =
+  "Set NEXT_PUBLIC_CONVEX_URL in this app’s .env.local (and run Convex) to sign in.";
 
 export function OfflineAuthProvider({ children }: { children: ReactNode }) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -29,11 +29,11 @@ export function OfflineAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const rejectSignIn = useCallback(async () => {
-    setAuthError(OFFLINE_SIGN_IN_MESSAGE);
+    setAuthError(OFFLINE_SUBMIT_HINT);
   }, []);
 
   const socialLogin = useCallback(async (_provider: SocialAuthProvider) => {
-    setAuthError(OFFLINE_SIGN_IN_MESSAGE);
+    setAuthError(OFFLINE_SUBMIT_HINT);
   }, []);
 
   const logout = useCallback(async () => {
@@ -53,7 +53,7 @@ export function OfflineAuthProvider({ children }: { children: ReactNode }) {
     () => ({
       authStatus: "anonymous",
       user: null,
-      authEnvironmentNote: OFFLINE_SIGN_IN_MESSAGE,
+      authEnvironmentNote: null,
       isAuthModalOpen,
       authMode,
       isSubmitting: false,
