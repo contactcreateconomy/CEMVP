@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CreateconomyLogoMark } from "@/components/ui/createconomy-logo-mark";
 import { getNotificationsForUser, getUnreadNotifications } from "@/lib/adapters/content";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/providers/auth-provider";
+import { useAuth } from "@cemvp/auth-ui";
 import { useScroll } from "@/components/ui/use-scroll";
 
 const TYPE_ACCENT_CLASS: Record<"comment" | "upvote" | "follow" | "system", string> = {
@@ -312,6 +312,11 @@ export function TopNav() {
                     </DropdownMenu.Content>
                   </DropdownMenu.Portal>
                 </DropdownMenu.Root>
+              ) : authStatus === "loading" ? (
+                <span
+                  className="inline-flex h-9 w-20 animate-pulse rounded-full bg-(--bg-overlay)"
+                  aria-hidden
+                />
               ) : (
                 <button
                   type="button"

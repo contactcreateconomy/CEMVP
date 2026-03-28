@@ -1,12 +1,12 @@
 "use client";
 
-import { CheckCircle2, Eye, EyeOff, Loader2, ShieldCheck, ShieldEllipsis, ShieldX } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import type { SignupPayload } from "@/types";
+import type { SignupPayload } from "./types";
+import { cn } from "./utils/cn";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 
 interface SignupFormProps {
   isSubmitting: boolean;
@@ -69,16 +69,9 @@ function getPasswordStrength(password: string): PasswordStrength {
   };
 }
 
-
 export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin }: SignupFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [emailVerified, setEmailVerified] = useState(false);
-  const [otpRequested, setOtpRequested] = useState(false);
-  const [sendingOtp, setSendingOtp] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
-  const [otpError, setOtpError] = useState<string | null>(null);
-  const [otpMessage, setOtpMessage] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -117,12 +110,8 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
       return "Enter a valid email address.";
     }
 
-    if (!emailVerified) {
-      return "Verify your email to continue.";
-    }
-
     return null;
-  }, [email, emailSyntaxIsValid, emailVerified, triedSubmit]);
+  }, [email, emailSyntaxIsValid, triedSubmit]);
 
   const passwordError = useMemo(() => {
     if (!triedSubmit && password.length === 0) {
@@ -163,49 +152,9 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
     !passwordError &&
     !confirmPasswordError &&
     !termsError &&
-    emailVerified &&
     !!name.trim() &&
     !!email.trim() &&
     password.length >= 8;
-
-  const requestOtp = async () => {
-    if (!emailSyntaxIsValid || !email.trim()) {
-      setOtpError("Enter a valid email address first.");
-      return;
-    }
-
-    setSendingOtp(true);
-    setOtpError(null);
-    setOtpMessage(null);
-    setEmailVerified(false);
-    setOtpRequested(true);
-
-    await new Promise((resolve) => setTimeout(resolve, 900));
-
-    setSendingOtp(false);
-    setOtpMessage(`OTP sent to ${email.trim()}.`);
-  };
-
-  const verifyOtp = () => {
-    if (otpCode.trim() !== "123456") {
-      setEmailVerified(false);
-      setOtpError("Incorrect OTP. Use 123456 for mock verification.");
-      return;
-    }
-
-    setEmailVerified(true);
-    setOtpError(null);
-    setOtpMessage("Email verified successfully.");
-  };
-
-  const handleEmailChange = (value: string) => {
-    setEmail(value);
-    setEmailVerified(false);
-    setOtpRequested(false);
-    setOtpCode("");
-    setOtpError(null);
-    setOtpMessage(null);
-  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -251,90 +200,17 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
         <label htmlFor="auth-signup-email" className="text-xs font-medium text-text-secondary">
           Email
         </label>
-        <div className="relative">
-          <Input
-            id="auth-signup-email"
-            type="email"
-            autoComplete="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(event) => handleEmailChange(event.target.value)}
-            className="pr-24"
-            aria-invalid={Boolean(emailError)}
-            aria-describedby={emailError ? "auth-signup-email-error" : undefined}
-            disabled={isSubmitting || sendingOtp}
-          />
-          <button
-            type="button"
-            onClick={requestOtp}
-            disabled={isSubmitting || sendingOtp}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-bg-overlay px-2.5 py-1 text-[11px] font-semibold text-text-primary transition-colors hover:bg-border-subtle disabled:opacity-60"
-          >
-            {sendingOtp ? "Sending..." : emailVerified ? "Verified" : "Verify"}
-          </button>
-        </div>
-
-        {otpRequested ? (
-          <div className="animate-soft-float space-y-2 rounded-[10px] border border-border-subtle bg-bg-overlay/55 p-2.5">
-            <label htmlFor="auth-signup-otp" className="text-[11px] font-medium text-text-secondary">
-              OTP verification code
-            </label>
-            <div className="flex gap-2">
-              <Input
-                id="auth-signup-otp"
-                inputMode="numeric"
-                placeholder="Enter OTP"
-                maxLength={6}
-                value={otpCode}
-                onChange={(event) => {
-                  setOtpCode(event.target.value.replace(/\D/g, ""));
-                  setOtpError(null);
-                }}
-                disabled={isSubmitting || sendingOtp || emailVerified}
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                className="shrink-0"
-                onClick={verifyOtp}
-                disabled={isSubmitting || sendingOtp || otpCode.length < 6 || emailVerified}
-              >
-                {emailVerified ? "Done" : "Confirm"}
-              </Button>
-            </div>
-
-            <div className="min-h-[18px] text-xs">
-              {sendingOtp ? (
-                <span className="inline-flex items-center gap-1.5 text-text-secondary">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Waiting for OTP delivery...
-                </span>
-              ) : null}
-
-              {!sendingOtp && otpMessage ? (
-                <span className="inline-flex items-center gap-1.5 text-feedback-success">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  {otpMessage}
-                </span>
-              ) : null}
-
-              {!sendingOtp && otpError ? (
-                <span className="inline-flex items-center gap-1.5 text-feedback-error">
-                  <ShieldX className="h-3.5 w-3.5" />
-                  {otpError}
-                </span>
-              ) : null}
-
-              {!sendingOtp && !otpMessage && !otpError && otpRequested ? (
-                <span className="inline-flex items-center gap-1.5 text-text-muted">
-                  <ShieldEllipsis className="h-3.5 w-3.5" />
-                  Use 123456 for this frontend mock flow.
-                </span>
-              ) : null}
-            </div>
-          </div>
-        ) : null}
-
+        <Input
+          id="auth-signup-email"
+          type="email"
+          autoComplete="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          aria-invalid={Boolean(emailError)}
+          aria-describedby={emailError ? "auth-signup-email-error" : undefined}
+          disabled={isSubmitting}
+        />
         {emailError ? (
           <p id="auth-signup-email-error" className="text-xs text-feedback-error">
             {emailError}
@@ -468,7 +344,8 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
             disabled={isSubmitting}
           />
           <span>
-            I agree to the <span className="font-medium text-text-primary">Terms</span> and <span className="font-medium text-text-primary">Privacy Policy</span>.
+            I agree to the <span className="font-medium text-text-primary">Terms</span> and{" "}
+            <span className="font-medium text-text-primary">Privacy Policy</span>.
           </span>
         </label>
         {termsError ? <p className="text-xs text-feedback-error">{termsError}</p> : null}

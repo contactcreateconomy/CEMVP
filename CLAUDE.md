@@ -93,7 +93,7 @@ Forum is the architectural reference for conventions used by placeholder apps.
 
 - Global app layout (`src/app/layout.tsx`):
   - loads global CSS and local fonts,
-  - wraps the tree with `ThemeProvider`, `AuthProvider`, and global `AuthModal`.
+  - wraps the tree with `ThemeProvider`, `ConvexProvider`, `AppAuthProvider` from `@cemvp/auth-ui`, and global `AuthModal`.
 - Main application shell is applied through route grouping:
   - `src/app/(app)/layout.tsx` wraps grouped routes with `AppShell`.
   - `AppShell` (`src/components/layout/app-shell.tsx`) composes top navigation, sidebars, hero section, and mobile tab bar.

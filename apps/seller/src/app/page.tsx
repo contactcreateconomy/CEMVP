@@ -1,3 +1,4 @@
+import { AuthEntryButtons } from "@/components/auth-entry-buttons";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ export default function SellerHomePage() {
             scaffolded.
           </p>
           <Input placeholder="Search seller tools" />
+          <AuthEntryButtons />
           <div className="flex flex-wrap gap-2">
             <Button>Open dashboard</Button>
             <Button variant="secondary">View orders</Button>

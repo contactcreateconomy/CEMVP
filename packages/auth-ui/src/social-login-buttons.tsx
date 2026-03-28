@@ -2,9 +2,9 @@
 
 import { Chrome, Facebook, Github } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import type { SocialAuthProvider } from "@/types";
+import type { SocialAuthProvider } from "./types";
+import { cn } from "./utils/cn";
+import { Button } from "./ui/button";
 
 interface SocialLoginButtonsProps {
   isSubmitting: boolean;
@@ -62,7 +62,12 @@ export function SocialLoginButtons({ isSubmitting, onSocialLogin }: SocialLoginB
           )}
           onClick={() => onSocialLogin(provider)}
         >
-          <Icon className={cn("h-4 w-4 shrink-0 transition-[color,filter] duration-200 group-hover:drop-shadow-[0_0_8px_currentColor]", colorClass)} />
+          <Icon
+            className={cn(
+              "h-4 w-4 shrink-0 transition-[color,filter] duration-200 group-hover:drop-shadow-[0_0_8px_currentColor]",
+              colorClass,
+            )}
+          />
           <span>{label}</span>
         </Button>
       ))}

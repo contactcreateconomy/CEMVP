@@ -3,11 +3,11 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowRight, X } from "lucide-react";
 
-import { LoginForm } from "@/components/auth/login-form";
-import { SignupForm } from "@/components/auth/signup-form";
-import { SocialLoginButtons } from "@/components/auth/social-login-buttons";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/providers/auth-provider";
+import { LoginForm } from "./login-form";
+import { SignupForm } from "./signup-form";
+import { SocialLoginButtons } from "./social-login-buttons";
+import { cn } from "./utils/cn";
+import { useAppAuth } from "./app-auth-provider";
 
 export function AuthModal() {
   const {
@@ -21,7 +21,7 @@ export function AuthModal() {
     login,
     signup,
     socialLogin,
-  } = useAuth();
+  } = useAppAuth();
 
   return (
     <Dialog.Root open={isAuthModalOpen} onOpenChange={(open) => (open ? openAuthModal(authMode) : closeAuthModal())}>
@@ -136,17 +136,9 @@ export function AuthModal() {
             <div className="mt-4 rounded-[12px] border border-border-subtle bg-bg-overlay px-3 py-2 text-[11px] text-text-secondary">
               <p className="inline-flex items-center gap-1.5">
                 <ArrowRight className="h-3.5 w-3.5 text-brand-primary" />
-                Frontend-only mock flow for now. Convex auth integration will replace backend hooks later.
+                Email and password use Convex Auth. OAuth buttons are not wired yet.
               </p>
             </div>
-
-            {authMode === "login" ? (
-              <div className="mt-3 rounded-[12px] border border-border-active/45 bg-bg-overlay px-3 py-2 text-[11px] text-text-secondary">
-                <p>
-                  Test credentials — Email: <span className="font-semibold text-text-primary">Devtest</span> | Pass: <span className="font-semibold text-text-primary">123456</span>
-                </p>
-              </div>
-            ) : null}
 
             <div className="sr-only" aria-live="polite">
               {isSubmitting ? "Processing authentication request" : authError ? authError : "Authentication form ready"}

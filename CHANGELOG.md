@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-03-28
+- Branch `006-login-backend`: Convex Auth **Password** provider in [`convex/auth.ts`](convex/auth.ts), HTTP router in [`convex/http.ts`](convex/http.ts); merged `users` table with Convex Auth fields; [`convex/profile.ts`](convex/profile.ts) `current` query; default **memberships** (forum/seller/marketplace `member`, admin via `ADMIN_EMAILS` env) in `afterUserCreatedOrUpdated`.
+- New workspace package [`packages/auth-ui`](packages/auth-ui): shared `AppAuthProvider`, `AuthModal`, login/signup/social UI; forum uses it via `@cemvp/auth-ui` (removed mock `auth-provider` and local auth components).
+- **Tailwind v4** for `apps/seller`, `apps/admin`, `apps/marketplace` (forum-aligned `globals.css`, `@tailwindcss/postcss`, removed `tailwind.config.ts`); `transpilePackages: ["@cemvp/auth-ui"]` on all four apps; placeholder home pages include **Log in / Sign up** entry buttons.
+- Root `devDependencies.convex` bumped to `^1.34.1`.
+- `OfflineAuthProvider` when `NEXT_PUBLIC_CONVEX_URL` is unset so `useAuth` / static builds work without Convex; `AppAuthProvider` + `AuthModal` only when `isConvexConfigured()`.
+
+## Validation (006-login-backend)
+- `pnpm exec convex codegen` OK.
+- `pnpm --filter ./apps/forum typecheck` / `build` OK; `pnpm --filter @cemvp/{seller,admin,marketplace} typecheck` OK.
+
 ## 2026-03-20
 - 17:15: added `.claude/settings.json` with hooks for changelog updates and plan-branch auto-creation.
 - Added monorepo placeholder apps: `apps/seller`, `apps/admin`, and `apps/marketplace`.
