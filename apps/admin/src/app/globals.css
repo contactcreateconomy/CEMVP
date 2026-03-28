@@ -1,82 +1,149 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@source "../../../../packages/auth-ui/src/**/*.{ts,tsx}";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-border: var(--border-default);
+  --color-input: var(--border-default);
+  --color-ring: var(--border-active);
+  --color-muted-foreground: var(--text-muted);
+
+  /* Background colors */
+  --color-bg-canvas: var(--bg-canvas);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-surface-elevated: var(--bg-surface-elevated);
+  --color-bg-overlay: var(--bg-overlay);
+  --color-bg-inset: var(--bg-inset);
+  --color-bg-wash: var(--bg-wash);
+
+  /* Text colors */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-disabled: var(--text-disabled);
+  --color-text-inverse: var(--text-inverse);
+
+  /* Border colors */
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-prominent: var(--border-prominent);
+  --color-border-active: var(--border-active);
+
+  /* Brand colors */
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-hover: var(--brand-primary-hover);
+  --color-brand-primary-pressed: var(--brand-primary-pressed);
+
+  /* Feedback colors */
+  --color-feedback-success: var(--feedback-success);
+  --color-feedback-error: var(--feedback-error);
+  --color-feedback-warning: var(--feedback-warning);
+  --color-feedback-info: var(--feedback-info);
+
+  /* Shadows */
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  /* Glows */
+  --shadow-glow-primary-sm: var(--glow-primary-sm);
+  --shadow-glow-primary-md: var(--glow-primary-md);
+
+  /* Z-index scale */
+  --z-70: 70;
+  --z-80: 80;
+}
 
 :root {
   --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: var(--font-geist-mono), "SF Mono", "Fira Code", "Cascadia Code", monospace;
 
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(240 10% 4%);
+  --popover: hsl(0 0% 98%);
+  --popover-foreground: hsl(240 10% 4%);
+
   /* Light mode (semantic tokens) */
-  --bg-canvas: #ffffff;
-  --bg-surface: #fafafa;
-  --bg-surface-elevated: #f4f4f5;
-  --bg-overlay: #e4e4e7;
-  --bg-inset: #f4f4f5;
-  --bg-wash: rgba(0, 0, 0, 0.02);
+  --bg-canvas: hsl(0 0% 100%);
+  --bg-surface: hsl(0 0% 98%);
+  --bg-surface-elevated: hsl(240 5% 96%);
+  --bg-overlay: hsl(240 5% 90%);
+  --bg-inset: hsl(240 5% 96%);
+  --bg-wash: hsl(0 0% 0% / 0.02);
 
-  --text-primary: #09090b;
-  --text-secondary: #52525b;
-  --text-muted: #71717a;
-  --text-disabled: #a1a1aa;
-  --text-inverse: #fafafa;
+  --text-primary: hsl(240 10% 4%);
+  --text-secondary: hsl(240 5% 34%);
+  --text-muted: hsl(240 4% 46%);
+  --text-disabled: hsl(240 5% 65%);
+  --text-inverse: hsl(0 0% 98%);
 
-  --border-subtle: #f4f4f5;
-  --border-default: #e4e4e7;
-  --border-prominent: #d4d4d8;
-  --border-active: #0ea5e9;
+  --border-subtle: hsl(240 5% 96%);
+  --border-default: hsl(240 5% 90%);
+  --border-prominent: hsl(240 5% 84%);
+  --border-active: hsl(199 89% 48%);
 
-  --brand-primary: #0ea5e9;
-  --brand-primary-hover: #38bdf8;
-  --brand-primary-pressed: #0284c7;
+  --brand-primary: hsl(199 89% 48%);
+  --brand-primary-hover: hsl(199 94% 60%);
+  --brand-primary-pressed: hsl(200 98% 39%);
 
-  --feedback-success: #22c55e;
-  --feedback-error: #ef4444;
-  --feedback-warning: #f59e0b;
-  --feedback-info: #0ea5e9;
+  --feedback-success: hsl(142 71% 45%);
+  --feedback-error: hsl(0 84% 60%);
+  --feedback-warning: hsl(38 92% 50%);
+  --feedback-info: hsl(199 89% 48%);
 
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.12), 0 4px 6px rgba(0, 0, 0, 0.06);
+  --shadow-xs: 0 1px 2px hsl(0 0% 0% / 0.05);
+  --shadow-sm: 0 1px 3px hsl(0 0% 0% / 0.08), 0 1px 2px hsl(0 0% 0% / 0.04);
+  --shadow-md: 0 4px 6px hsl(0 0% 0% / 0.1), 0 2px 4px hsl(0 0% 0% / 0.05);
+  --shadow-lg: 0 10px 15px hsl(0 0% 0% / 0.12), 0 4px 6px hsl(0 0% 0% / 0.06);
 
   --glow-primary-sm: none;
   --glow-primary-md: none;
-  --dot-color: rgba(9, 9, 11, 0.08);
+  --dot-color: hsl(240 10% 4% / 0.08);
 }
 
 .dark {
+  --background: hsl(240 10% 4%);
+  --foreground: hsl(0 0% 98%);
+  --popover: hsl(240 10% 11%);
+  --popover-foreground: hsl(0 0% 98%);
+
   /* Dark mode default */
-  --bg-canvas: #09090b;
-  --bg-surface: #18181b;
-  --bg-surface-elevated: #27272a;
-  --bg-overlay: #3f3f46;
-  --bg-inset: #0c0c0e;
-  --bg-wash: rgba(255, 255, 255, 0.03);
+  --bg-canvas: hsl(240 10% 4%);
+  --bg-surface: hsl(240 10% 11%);
+  --bg-surface-elevated: hsl(240 6% 16%);
+  --bg-overlay: hsl(240 5% 27%);
+  --bg-inset: hsl(240 8% 5%);
+  --bg-wash: hsl(0 0% 100% / 0.03);
 
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
-  --text-disabled: #52525b;
-  --text-inverse: #09090b;
+  --text-primary: hsl(0 0% 98%);
+  --text-secondary: hsl(240 5% 65%);
+  --text-muted: hsl(240 4% 46%);
+  --text-disabled: hsl(240 5% 34%);
+  --text-inverse: hsl(240 10% 4%);
 
-  --border-subtle: #1e1e22;
-  --border-default: #27272a;
-  --border-prominent: #3f3f46;
-  --border-active: #0ea5e9;
+  --border-subtle: hsl(240 7% 13%);
+  --border-default: hsl(240 6% 16%);
+  --border-prominent: hsl(240 5% 27%);
+  --border-active: hsl(199 89% 48%);
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.15);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.35), 0 4px 6px rgba(0, 0, 0, 0.2);
+  --shadow-xs: 0 1px 2px hsl(0 0% 0% / 0.3);
+  --shadow-sm: 0 1px 3px hsl(0 0% 0% / 0.25), 0 1px 2px hsl(0 0% 0% / 0.15);
+  --shadow-md: 0 4px 6px hsl(0 0% 0% / 0.3), 0 2px 4px hsl(0 0% 0% / 0.15);
+  --shadow-lg: 0 10px 15px hsl(0 0% 0% / 0.35), 0 4px 6px hsl(0 0% 0% / 0.2);
 
-  --glow-primary-sm: 0 0 10px rgba(14, 165, 233, 0.2);
-  --glow-primary-md: 0 0 20px rgba(14, 165, 233, 0.35), 0 0 60px rgba(14, 165, 233, 0.15);
-  --dot-color: rgba(255, 255, 255, 0.08);
+  --glow-primary-sm: 0 0 10px hsl(199 89% 48% / 0.2);
+  --glow-primary-md: 0 0 20px hsl(199 89% 48% / 0.35), 0 0 60px hsl(199 89% 48% / 0.15);
+  --dot-color: hsl(0 0% 100% / 0.08);
 }
 
 * {
@@ -98,8 +165,10 @@ main {
   @apply min-h-screen;
 }
 
-a {
-  color: var(--brand-primary);
+@layer base {
+  a {
+    color: var(--brand-primary);
+  }
 }
 
 :focus-visible {
@@ -173,22 +242,22 @@ a {
 @keyframes modal-pop-in {
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0);
+    transform: scale(0);
   }
   100% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
   }
 }
 
 @keyframes modal-pop-out {
   0% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0);
+    transform: scale(0);
   }
 }
 
@@ -227,21 +296,13 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
-  }
-
   .electric-glow,
   .animate-pulse-glow {
     box-shadow: none;
     animation: none !important;
   }
 
-  .animate-soft-float,
-  .animate-route-emerge,
+  /* Keep reduced-motion respect limited to our modal + pulse effects. */
   .animate-modal-pop-in,
   .animate-modal-pop-out,
   .animate-overlay-fade-in,
@@ -260,11 +321,10 @@ a {
 
   .auth-modal-content[data-state] {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
   }
 
   .auth-modal-overlay[data-state] {
     opacity: 1;
   }
 }
-

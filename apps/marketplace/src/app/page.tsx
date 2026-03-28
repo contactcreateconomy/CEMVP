@@ -1,3 +1,4 @@
+import { AuthEntryButtons } from "@/components/auth-entry-buttons";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ export default function MarketplaceHomePage() {
             This placeholder keeps marketplace entry points deployable while sharing the same forum design language.
           </p>
           <Input placeholder="Search listings" />
+          <AuthEntryButtons />
           <div className="flex flex-wrap gap-2">
             <Button>Browse products</Button>
             <Button variant="secondary">Seller storefronts</Button>

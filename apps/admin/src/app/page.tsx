@@ -1,3 +1,4 @@
+import { AuthEntryButtons } from "@/components/auth-entry-buttons";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ export default function AdminHomePage() {
             This placeholder keeps the forum visual system intact while the admin control surface is incrementally built.
           </p>
           <Input placeholder="Search admin controls" />
+          <AuthEntryButtons />
           <div className="flex flex-wrap gap-2">
             <Button>Open control center</Button>
             <Button variant="secondary">Moderation queue</Button>

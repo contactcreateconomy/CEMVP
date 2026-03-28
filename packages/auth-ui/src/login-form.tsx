@@ -3,9 +3,9 @@
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import type { LoginPayload } from "@/types";
+import type { LoginPayload } from "./types";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 
 interface LoginFormProps {
   isSubmitting: boolean;
@@ -23,7 +23,6 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
   const [forgotPasswordMessage, setForgotPasswordMessage] = useState<string | null>(null);
 
   const normalizedEmail = email.trim().toLowerCase();
-  const isDevtestLogin = normalizedEmail === "devtest";
 
   const emailError = useMemo(() => {
     if (!triedSubmit && email.length === 0) {
@@ -34,16 +33,12 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
       return "Email is required.";
     }
 
-    if (isDevtestLogin) {
-      return null;
-    }
-
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       return "Use a valid email format.";
     }
 
     return null;
-  }, [email, normalizedEmail, isDevtestLogin, triedSubmit]);
+  }, [email, normalizedEmail, triedSubmit]);
 
   const passwordError = useMemo(() => {
     if (!triedSubmit && password.length === 0) {
@@ -54,26 +49,15 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
       return "Password is required.";
     }
 
-    if (isDevtestLogin) {
-      if (password !== "123456") {
-        return "For devtest login use password 123456.";
-      }
-
-      return null;
-    }
-
     if (password.length < 8) {
       return "Password must be at least 8 characters.";
     }
 
     return null;
-  }, [password, isDevtestLogin, triedSubmit]);
+  }, [password, triedSubmit]);
 
   const isFormValid =
-    !emailError &&
-    !passwordError &&
-    normalizedEmail.length > 0 &&
-    (isDevtestLogin ? password === "123456" : password.length >= 8);
+    !emailError && !passwordError && normalizedEmail.length > 0 && password.length >= 8;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -99,7 +83,7 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
         </label>
         <Input
           id="auth-login-email"
-          type="text"
+          type="email"
           autoComplete="username"
           placeholder="Enter your email"
           value={email}
@@ -164,7 +148,9 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
         <button
           type="button"
           className="text-xs font-medium text-brand-primary hover:underline"
-          onClick={() => setForgotPasswordMessage("If that email is registered, we will send reset instructions.")}
+          onClick={() =>
+            setForgotPasswordMessage("Password reset is not enabled yet. Contact support if you are locked out.")
+          }
           disabled={isSubmitting}
         >
           Forgot password?

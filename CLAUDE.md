@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - This is a `pnpm` workspace monorepo.
 - Workspace packages are app-only right now (`pnpm-workspace.yaml` includes `apps/*`).
 - Current apps:
-  - `apps/forum` — primary Next.js app with full feature surface.
+  - `apps/forum` — primary Next.js app with full feature surface. Production: https://discuss.createconomy.com/feed.
   - `apps/seller` — placeholder Next.js app.
   - `apps/admin` — placeholder Next.js app.
   - `apps/marketplace` — placeholder Next.js app.
@@ -93,7 +93,7 @@ Forum is the architectural reference for conventions used by placeholder apps.
 
 - Global app layout (`src/app/layout.tsx`):
   - loads global CSS and local fonts,
-  - wraps the tree with `ThemeProvider`, `AuthProvider`, and global `AuthModal`.
+  - wraps the tree with `ThemeProvider`, `ConvexProvider`, `AppAuthProvider` from `@cemvp/auth-ui`, and global `AuthModal`.
 - Main application shell is applied through route grouping:
   - `src/app/(app)/layout.tsx` wraps grouped routes with `AppShell`.
   - `AppShell` (`src/components/layout/app-shell.tsx`) composes top navigation, sidebars, hero section, and mobile tab bar.

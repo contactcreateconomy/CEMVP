@@ -1,5 +1,40 @@
 # Changelog
 
+## 2026-03-28 (production forum URL, offline auth modal copy)
+- [`README.md`](README.md), root [`.env.example`](.env.example), [`apps/forum/.env.example`](apps/forum/.env.example), [`CLAUDE.md`](CLAUDE.md): production forum at **https://discuss.createconomy.com/feed**; Convex **`SITE_URL`** for that deploy documented as origin **https://discuss.createconomy.com**.
+- [`packages/auth-ui` `OfflineAuthProvider`](packages/auth-ui/src/offline-auth-provider.tsx): no `authEnvironmentNote` banner in the auth modal; offline submit/social errors use a short hint without “sign-in is unavailable”.
+
+## Validation
+- `pnpm --filter ./apps/forum typecheck` OK.
+
+## 2026-03-28 (Convex URL, OAuth, auth UI)
+- Root [`.env.example`](.env.example) and [`apps/forum/.env.example`](apps/forum/.env.example): `NEXT_PUBLIC_CONVEX_URL` for deployment `watchful-chameleon-570`; [`README.md`](README.md) documents per-app `.env.local`, Vercel, and Convex-side vars (`SITE_URL`, `AUTH_*` for GitHub/Google/Facebook, callback URLs on `.convex.site`).
+- [`convex/auth.ts`](convex/auth.ts): **GitHub**, **Google**, and **Facebook** OAuth via `@auth/core/providers/*` alongside **Password**.
+- [`packages/auth-ui`](packages/auth-ui): `socialLogin` calls `signIn(provider)` with optional `redirectTo`; removed auth modal footer disclaimer.
+
+## Validation
+- `pnpm exec convex codegen` OK; `pnpm --filter ./apps/forum typecheck` OK.
+
+## 2026-03-28 (auth modal centering / Tailwind v4)
+- [`packages/auth-ui` `AuthModal`](packages/auth-ui/src/auth-modal.tsx): full-screen `auth-modal-portal-root` uses flexbox to center the panel; `Dialog.Content` is `relative` (drops `fixed` + `-translate-x/y-1/2`). Modal keyframes in all four apps’ `globals.css` use **`scale()` only** so animated `transform` does not collide with Tailwind v4’s separate `translate` properties (which was leaving the dialog at the viewport’s top-left).
+
+## 2026-03-28 (offline auth modal)
+- `OfflineAuthProvider` now keeps real modal state and mounts `AuthModal` in all four apps when Convex is not configured, so **Log in / Sign up** opens the dialog; `authEnvironmentNote` on context explains setting `NEXT_PUBLIC_CONVEX_URL`.
+
+## 2026-03-28 (auth modal CSS)
+- Earlier tweak: keyframes briefly combined `translate(-50%, -50%)` with `scale()` while the dialog used fixed + Tailwind translate; superseded by the **2026-03-28 (auth modal centering / Tailwind v4)** flex wrapper + scale-only keyframes.
+
+## 2026-03-28
+- Branch `006-login-backend`: Convex Auth **Password** provider in [`convex/auth.ts`](convex/auth.ts), HTTP router in [`convex/http.ts`](convex/http.ts); merged `users` table with Convex Auth fields; [`convex/profile.ts`](convex/profile.ts) `current` query; default **memberships** (forum/seller/marketplace `member`, admin via `ADMIN_EMAILS` env) in `afterUserCreatedOrUpdated`.
+- New workspace package [`packages/auth-ui`](packages/auth-ui): shared `AppAuthProvider`, `AuthModal`, login/signup/social UI; forum uses it via `@cemvp/auth-ui` (removed mock `auth-provider` and local auth components).
+- **Tailwind v4** for `apps/seller`, `apps/admin`, `apps/marketplace` (forum-aligned `globals.css`, `@tailwindcss/postcss`, removed `tailwind.config.ts`); `transpilePackages: ["@cemvp/auth-ui"]` on all four apps; placeholder home pages include **Log in / Sign up** entry buttons.
+- Root `devDependencies.convex` bumped to `^1.34.1`.
+- `OfflineAuthProvider` when `NEXT_PUBLIC_CONVEX_URL` is unset so `useAuth` / static builds work without Convex; `AppAuthProvider` when Convex is configured, otherwise `OfflineAuthProvider` + `AuthModal` with an environment note (see 2026-03-28 offline auth modal entry).
+
+## Validation (006-login-backend)
+- `pnpm exec convex codegen` OK.
+- `pnpm --filter ./apps/forum typecheck` / `build` OK; `pnpm --filter @cemvp/{seller,admin,marketplace} typecheck` OK.
+
 ## 2026-03-20
 - 17:15: added `.claude/settings.json` with hooks for changelog updates and plan-branch auto-creation.
 - Added monorepo placeholder apps: `apps/seller`, `apps/admin`, and `apps/marketplace`.

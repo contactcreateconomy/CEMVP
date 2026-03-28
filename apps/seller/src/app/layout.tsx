@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 
 import "./globals.css";
+import { isConvexConfigured } from "@cemvp/convex-client";
+import { AppAuthProvider, AuthModal, OfflineAuthProvider } from "@cemvp/auth-ui";
 import { ConvexProvider } from "@/providers/convex-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 
@@ -27,11 +29,25 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const convexConfigured = isConvexConfigured();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <ConvexProvider>{children}</ConvexProvider>
+          <ConvexProvider>
+            {convexConfigured ? (
+              <AppAuthProvider>
+                {children}
+                <AuthModal />
+              </AppAuthProvider>
+            ) : (
+              <OfflineAuthProvider>
+                {children}
+                <AuthModal />
+              </OfflineAuthProvider>
+            )}
+          </ConvexProvider>
         </ThemeProvider>
       </body>
     </html>
