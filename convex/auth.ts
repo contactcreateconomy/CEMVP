@@ -4,6 +4,13 @@ import Google from "@auth/core/providers/google";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth } from "@convex-dev/auth/server";
 
+/** Convex Dashboard paste can include trailing newlines; GitHub rejects client_id with %0A. */
+function oauthEnv(idKey: string, secretKey: string) {
+  const clientId = (process.env[idKey] ?? "").trim() || undefined;
+  const clientSecret = (process.env[secretKey] ?? "").trim() || undefined;
+  return { clientId, clientSecret };
+}
+
 function parseAdminEmails(): Set<string> {
   const raw = process.env.ADMIN_EMAILS ?? "";
   return new Set(
@@ -42,9 +49,9 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         return out;
       },
     }),
-    GitHub,
-    Google,
-    Facebook,
+    GitHub(oauthEnv("AUTH_GITHUB_ID", "AUTH_GITHUB_SECRET")),
+    Google(oauthEnv("AUTH_GOOGLE_ID", "AUTH_GOOGLE_SECRET")),
+    Facebook(oauthEnv("AUTH_FACEBOOK_ID", "AUTH_FACEBOOK_SECRET")),
   ],
   callbacks: {
     async afterUserCreatedOrUpdated(ctx, { userId, existingUserId, profile }) {
