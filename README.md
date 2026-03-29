@@ -36,7 +36,8 @@ Configure on your **Convex deployment** (Dashboard → Environment variables, or
 
 | Variable | Purpose |
 |----------|--------|
-| `SITE_URL` | App origin for OAuth return redirects (e.g. `http://localhost:3000` for forum dev, or `https://discuss.createconomy.com` for production forum; see link above). |
+| `SITE_URL` | Primary app origin for OAuth return redirects when no `redirectTo` is used (e.g. `http://localhost:3000` for forum dev, or `https://discuss.createconomy.com` for production forum; see link above). |
+| `AUTH_REDIRECT_ORIGINS` | Optional comma-separated extra **origins** (full URLs, e.g. `https://seller.example.com,https://admin.example.com`) allowed as OAuth `redirectTo` targets. The shared [`AppAuthProvider`](packages/auth-ui/src/app-auth-provider.tsx) already sends `window.location.href` for social login; without this variable, only `SITE_URL` and relative paths are accepted ([Convex Auth `callbacks.redirect`](https://labs.convex.dev/auth/api_reference/server#callbacksredirect)). |
 | `JWT_PRIVATE_KEY`, `JWKS` | Required by Convex Auth ([manual setup](https://labs.convex.dev/auth/setup/manual)). Generate locally with `pnpm convex:gen-jwt` (updates `convex/.env.local`); set on Convex with `pnpm exec convex env set JWT_PRIVATE_KEY --from-file …` (see script output — PEM can break plain `env set` argv). |
 | `CONVEX_SITE_URL` | JWT issuer domain; usually present on hosted deployments ([`convex/auth.config.ts`](convex/auth.config.ts)). |
 | `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` | GitHub OAuth ([docs](https://labs.convex.dev/auth/config/oauth/github)). |
