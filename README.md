@@ -71,6 +71,8 @@ pnpm dlx vercel@latest env add NEXT_PUBLIC_CONVEX_URL production --value "https:
 
 Redeploy the production deployment after changing env vars so the build picks them up.
 
+**Vercel / production builds:** Next.js 16 defaults to **Turbopack** for `next build`, which does not apply the same `convex` dedupe as webpack and can fail prerender with **`Could not find ConvexProviderWithAuth`**. Forum (and other apps using `@cemvp/auth-ui`) use **`next build --webpack`** in `package.json` so production matches local auth.
+
 ## Run apps
 
 From repository root:
