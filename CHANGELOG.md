@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-03-29 (OAuth env trimming — GitHub 404 on authorize)
+- [`convex/auth.ts`](convex/auth.ts): pass **trimmed** `clientId` / `clientSecret` into GitHub, Google, and Facebook providers so Convex env values pasted with a **trailing newline** no longer break OAuth (GitHub showed **404** with `client_id=...%0A`).
+
 ## 2026-03-29 (Vercel prod build: `next build --webpack`)
 - All four apps’ `package.json` **`build`**: **`next build --webpack`** — fixes Vercel **`ERROR`** on production when prerendering (e.g. `/_not-found`): duplicate `convex/react` under default Turbopack build; webpack uses existing [`next.config.mjs`](apps/forum/next.config.mjs) aliases. Verified: `pnpm --filter ./apps/forum build` OK.
 - [`README.md`](README.md): note under Vercel section.
