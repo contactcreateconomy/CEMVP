@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-03-29 (Vercel prod build: `next build --webpack`)
+- All four apps’ `package.json` **`build`**: **`next build --webpack`** — fixes Vercel **`ERROR`** on production when prerendering (e.g. `/_not-found`): duplicate `convex/react` under default Turbopack build; webpack uses existing [`next.config.mjs`](apps/forum/next.config.mjs) aliases. Verified: `pnpm --filter ./apps/forum build` OK.
+- [`README.md`](README.md): note under Vercel section.
+
 ## 2026-03-29 (production: Convex prod env + Vercel forum `NEXT_PUBLIC_CONVEX_URL`)
 - **Convex production** (`energetic-kangaroo-55`): `SITE_URL` → `https://discuss.createconomy.com`; `JWT_PRIVATE_KEY` / `JWKS` / `AUTH_GITHUB_*` aligned with dev via `pnpm exec convex env set --prod` (Convex MCP cannot mutate prod by default). `CONVEX_SITE_URL` is built-in on Convex Cloud and cannot be overridden.
 - **Vercel** project `cemvp-forum` (team createconomy): production **`NEXT_PUBLIC_CONVEX_URL`** → `https://energetic-kangaroo-55.convex.cloud` via `vercel env add` (Vercel MCP has no env-var tool).
@@ -7,7 +11,7 @@
 
 ## 2026-03-29 (Next.js: single Convex instance for auth-ui)
 - All four apps’ [`next.config.mjs`](apps/forum/next.config.mjs): **`turbopack.resolveAlias`** + **`webpack.resolve.alias`** for `convex` and `@convex-dev/auth` → each app’s `node_modules`, so `@cemvp/auth-ui` shares the same React context as `ConvexAuthProvider` (fixes **`Could not find ConvexProviderWithAuth`** / duplicate `convex/react` when using `transpilePackages`).
-- Dev scripts: **`next dev --webpack`** on all four apps — Turbopack still bundles a second `convex/react` for transpiled `auth-ui`; webpack honors the aliases so local **`pnpm dev`** works.
+- Dev scripts: **`next dev --webpack`**; **build** scripts: **`next build --webpack`** — Turbopack still bundles a second `convex/react` for transpiled `auth-ui`; webpack honors the aliases for **local dev and Vercel production builds**.
 
 ## 2026-03-29 (Convex Auth JWT generator)
 - Root `devDependencies`: **`jose`**; script [`scripts/generate-convex-auth-jwt.mjs`](scripts/generate-convex-auth-jwt.mjs) and `pnpm convex:gen-jwt` to fill **`JWT_PRIVATE_KEY`** / **`JWKS`** in `convex/.env.local` per [Convex Auth manual setup](https://labs.convex.dev/auth/setup/manual).
