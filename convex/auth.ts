@@ -21,6 +21,31 @@ function parseAdminEmails(): Set<string> {
   );
 }
 
+/** Origins allowed for OAuth `redirectTo` (plus `SITE_URL`). Comma-separated URL prefixes in `AUTH_REDIRECT_ORIGINS`. */
+function parseAuthRedirectOrigins(): Set<string> {
+  const origins = new Set<string>();
+  const site = (process.env.SITE_URL ?? "").trim();
+  if (site) {
+    try {
+      origins.add(new URL(site).origin);
+    } catch {
+      /* ignore invalid SITE_URL */
+    }
+  }
+  const extra = (process.env.AUTH_REDIRECT_ORIGINS ?? "").trim();
+  if (!extra) return origins;
+  for (const part of extra.split(",")) {
+    const raw = part.trim();
+    if (!raw) continue;
+    try {
+      origins.add(new URL(raw).origin);
+    } catch {
+      /* skip invalid entry */
+    }
+  }
+  return origins;
+}
+
 function deriveHandle(email: string, name?: string): string {
   if (name?.trim()) {
     const h = name
@@ -54,6 +79,29 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
     Facebook(oauthEnv("AUTH_FACEBOOK_ID", "AUTH_FACEBOOK_SECRET")),
   ],
   callbacks: {
+    async redirect({ redirectTo }) {
+      const fallback = (process.env.SITE_URL ?? "").trim() || "/";
+      if (typeof redirectTo !== "string" || !redirectTo.trim()) {
+        return fallback;
+      }
+      const target = redirectTo.trim();
+      if (target.startsWith("?")) {
+        return target;
+      }
+      if (target.startsWith("/") && !target.startsWith("//")) {
+        return target;
+      }
+      const allowed = parseAuthRedirectOrigins();
+      try {
+        const url = new URL(target);
+        if (allowed.has(url.origin)) {
+          return target;
+        }
+      } catch {
+        /* invalid absolute URL */
+      }
+      return fallback;
+    },
     async afterUserCreatedOrUpdated(ctx, { userId, existingUserId, profile }) {
       const now = Date.now();
       const email = typeof profile.email === "string" ? profile.email.trim().toLowerCase() : "";

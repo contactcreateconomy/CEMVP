@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-03-29 (multi-app OAuth redirects: `AUTH_REDIRECT_ORIGINS`)
+- [`convex/auth.ts`](convex/auth.ts): **`callbacks.redirect`** + **`AUTH_REDIRECT_ORIGINS`** — allow social/OAuth return to seller/admin/marketplace origins when they differ from **`SITE_URL`** (still allows relative paths and `?query` per Convex Auth defaults).
+- [`convex/.env.example`](convex/.env.example), [`README.md`](README.md): document **`AUTH_REDIRECT_ORIGINS`**.
+
 ## 2026-03-29 (OAuth env trimming — GitHub 404 on authorize)
 - [`convex/auth.ts`](convex/auth.ts): pass **trimmed** `clientId` / `clientSecret` into GitHub, Google, and Facebook providers so Convex env values pasted with a **trailing newline** no longer break OAuth (GitHub showed **404** with `client_id=...%0A`).
 
