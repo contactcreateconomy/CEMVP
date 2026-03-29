@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-03-29 (production: Convex prod env + Vercel forum `NEXT_PUBLIC_CONVEX_URL`)
+- **Convex production** (`energetic-kangaroo-55`): `SITE_URL` → `https://discuss.createconomy.com`; `JWT_PRIVATE_KEY` / `JWKS` / `AUTH_GITHUB_*` aligned with dev via `pnpm exec convex env set --prod` (Convex MCP cannot mutate prod by default). `CONVEX_SITE_URL` is built-in on Convex Cloud and cannot be overridden.
+- **Vercel** project `cemvp-forum` (team createconomy): production **`NEXT_PUBLIC_CONVEX_URL`** → `https://energetic-kangaroo-55.convex.cloud` via `vercel env add` (Vercel MCP has no env-var tool).
+- [`README.md`](README.md): dev vs prod Convex URLs, callback list, CLI notes for Convex prod and Vercel.
+
+## 2026-03-29 (Next.js: single Convex instance for auth-ui)
+- All four apps’ [`next.config.mjs`](apps/forum/next.config.mjs): **`turbopack.resolveAlias`** + **`webpack.resolve.alias`** for `convex` and `@convex-dev/auth` → each app’s `node_modules`, so `@cemvp/auth-ui` shares the same React context as `ConvexAuthProvider` (fixes **`Could not find ConvexProviderWithAuth`** / duplicate `convex/react` when using `transpilePackages`).
+- Dev scripts: **`next dev --webpack`** on all four apps — Turbopack still bundles a second `convex/react` for transpiled `auth-ui`; webpack honors the aliases so local **`pnpm dev`** works.
+
+## 2026-03-29 (Convex Auth JWT generator)
+- Root `devDependencies`: **`jose`**; script [`scripts/generate-convex-auth-jwt.mjs`](scripts/generate-convex-auth-jwt.mjs) and `pnpm convex:gen-jwt` to fill **`JWT_PRIVATE_KEY`** / **`JWKS`** in `convex/.env.local` per [Convex Auth manual setup](https://labs.convex.dev/auth/setup/manual).
+- [`convex/.env.example`](convex/.env.example) and [`README.md`](README.md): notes on syncing keys to Convex (`env set --from-file` for PEM).
+
+## 2026-03-29 (env examples: all apps + Convex OAuth template)
+- New [`convex/.env.example`](convex/.env.example): placeholder keys for `SITE_URL`, `CONVEX_SITE_URL`, `JWT_PRIVATE_KEY`, `JWKS`, `AUTH_GOOGLE_*`, `AUTH_GITHUB_*`, `AUTH_FACEBOOK_*`, `ADMIN_EMAILS` (set via Convex Dashboard / `npx convex env set`, not Next.js).
+- [`apps/seller`](apps/seller/.env.example), [`apps/admin`](apps/admin/.env.example), [`apps/marketplace`](apps/marketplace/.env.example): `.env.example` with `NEXT_PUBLIC_CONVEX_URL`; [`apps/forum/.env.example`](apps/forum/.env.example) and root [`.env.example`](.env.example) updated to match and cross-link `convex/.env.example`.
+- [`README.md`](README.md): environment section points at per-app and Convex templates.
+
 ## 2026-03-28 (production forum URL, offline auth modal copy)
 - [`README.md`](README.md), root [`.env.example`](.env.example), [`apps/forum/.env.example`](apps/forum/.env.example), [`CLAUDE.md`](CLAUDE.md): production forum at **https://discuss.createconomy.com/feed**; Convex **`SITE_URL`** for that deploy documented as origin **https://discuss.createconomy.com**.
 - [`packages/auth-ui` `OfflineAuthProvider`](packages/auth-ui/src/offline-auth-provider.tsx): no `authEnvironmentNote` banner in the auth modal; offline submit/social errors use a short hint without “sign-in is unavailable”.
