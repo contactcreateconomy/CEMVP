@@ -22,10 +22,12 @@
     "typecheck:marketplace": "pnpm --filter @cemvp/marketplace typecheck",
     "convex:dev": "convex dev",
     "convex:codegen": "convex codegen",
-    "convex:deploy:prod": "convex deploy"
+    "convex:deploy:prod": "convex deploy",
+    "convex:gen-jwt": "node scripts/generate-convex-auth-jwt.mjs"
   },
   "devDependencies": {
-    "convex": "^1.34.1"
+    "convex": "^1.34.1",
+    "jose": "^6.2.2"
   },
   "dependencies": {
     "@auth/core": "0.37.0",

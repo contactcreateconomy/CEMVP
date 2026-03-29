@@ -24,7 +24,7 @@ pnpm install
 
 ## Environment (Convex client URL)
 
-Each Next.js app reads **`NEXT_PUBLIC_CONVEX_URL`** from its own package root (for example [`apps/forum/.env.example`](apps/forum/.env.example)). Copy that file to **`apps/<app>/.env.local`** for forum, seller, admin, and marketplace as needed. The root [`.env.example`](.env.example) documents the same variable for reference.
+Each Next.js app reads **`NEXT_PUBLIC_CONVEX_URL`** from its own package root. Copy the matching **`apps/<app>/.env.example`** to **`apps/<app>/.env.local`** (forum, seller, admin, marketplace). The root [`.env.example`](.env.example) is an index; **Google/GitHub/Facebook IDs and secrets** are listed in [`convex/.env.example`](convex/.env.example) and must be set on the **Convex** deployment (`npx convex env set` or Dashboard), not in Next.js.
 
 Set the same variable in **each Vercel project** (Environment Variables) for deployed apps.
 
@@ -37,18 +37,39 @@ Configure on your **Convex deployment** (Dashboard → Environment variables, or
 | Variable | Purpose |
 |----------|--------|
 | `SITE_URL` | App origin for OAuth return redirects (e.g. `http://localhost:3000` for forum dev, or `https://discuss.createconomy.com` for production forum; see link above). |
-| `JWT_PRIVATE_KEY`, `JWKS` | Required by Convex Auth ([manual setup](https://labs.convex.dev/auth/setup/manual)). |
+| `JWT_PRIVATE_KEY`, `JWKS` | Required by Convex Auth ([manual setup](https://labs.convex.dev/auth/setup/manual)). Generate locally with `pnpm convex:gen-jwt` (updates `convex/.env.local`); set on Convex with `pnpm exec convex env set JWT_PRIVATE_KEY --from-file …` (see script output — PEM can break plain `env set` argv). |
 | `CONVEX_SITE_URL` | JWT issuer domain; usually present on hosted deployments ([`convex/auth.config.ts`](convex/auth.config.ts)). |
 | `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` | GitHub OAuth ([docs](https://labs.convex.dev/auth/config/oauth/github)). |
 | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Google OAuth ([docs](https://labs.convex.dev/auth/config/oauth/google)). |
 | `AUTH_FACEBOOK_ID`, `AUTH_FACEBOOK_SECRET` | Facebook / Meta OAuth (Auth.js provider). |
 | `ADMIN_EMAILS` | Optional comma-separated emails → `admin` membership on first sign-up ([`convex/auth.ts`](convex/auth.ts)). |
 
-OAuth **callback** URLs use your deployment’s **HTTP Actions** host (`.convex.site`, not `.cloud`). For `watchful-chameleon-570`:
+OAuth **callback** URLs use your deployment’s **HTTP Actions** host (`.convex.site`, not `.cloud`). Add **every** Convex deployment you use to your OAuth provider (GitHub allows multiple callback URLs).
+
+| Deployment | `.convex.cloud` (client / `NEXT_PUBLIC_CONVEX_URL`) | `.convex.site` (OAuth callbacks) |
+|------------|-----------------------------------------------------|-----------------------------------|
+| Dev (`watchful-chameleon-570`) | `https://watchful-chameleon-570.convex.cloud` | `https://watchful-chameleon-570.convex.site` |
+| Prod (`energetic-kangaroo-55`) | `https://energetic-kangaroo-55.convex.cloud` | `https://energetic-kangaroo-55.convex.site` |
+
+Example GitHub callbacks (repeat for Google/Facebook as needed):
 
 - `https://watchful-chameleon-570.convex.site/api/auth/callback/github`
-- `https://watchful-chameleon-570.convex.site/api/auth/callback/google`
-- `https://watchful-chameleon-570.convex.site/api/auth/callback/facebook`
+- `https://energetic-kangaroo-55.convex.site/api/auth/callback/github`
+
+### Production: Convex CLI vs MCP
+
+- **Convex production env vars** are not writable via the default Convex MCP connection (production is read-only). Use **`pnpm exec convex env set --prod …`** or the Convex Dashboard.
+- **Vercel env vars** are not exposed by the Vercel MCP tools in this repo; use **`vercel env add`** (see below) or the Vercel Dashboard.
+
+### Vercel project `cemvp-forum` (production)
+
+From `apps/forum` after `vercel link` (team **createconomy**):
+
+```bash
+pnpm dlx vercel@latest env add NEXT_PUBLIC_CONVEX_URL production --value "https://energetic-kangaroo-55.convex.cloud" --yes --force
+```
+
+Redeploy the production deployment after changing env vars so the build picks them up.
 
 ## Run apps
 
