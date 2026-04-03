@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-04-03 (convex prod: deploy + category bootstrap)
+- **`convex/forum/seed.ts`**: **`ensureForumCategories`** internal mutation — inserts missing **`forumCategories`** from catalog only (idempotent; no posts/profiles/demo data).
+- **`package.json`**: **`pnpm convex:prod:ensure-categories`** → `convex run forum/seed:ensureForumCategories --prod`.
+- **`docs/production-convex.md`**: Prod deploy steps, user-only content policy, category bootstrap; linked from [`docs/README.md`](docs/README.md) and [`CLAUDE.md`](CLAUDE.md).
+- **Prod**: `convex deploy` to **energetic-kangaroo-55**; **`convex:prod:ensure-categories`** result `{ inserted: 9, skipped: 0 }`.
+
 ## 2026-04-03 (forum: next/image remotePatterns for OAuth avatars)
 - **`apps/forum`**: [`next.config.mjs`](apps/forum/next.config.mjs) — allow **`next/image`** for **GitHub**, **Google**, **Facebook**, **Gravatar** hostnames (plus existing Unsplash) so signed-in profile avatars do not throw at runtime.
 

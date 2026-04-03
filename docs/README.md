@@ -9,6 +9,7 @@ Use this folder when onboarding, debugging, or (for AI agents) grounding work in
 | [quick-start.md](quick-start.md) | Install, env vars, local dev, Convex push, forum seed — minimal steps to run. |
 | [schema-forum.md](schema-forum.md) | Convex `forum*` tables, indexes, relationships; auth-linked vs seed-only data. |
 | [forum-capacity.md](forum-capacity.md) | Scaling posture, force-seed after schema changes, operations checklist. |
+| [production-convex.md](production-convex.md) | **Prod deploy**, category-only bootstrap (`ensureForumCategories`), no full seed on prod. |
 
 **Convex generated agent rules:** `convex/_generated/ai/guidelines.md` (read before editing Convex functions).
 

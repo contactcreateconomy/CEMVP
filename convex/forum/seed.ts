@@ -278,3 +278,30 @@ export const runForumSeed = internalMutation({
     };
   },
 });
+
+/**
+ * Production-safe: insert missing `forumCategories` rows from the static catalog only.
+ * Does not add posts, profiles, or demo content. Run once per prod deployment after schema deploy
+ * so `createPost` category validation works. Idempotent.
+ */
+export const ensureForumCategories = internalMutation({
+  args: {},
+  returns: v.object({ inserted: v.number(), skipped: v.number() }),
+  handler: async (ctx) => {
+    let inserted = 0;
+    let skipped = 0;
+    for (const c of categoryRows) {
+      const existing = await ctx.db
+        .query("forumCategories")
+        .withIndex("by_key", (q) => q.eq("key", c.key))
+        .unique();
+      if (existing) {
+        skipped++;
+        continue;
+      }
+      await ctx.db.insert("forumCategories", { ...c });
+      inserted++;
+    }
+    return { inserted, skipped };
+  },
+});

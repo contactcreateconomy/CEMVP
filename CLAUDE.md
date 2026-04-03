@@ -24,6 +24,7 @@ Read these when onboarding, changing Convex schema, or seeding. Each file summar
 | [`docs/quick-start.md`](docs/quick-start.md) | **Install → env → `convex dev` → seed → `pnpm dev`** and common scripts. |
 | [`docs/schema-forum.md`](docs/schema-forum.md) | **`forum*` tables, indexes, relationships**, auth vs seed profiles, API file map. |
 | [`docs/forum-capacity.md`](docs/forum-capacity.md) | **Force-seed after schema changes**, what gets wiped, scaling/ops checklist. |
+| [`docs/production-convex.md`](docs/production-convex.md) | **Convex prod**: `convex deploy`, **`pnpm convex:prod:ensure-categories`** (taxonomy only), avoid full seed on prod. |
 
 Convex-specific agent rules (API patterns): [`convex/_generated/ai/guidelines.md`](convex/_generated/ai/guidelines.md).
 

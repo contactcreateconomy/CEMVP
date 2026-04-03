@@ -73,6 +73,10 @@ Open the URL Next prints (usually `http://localhost:3000`). Feed and related rou
 | `pnpm convex:seed-forum` | Seed if empty |
 | `pnpm convex:seed-forum-force` | Force re-seed (requires `ALLOW_FORUM_SEED_FORCE` on deployment) |
 
+## Production Convex
+
+Deploy schema/functions and bootstrap **category keys only** (no demo posts): [production-convex.md](production-convex.md).
+
 ## Troubleshooting (short)
 
 - **Empty feed / errors** — Check `NEXT_PUBLIC_CONVEX_URL`, run `pnpm convex:seed-forum`, confirm `pnpm exec convex dev --once` succeeded.
