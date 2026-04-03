@@ -8,13 +8,8 @@ import { api } from "@/lib/convex";
 import { formatRelativeDate } from "@/lib/format";
 import { isConvexConfigured } from "@cemvp/convex-client";
 
-export function CampaignsPageClient() {
-  const enabled = isConvexConfigured();
-  const campaigns = useQuery(api.forum.queries.listCampaigns, enabled ? {} : "skip");
-
-  if (!enabled) {
-    return <p className="text-sm text-(--text-muted)">Connect Convex to load campaigns.</p>;
-  }
+function CampaignsPageWithConvex() {
+  const campaigns = useQuery(api.forum.queries.listCampaigns, {});
 
   if (campaigns === undefined) {
     return null;
@@ -44,4 +39,12 @@ export function CampaignsPageClient() {
       </Card>
     </section>
   );
+}
+
+export function CampaignsPageClient() {
+  if (!isConvexConfigured()) {
+    return <p className="text-sm text-(--text-muted)">Connect Convex to load campaigns.</p>;
+  }
+
+  return <CampaignsPageWithConvex />;
 }
