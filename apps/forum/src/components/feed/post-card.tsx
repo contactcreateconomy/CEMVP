@@ -4,8 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-import type { Comment, Post, User } from "@/types";
-import { getCategories } from "@/lib/adapters/content";
+import type { Category, Comment, Post, User } from "@/types";
 import { getDiscussionHrefForPost } from "@/lib/discussion/feed-post-discussion-slug";
 import { CommentsPreviewCycler } from "@/components/feed/comments-preview-cycler";
 import { PostActionsMenu } from "@/components/feed/post-actions-menu";
@@ -17,6 +16,7 @@ interface PostCardProps {
   author: User | null;
   comments: Comment[];
   commenters: User[];
+  categories: Category[];
   isFavorited: boolean;
   isUpvoted: boolean;
   onToggleFavorite: () => void;
@@ -38,9 +38,9 @@ export function PostCard({
   onHide,
   onReport,
   onShare,
+  categories,
 }: PostCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const categories = getCategories();
   const category = categories.find((item) => item.key === post.category) ?? null;
   const discussionHref = getDiscussionHrefForPost(post);
 

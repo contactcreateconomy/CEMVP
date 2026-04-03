@@ -16,7 +16,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { getCategories } from "@/lib/adapters/content";
+import { useQuery } from "convex/react";
+
+import { api } from "@/lib/convex";
+import { isConvexConfigured } from "@cemvp/convex-client";
 import type { CategoryKey } from "@/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,7 +41,8 @@ const categoryIconMap: Record<CategoryKey, LucideIcon> = {
 export function LeftSidebar() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const categories = getCategories();
+  const enabled = isConvexConfigured();
+  const categories = useQuery(api.forum.queries.listCategories, enabled ? {} : "skip") ?? [];
   const selectedCategory = searchParams.get("category");
 
   const discoverItems = [
@@ -47,7 +51,7 @@ export function LeftSidebar() {
       key: category.key,
       label: category.name,
       href: `/feed?category=${category.key}`,
-      Icon: categoryIconMap[category.key],
+      Icon: categoryIconMap[category.key as CategoryKey],
     })),
   ];
 

@@ -9,7 +9,10 @@ import { useTheme } from "next-themes";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CreateconomyLogoMark } from "@/components/ui/createconomy-logo-mark";
-import { getNotificationsForUser, getUnreadNotifications } from "@/lib/adapters/content";
+import { useQuery } from "convex/react";
+
+import { api } from "@/lib/convex";
+import { isConvexConfigured } from "@cemvp/convex-client";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@cemvp/auth-ui";
 import { useScroll } from "@/components/ui/use-scroll";
@@ -60,26 +63,28 @@ export function TopNav() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const scrolled = useScroll(10);
 
-  const viewerId = authStatus === "authenticated" ? user?.id ?? null : null;
+  const convexOn = isConvexConfigured();
+  const notificationList = useQuery(
+    api.forum.queries.listNotificationsForViewer,
+    authStatus === "authenticated" && convexOn ? {} : "skip",
+  );
 
   const unread = useMemo(() => {
-    if (!viewerId) {
+    if (!notificationList) {
       return 0;
     }
-
-    return getUnreadNotifications(viewerId).length;
-  }, [viewerId]);
+    return notificationList.filter((n) => !n.read).length;
+  }, [notificationList]);
 
   const latestNotifications = useMemo(() => {
-    if (!viewerId) {
+    if (!notificationList) {
       return [];
     }
-
-    return getNotificationsForUser(viewerId)
+    return notificationList
       .slice()
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 5);
-  }, [viewerId]);
+  }, [notificationList]);
 
   useEffect(() => {
     setMounted(true);

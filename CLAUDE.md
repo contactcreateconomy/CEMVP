@@ -12,6 +12,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `apps/admin` — placeholder Next.js app.
   - `apps/marketplace` — placeholder Next.js app.
 
+## Documentation index (`docs/`)
+
+Read these when onboarding, changing Convex schema, or seeding. Each file summarizes intent so agents can choose depth without scanning the whole repo.
+
+| File | Description |
+|------|-------------|
+| [`docs/README.md`](docs/README.md) | **Index** of all docs below + pointers to root README and Convex AI guidelines. |
+| [`docs/overview.md`](docs/overview.md) | **Monorepo + forum + Convex** roles, conceptual data model, “where to go next.” |
+| [`docs/architecture.md`](docs/architecture.md) | **System architecture**, stack diagram, **tools and package versions** (Next, React, Convex, Tailwind, TipTap, Radix, ESLint, pnpm, Node). |
+| [`docs/quick-start.md`](docs/quick-start.md) | **Install → env → `convex dev` → seed → `pnpm dev`** and common scripts. |
+| [`docs/schema-forum.md`](docs/schema-forum.md) | **`forum*` tables, indexes, relationships**, auth vs seed profiles, API file map. |
+| [`docs/forum-capacity.md`](docs/forum-capacity.md) | **Force-seed after schema changes**, what gets wiped, scaling/ops checklist. |
+
+Convex-specific agent rules (API patterns): [`convex/_generated/ai/guidelines.md`](convex/_generated/ai/guidelines.md).
+
 ## Common commands
 
 Run from repository root.
@@ -99,12 +114,13 @@ Forum is the architectural reference for conventions used by placeholder apps.
   - `AppShell` (`src/components/layout/app-shell.tsx`) composes top navigation, sidebars, hero section, and mobile tab bar.
 - Route pages (for example `src/app/(app)/feed/page.tsx`) are primarily composition + view-level sorting/filtering.
 
-### 3) Data shape and mock-data flow in forum
+### 3) Forum data layer (Convex, not mocks)
 
-- Forum currently relies on mock-backed content organized under `src/lib/mock-data/*`.
-- Mock modules are re-exported via `src/lib/mock-data/index.ts`.
-- Adapter layer (`src/lib/adapters/content.ts`) provides route-consumable view models and is the boundary between route/page components and raw mock data.
-- Several route files include backend endpoint expectations in comments; preserve those as contract hints when integrating real APIs.
+- **Backend:** [`convex/schema.ts`](convex/schema.ts), [`convex/forum/queries.ts`](convex/forum/queries.ts), [`convex/forum/mutations.ts`](convex/forum/mutations.ts), [`convex/forum/discussionRoute.ts`](convex/forum/discussionRoute.ts), [`convex/forum/seed.ts`](convex/forum/seed.ts).
+- **Client:** [`apps/forum/src/lib/convex.ts`](apps/forum/src/lib/convex.ts) re-exports `api` / `Id`; route clients use `useQuery` / `useMutation` from `convex/react`.
+- **Feed** uses paginated **`listFeedPage`** (bounded reads, denormalized author fields on posts). **Search** uses bounded **`searchPostsAndUsers`**. **Discussion** uses **`getDiscussionRouteState`**.
+- **Seed** is an internal mutation `forum/seed:runForumSeed`; force wipe requires `ALLOW_FORUM_SEED_FORCE` on the deployment (see [`docs/quick-start.md`](docs/quick-start.md), [`docs/forum-capacity.md`](docs/forum-capacity.md)).
+- **Schema / table reference:** [`docs/schema-forum.md`](docs/schema-forum.md).
 
 ### 4) Design system conventions used across apps
 

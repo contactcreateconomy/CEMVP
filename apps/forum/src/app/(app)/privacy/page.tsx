@@ -17,8 +17,8 @@ export default function PrivacyPage() {
             used, retention, cookies, third parties, and user rights under applicable law (e.g. GDPR, CCPA).
           </p>
           <p>
-            The forum MVP uses mock data locally; production deployments should document real data practices and link
-            to any subprocessors or analytics providers.
+            Production deployments should document real data practices (including Convex-hosted content and auth) and
+            link to any subprocessors or analytics providers.
           </p>
         </CardContent>
       </Card>

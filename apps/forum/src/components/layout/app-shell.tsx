@@ -2,18 +2,14 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 import Link from "next/link";
 
-import { TopPostHeroCarousel } from "@/components/feed/top-post-hero-carousel";
+import { TopPostHeroSection } from "@/components/layout/top-post-hero-section";
 import { LeftSidebar } from "@/components/layout/left-sidebar";
 import { ConditionalRightSidebar } from "@/components/layout/conditional-right-sidebar";
 import { TopNav } from "@/components/layout/top-nav";
 import { MobileTabBar } from "@/components/layout/mobile-tab-bar";
-import { getTopPostHeroSlides } from "@/lib/adapters/content";
-
 interface AppShellProps {
   children: ReactNode;
 }
-
-const topPostHeroSlides = getTopPostHeroSlides();
 
 export function AppShell({ children }: AppShellProps) {
   return (
@@ -23,7 +19,7 @@ export function AppShell({ children }: AppShellProps) {
         <TopNav />
 
         <section className="mx-auto hidden w-full max-w-[1440px] px-4 pb-2 pt-6 md:px-6 lg:block lg:px-8">
-          <TopPostHeroCarousel slides={topPostHeroSlides} className="h-[380px] xl:h-[420px]" />
+          <TopPostHeroSection />
         </section>
 
         <div className="mx-auto flex w-full max-w-[1440px] gap-4 px-4 py-6 md:px-6 lg:gap-8 lg:px-8">

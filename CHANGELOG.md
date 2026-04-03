@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-04-03 (forum: next/image remotePatterns for OAuth avatars)
+- **`apps/forum`**: [`next.config.mjs`](apps/forum/next.config.mjs) — allow **`next/image`** for **GitHub**, **Google**, **Facebook**, **Gravatar** hostnames (plus existing Unsplash) so signed-in profile avatars do not throw at runtime.
+
+## 2026-04-03 (forum: ForumProfileEnsurer under AppAuthProvider)
+- **`apps/forum`**: Render **`ForumProfileEnsurer`** inside **`AppAuthProvider`** in [`layout.tsx`](apps/forum/src/app/layout.tsx) (not inside [`ConvexProvider`](apps/forum/src/providers/convex-provider.tsx)) so **`useAuth`** is defined — fixes **`useAppAuth must be used within AppAuthProvider`** on `/feed`.
+
+## 2026-04-03 (docs: architecture + stack versions)
+- **`docs/architecture.md`**: System diagram (Mermaid), monorepo/runtime versions, forum + root dependency tables (Next, React, Convex, Tailwind, TipTap, Radix, ESLint, pnpm, Node), workspace packages, deployment intent. Linked from [`docs/README.md`](docs/README.md), [`CLAUDE.md`](CLAUDE.md), [`README.md`](README.md), [`AGENTS.md`](AGENTS.md), [`docs/overview.md`](docs/overview.md).
+
+## 2026-04-03 (docs: agent-oriented overview, quick start, schema reference)
+- **`docs/`**: Added [`docs/README.md`](docs/README.md) (index), [`docs/overview.md`](docs/overview.md), [`docs/quick-start.md`](docs/quick-start.md), [`docs/schema-forum.md`](docs/schema-forum.md). [`CLAUDE.md`](CLAUDE.md) — documentation index table + replaced outdated mock-data forum section with Convex-backed description. [`AGENTS.md`](AGENTS.md), [`README.md`](README.md) — pointers to `docs/README.md`.
+
 ## 2026-04-03 (forum: /new-post TipTap editor)
 - **`apps/forum`**: **`/new-post`** uses **`NewPostComposer`** — TipTap (StarterKit, underline, link, placeholder), **selection bubble menu** (`@tiptap/react/menus`), **category** pills aligned with **`getCategories()`** (locked categories disabled), title + optional subtitle, mock **Publish** / **Save draft** toasts. Global **`.new-post-prose`** styles in [`apps/forum/src/app/globals.css`](apps/forum/src/app/globals.css). Removed unused **`@tiptap/extension-bubble-menu`** dependency (menu comes from React package).
 - **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` OK.

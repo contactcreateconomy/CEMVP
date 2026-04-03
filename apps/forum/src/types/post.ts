@@ -16,4 +16,8 @@ export interface Post {
   trending: "hot" | "recent" | "evergreen";
   isFavorited: boolean;
   locked: boolean;
+  /** From Convex: post has a rich discussion document at this slug */
+  isRichThread?: boolean;
+  /** Viewer has upvoted (auth); used for button state */
+  viewerHasUpvote?: boolean;
 }

@@ -5,6 +5,7 @@ import "./globals.css";
 import { isConvexConfigured } from "@cemvp/convex-client";
 import { AppAuthProvider, AuthModal, OfflineAuthProvider } from "@cemvp/auth-ui";
 import { ConvexProvider } from "@/providers/convex-provider";
+import { ForumProfileEnsurer } from "@/providers/forum-profile-ensurer";
 import { ThemeProvider } from "@/providers/theme-provider";
 
 const geistSans = localFont({
@@ -38,6 +39,7 @@ export default function RootLayout({
           <ConvexProvider>
             {convexConfigured ? (
               <AppAuthProvider>
+                <ForumProfileEnsurer />
                 {children}
                 <AuthModal />
               </AppAuthProvider>

@@ -2,6 +2,12 @@
 
 This repository is a pnpm workspace monorepo.
 
+## Documentation (`docs/`)
+
+- **[docs/README.md](docs/README.md)** — index of overview, architecture (stack + versions), quick start, forum schema reference, and capacity/seed docs (for contributors and AI agents).
+- **[docs/architecture.md](docs/architecture.md)** — architecture, software stack, and declared dependency versions.
+- **[CLAUDE.md](CLAUDE.md)** — links the same docs in a table for Claude Code.
+
 ## Workspace layout
 
 - `apps/forum` — Next.js forum app (migrated from `CEfrontend` with behavior-preserving structure)

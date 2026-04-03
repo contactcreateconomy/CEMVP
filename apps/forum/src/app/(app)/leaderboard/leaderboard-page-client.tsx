@@ -1,0 +1,51 @@
+"use client";
+
+import { useQuery } from "convex/react";
+import { Trophy } from "lucide-react";
+
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { api } from "@/lib/convex";
+import { formatPoints } from "@/lib/format";
+import { isConvexConfigured } from "@cemvp/convex-client";
+
+export function LeaderboardPageClient() {
+  const enabled = isConvexConfigured();
+  const rows = useQuery(api.forum.queries.getLeaderboardWithUsers, enabled ? {} : "skip");
+
+  if (!enabled) {
+    return <p className="text-sm text-(--text-muted)">Connect Convex to load the leaderboard.</p>;
+  }
+
+  if (rows === undefined) {
+    return null;
+  }
+
+  const sorted = [...rows].sort((a, b) => b.points - a.points);
+
+  return (
+    <section className="animate-route-emerge space-y-4">
+      <Card>
+        <CardHeader>
+          <h1 className="inline-flex items-center gap-2 text-2xl font-semibold text-(--text-primary)">
+            <Trophy className="h-5 w-5" /> Leaderboard
+          </h1>
+        </CardHeader>
+
+        <CardContent className="space-y-2">
+          {sorted.map((row, index) => (
+            <div
+              key={row.userId}
+              className="flex items-center justify-between rounded-md border border-(--border-default) bg-(--bg-surface) px-3 py-2"
+            >
+              <p className="text-sm text-(--text-primary)">
+                <span className="mr-2 font-semibold text-(--brand-primary)">#{index + 1}</span>
+                {row.user?.name ?? "Unknown user"}
+              </p>
+              <p className="text-xs font-semibold text-(--feedback-warning)">{formatPoints(row.points)}</p>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </section>
+  );
+}
