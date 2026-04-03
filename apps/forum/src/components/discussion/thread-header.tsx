@@ -95,7 +95,7 @@ export function ThreadHeader({
     return () => mq.removeEventListener("change", apply);
   }, []);
 
-  const CategoryIcon = category ? categoryIconMap[category.key] : Sparkles;
+  const CategoryIcon = category ? (categoryIconMap[category.key] ?? Sparkles) : Sparkles;
   const chipStyle = category ? { borderColor: `${category.primaryColor}55`, color: category.primaryColor } : undefined;
 
   const share = async () => {
@@ -182,7 +182,7 @@ export function ThreadHeader({
         ) : null}
 
         <div className="flex flex-wrap gap-2">
-          {thread.tags.map((tag) => (
+          {(thread.tags ?? []).map((tag) => (
             <button
               key={tag}
               type="button"
@@ -232,7 +232,7 @@ export function ThreadHeader({
             className="inline-flex items-center gap-1.5 rounded-full border border-(--border-default) px-3 py-1.5 text-sm font-medium text-(--text-secondary) transition-colors hover:bg-(--bg-overlay)"
           >
             <MessageCircle className="h-4 w-4" />
-            {commentCount ?? thread.comments.length}
+            {commentCount ?? thread.comments?.length ?? 0}
           </button>
           <button
             type="button"

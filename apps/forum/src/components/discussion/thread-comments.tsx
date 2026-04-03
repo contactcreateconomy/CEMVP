@@ -80,13 +80,15 @@ export function ThreadComments({
   const [votes, setVotes] = useState<Record<string, { up?: boolean; down?: boolean }>>({});
   const [replyTo, setReplyTo] = useState<string | null>(null);
 
+  const commentList = thread.comments ?? [];
+
   const filterChipOptions = useMemo(() => {
     if (thread.category === "help") return FILTER_OPTIONS;
     return FILTER_OPTIONS.filter((t) => t !== "solution");
   }, [thread.category]);
 
   const sortedComments = useMemo(() => {
-    const list = [...thread.comments];
+    const list = [...commentList];
     if (sort === "new") {
       return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
@@ -94,7 +96,7 @@ export function ThreadComments({
       return list.sort((a, b) => b.upvotes - a.upvotes);
     }
     return list.sort((a, b) => b.upvotes + b.downvotes - (a.upvotes + a.downvotes));
-  }, [thread.comments, sort]);
+  }, [commentList, sort]);
 
   const childrenMap = useMemo(() => buildChildrenMap(sortedComments), [sortedComments]);
 
@@ -110,7 +112,12 @@ export function ThreadComments({
   const mapToUse = thread.category === "gigs" && isMax && gigsCommentMode !== "all" ? childrenMapGigs : childrenMap;
 
   const solutionId =
-    thread.category === "help" && thread.categoryBody.solved ? thread.categoryBody.solutionCommentId : undefined;
+    thread.category === "help" &&
+    thread.categoryBody &&
+    "solved" in thread.categoryBody &&
+    thread.categoryBody.solved
+      ? thread.categoryBody.solutionCommentId
+      : undefined;
 
   const roots = useMemo(() => {
     const listRoots = mapToUse.get(null) ?? [];
@@ -177,7 +184,7 @@ export function ThreadComments({
       ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-(--text-primary)">{thread.comments.length} comments</p>
+        <p className="text-sm font-semibold text-(--text-primary)">{commentList.length} comments</p>
         <div className="flex flex-wrap gap-1 rounded-full border border-(--border-default) bg-(--bg-inset) p-0.5">
           {(["best", "new", "top"] as const).map((s) => (
             <button
@@ -244,7 +251,7 @@ export function ThreadComments({
         </div>
       )}
 
-      {thread.comments.length === 0 ? (
+      {commentList.length === 0 ? (
         <div className="rounded-[14px] border border-dashed border-(--border-default) bg-(--bg-inset) px-4 py-8 text-center text-sm text-(--text-secondary)">
           Be the first to reply. Share your thoughts.
         </div>

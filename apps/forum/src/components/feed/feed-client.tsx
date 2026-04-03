@@ -1,19 +1,23 @@
 "use client";
 
+import { useMutation } from "convex/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { PostCard } from "@/components/feed/post-card";
 import { EmptyState } from "@/components/states/empty-state";
 import { FeedUndoToast } from "@/components/feed/feed-undo-toast";
 import { ReportPostDialog } from "@/components/feed/report-post-dialog";
-import type { Comment, Post, User } from "@/types";
+import { api, type Id } from "@/lib/convex";
 import { getDiscussionHrefForPost } from "@/lib/discussion/feed-post-discussion-slug";
+import type { Category, Comment, Post, User } from "@/types";
+import { useAuth } from "@cemvp/auth-ui";
 
 interface FeedClientProps {
   initialPosts: Post[];
   allComments: Comment[];
   users: User[];
   selectedSort: "top" | "hot" | "new" | "fav";
+  categories: Category[];
   /** When set and there are no posts to show, overrides default empty copy (e.g. search / saved). */
   emptyState?: { title: string; description: string; ctaLabel?: string };
 }
@@ -33,14 +37,16 @@ export function FeedClient({
   allComments,
   users,
   selectedSort,
+  categories,
   emptyState: emptyStateOverride,
 }: FeedClientProps) {
-  const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
-  const [upvoteDeltaByPostId, setUpvoteDeltaByPostId] = useState<Record<string, number>>({});
-  const [isUpvotedByPostId, setIsUpvotedByPostId] = useState<Record<string, boolean>>({});
+  const { authStatus, openAuthModal } = useAuth();
   const [hiddenPostIds, setHiddenPostIds] = useState<Set<string>>(new Set());
   const [undoState, setUndoState] = useState<UndoState | null>(null);
   const [reportPostId, setReportPostId] = useState<string | null>(null);
+
+  const toggleFavoriteMutation = useMutation(api.forum.mutations.toggleFavorite);
+  const toggleUpvoteMutation = useMutation(api.forum.mutations.toggleUpvote);
 
   const usersById = useMemo(() => new Map(users.map((user) => [user.id, user])), [users]);
 
@@ -54,20 +60,13 @@ export function FeedClient({
     return map;
   }, [allComments]);
 
-  const effectivePosts = useMemo(
-    () =>
-      initialPosts
-        .map((post) => ({
-          ...post,
-          isFavorited: favoriteOverrides[post.id] ?? post.isFavorited,
-          upvotes: post.upvotes + (upvoteDeltaByPostId[post.id] ?? 0),
-        }))
-        .filter((post) => !hiddenPostIds.has(post.id)),
-    [favoriteOverrides, hiddenPostIds, initialPosts, upvoteDeltaByPostId],
+  const visiblePosts = useMemo(
+    () => initialPosts.filter((post) => !hiddenPostIds.has(post.id)),
+    [hiddenPostIds, initialPosts],
   );
 
   const sortedPosts = useMemo(() => {
-    const sorted = [...effectivePosts].sort((a, b) => {
+    const sorted = [...visiblePosts].sort((a, b) => {
       if (selectedSort === "new") {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
@@ -89,7 +88,7 @@ export function FeedClient({
     });
 
     return selectedSort === "fav" ? sorted.filter((post) => post.isFavorited) : sorted;
-  }, [effectivePosts, selectedSort]);
+  }, [visiblePosts, selectedSort]);
 
   useEffect(() => {
     return () => {
@@ -139,32 +138,35 @@ export function FeedClient({
     });
   }, []);
 
-  const toggleFavorite = useCallback((post: Post) => {
-    setFavoriteOverrides((current) => {
-      const nextValue = !(current[post.id] ?? post.isFavorited);
-      return {
-        ...current,
-        [post.id]: nextValue,
-      };
-    });
-  }, []);
+  const toggleFavorite = useCallback(
+    async (post: Post) => {
+      if (authStatus !== "authenticated") {
+        openAuthModal();
+        return;
+      }
+      try {
+        await toggleFavoriteMutation({ postId: post.id as Id<"forumPosts"> });
+      } catch {
+        /* ignore */
+      }
+    },
+    [authStatus, openAuthModal, toggleFavoriteMutation],
+  );
 
-  const toggleUpvote = useCallback((post: Post) => {
-    setIsUpvotedByPostId((current) => {
-      const currentlyUpvoted = current[post.id] ?? false;
-      const nextUpvoted = !currentlyUpvoted;
-
-      setUpvoteDeltaByPostId((deltaCurrent) => ({
-        ...deltaCurrent,
-        [post.id]: nextUpvoted ? 1 : 0,
-      }));
-
-      return {
-        ...current,
-        [post.id]: nextUpvoted,
-      };
-    });
-  }, []);
+  const toggleUpvote = useCallback(
+    async (post: Post) => {
+      if (authStatus !== "authenticated") {
+        openAuthModal();
+        return;
+      }
+      try {
+        await toggleUpvoteMutation({ postId: post.id as Id<"forumPosts"> });
+      } catch {
+        /* ignore */
+      }
+    },
+    [authStatus, openAuthModal, toggleUpvoteMutation],
+  );
 
   const reportPost = useCallback(
     (reason: string) => {
@@ -243,10 +245,11 @@ export function FeedClient({
               author={usersById.get(post.authorId) ?? null}
               comments={comments}
               commenters={commenters}
+              categories={categories}
               isFavorited={post.isFavorited}
-              isUpvoted={isUpvotedByPostId[post.id] ?? false}
-              onToggleFavorite={() => toggleFavorite(post)}
-              onToggleUpvote={() => toggleUpvote(post)}
+              isUpvoted={post.viewerHasUpvote ?? false}
+              onToggleFavorite={() => void toggleFavorite(post)}
+              onToggleUpvote={() => void toggleUpvote(post)}
               onHide={() => hidePost(post.id)}
               onReport={() => setReportPostId(post.id)}
               onShare={() => void handleShare(post)}

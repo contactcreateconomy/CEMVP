@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-04-04 (forum: remove misleading Edge IP rate-limit middleware)
+- **`apps/forum/src/middleware.ts`**: Removed. In-memory per-IP counters on the Edge do not persist across Vercel instances or cold starts, so they gave a false sense of security.
+- **`README.md`**, **`docs/architecture.md`**, **`docs/forum-capacity.md`**, **`CLAUDE.md`**, **`AGENTS.md`**, **`docs/README.md`**: Document Convex **`forumWriteBuckets`** for writes and recommend **Vercel WAF** / shared stores (e.g. Upstash) for distributed IP throttling.
+
+## 2026-04-03 (docs: sync with forum scale hardening)
+- **`README.md`**, **`docs/architecture.md`**, **`docs/schema-forum.md`**, **`docs/forum-capacity.md`**, **`docs/overview.md`**, **`docs/README.md`**, **`docs/quick-start.md`**, **`docs/production-convex.md`**, **`CLAUDE.md`**: Document **`SharedDataProvider`**, middleware rate limiting, Vercel Analytics/Speed Insights, Convex crons + **`forumFeedCache`**, search indexes, split discussion queries (**`getDiscussionSidebarData`**), **`hasViewerProfile`**, lazy TipTap, preview env var note, monorepo Vercel CLI note.
+- **`apps/forum/README.md`**: Replaced create-next-app boilerplate with pointers to monorepo docs and forum-specific conventions.
+
+## 2026-04-03 (convex prod: deploy + category bootstrap)
+- **`convex/forum/seed.ts`**: **`ensureForumCategories`** internal mutation — inserts missing **`forumCategories`** from catalog only (idempotent; no posts/profiles/demo data).
+- **`package.json`**: **`pnpm convex:prod:ensure-categories`** → `convex run forum/seed:ensureForumCategories --prod`.
+- **`docs/production-convex.md`**: Prod deploy steps, user-only content policy, category bootstrap; linked from [`docs/README.md`](docs/README.md) and [`CLAUDE.md`](CLAUDE.md).
+- **Prod**: `convex deploy` to **energetic-kangaroo-55**; **`convex:prod:ensure-categories`** result `{ inserted: 9, skipped: 0 }`.
+
+## 2026-04-03 (forum: next/image remotePatterns for OAuth avatars)
+- **`apps/forum`**: [`next.config.mjs`](apps/forum/next.config.mjs) — allow **`next/image`** for **GitHub**, **Google**, **Facebook**, **Gravatar** hostnames (plus existing Unsplash) so signed-in profile avatars do not throw at runtime.
+
+## 2026-04-03 (forum: ForumProfileEnsurer under AppAuthProvider)
+- **`apps/forum`**: Render **`ForumProfileEnsurer`** inside **`AppAuthProvider`** in [`layout.tsx`](apps/forum/src/app/layout.tsx) (not inside [`ConvexProvider`](apps/forum/src/providers/convex-provider.tsx)) so **`useAuth`** is defined — fixes **`useAppAuth must be used within AppAuthProvider`** on `/feed`.
+
+## 2026-04-03 (docs: architecture + stack versions)
+- **`docs/architecture.md`**: System diagram (Mermaid), monorepo/runtime versions, forum + root dependency tables (Next, React, Convex, Tailwind, TipTap, Radix, ESLint, pnpm, Node), workspace packages, deployment intent. Linked from [`docs/README.md`](docs/README.md), [`CLAUDE.md`](CLAUDE.md), [`README.md`](README.md), [`AGENTS.md`](AGENTS.md), [`docs/overview.md`](docs/overview.md).
+
+## 2026-04-03 (docs: agent-oriented overview, quick start, schema reference)
+- **`docs/`**: Added [`docs/README.md`](docs/README.md) (index), [`docs/overview.md`](docs/overview.md), [`docs/quick-start.md`](docs/quick-start.md), [`docs/schema-forum.md`](docs/schema-forum.md). [`CLAUDE.md`](CLAUDE.md) — documentation index table + replaced outdated mock-data forum section with Convex-backed description. [`AGENTS.md`](AGENTS.md), [`README.md`](README.md) — pointers to `docs/README.md`.
+
 ## 2026-04-03 (forum: /new-post TipTap editor)
 - **`apps/forum`**: **`/new-post`** uses **`NewPostComposer`** — TipTap (StarterKit, underline, link, placeholder), **selection bubble menu** (`@tiptap/react/menus`), **category** pills aligned with **`getCategories()`** (locked categories disabled), title + optional subtitle, mock **Publish** / **Save draft** toasts. Global **`.new-post-prose`** styles in [`apps/forum/src/app/globals.css`](apps/forum/src/app/globals.css). Removed unused **`@tiptap/extension-bubble-menu`** dependency (menu comes from React package).
 - **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` OK.

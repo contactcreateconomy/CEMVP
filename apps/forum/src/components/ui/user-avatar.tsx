@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useMemo, useState } from "react";
 
 import { getUserLevelRingColor } from "@/lib/user-levels";
@@ -57,12 +56,17 @@ export function UserAvatar({ user, size = "md", className }: UserAvatarProps) {
       onMouseLeave={() => setIsHovered(false)}
     >
       {user?.avatar ? (
-        <Image
+        // Native <img>: profile images may come from Convex storage or any OAuth host;
+        // next/image would throw if the hostname is not in remotePatterns (production crash).
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
           src={user.avatar}
-          alt={`${user.name} avatar`}
+          alt=""
           width={imageSizeMap[size]}
           height={imageSizeMap[size]}
           className={`${sizeClassMap[size]} rounded-full object-cover`}
+          loading="lazy"
+          referrerPolicy="no-referrer"
         />
       ) : (
         <span
