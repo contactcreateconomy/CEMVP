@@ -1,4 +1,7 @@
 import type { CategoryKey, Post } from "@/types";
+import type { DiscussionThread } from "@/types/discussion";
+
+import { discussionThreads } from "./discussion-threads";
 
 const categoryKeys: CategoryKey[] = [
   "news",
@@ -103,6 +106,26 @@ function slugify(value: string) {
     .replace(/\s+/g, "-");
 }
 
+function discussionThreadToPost(thread: DiscussionThread, coverIndex: number): Post {
+  return {
+    id: thread.id,
+    slug: thread.slug,
+    title: thread.title,
+    summary: thread.aiSummary,
+    body: thread.body,
+    coverImage: imagePool[coverIndex % imagePool.length],
+    category: thread.category,
+    authorId: thread.authorId,
+    upvotes: thread.upvotes,
+    commentsCount: thread.comments.length,
+    views: thread.views,
+    createdAt: thread.createdAt,
+    trending: "hot",
+    isFavorited: false,
+    locked: false,
+  };
+}
+
 function makePost(category: CategoryKey, categoryIndex: number, itemIndex: number): Post {
   const prompts = categoryPromptMap[category];
   const prompt = prompts[itemIndex % prompts.length];
@@ -133,6 +156,9 @@ function makePost(category: CategoryKey, categoryIndex: number, itemIndex: numbe
   };
 }
 
-export const posts: Post[] = categoryKeys.flatMap((category, categoryIndex) =>
-  Array.from({ length: 10 }, (_, itemIndex) => makePost(category, categoryIndex, itemIndex)),
-);
+export const posts: Post[] = [
+  ...discussionThreads.map((thread, index) => discussionThreadToPost(thread, index)),
+  ...categoryKeys.flatMap((category, categoryIndex) =>
+    Array.from({ length: 10 }, (_, itemIndex) => makePost(category, categoryIndex, itemIndex)),
+  ),
+];

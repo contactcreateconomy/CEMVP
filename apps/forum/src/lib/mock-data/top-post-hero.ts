@@ -1,4 +1,5 @@
 import type { Post } from "@/types";
+import { getDiscussionHrefForPost } from "@/lib/discussion/feed-post-discussion-slug";
 
 import { posts } from "./posts";
 
@@ -13,6 +14,8 @@ interface TopPostHeroSelection {
 export interface TopPostHeroSlide {
   id: string;
   slug: string;
+  /** Full path for featured links, including `?post=` when overlaying feed copy on an MVP thread. */
+  discussionHref: string;
   title: string;
   summary: string;
   coverImage?: string;
@@ -48,6 +51,7 @@ export function getTopPostHeroSlides(sourcePosts: Post[] = posts): TopPostHeroSl
     slides.push({
       id: post.id,
       slug: post.slug,
+      discussionHref: getDiscussionHrefForPost(post),
       title: post.title,
       summary: post.summary,
       coverImage: post.coverImage,

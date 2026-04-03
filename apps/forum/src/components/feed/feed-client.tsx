@@ -7,12 +7,15 @@ import { EmptyState } from "@/components/states/empty-state";
 import { FeedUndoToast } from "@/components/feed/feed-undo-toast";
 import { ReportPostDialog } from "@/components/feed/report-post-dialog";
 import type { Comment, Post, User } from "@/types";
+import { getDiscussionHrefForPost } from "@/lib/discussion/feed-post-discussion-slug";
 
 interface FeedClientProps {
   initialPosts: Post[];
   allComments: Comment[];
   users: User[];
   selectedSort: "top" | "hot" | "new" | "fav";
+  /** When set and there are no posts to show, overrides default empty copy (e.g. search / saved). */
+  emptyState?: { title: string; description: string; ctaLabel?: string };
 }
 
 function viralityScore(post: Post) {
@@ -25,7 +28,13 @@ interface UndoState {
   message: string;
 }
 
-export function FeedClient({ initialPosts, allComments, users, selectedSort }: FeedClientProps) {
+export function FeedClient({
+  initialPosts,
+  allComments,
+  users,
+  selectedSort,
+  emptyState: emptyStateOverride,
+}: FeedClientProps) {
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
   const [upvoteDeltaByPostId, setUpvoteDeltaByPostId] = useState<Record<string, number>>({});
   const [isUpvotedByPostId, setIsUpvotedByPostId] = useState<Record<string, boolean>>({});
@@ -169,7 +178,8 @@ export function FeedClient({ initialPosts, allComments, users, selectedSort }: F
     [hidePost, reportPostId],
   );
   const handleShare = useCallback(async (post: Post) => {
-    const shareUrl = typeof window === "undefined" ? "" : `${window.location.origin}/discussions/${post.slug}`;
+    const shareUrl =
+      typeof window === "undefined" ? "" : `${window.location.origin}${getDiscussionHrefForPost(post)}`;
 
     if (navigator.share) {
       try {
@@ -190,6 +200,15 @@ export function FeedClient({ initialPosts, allComments, users, selectedSort }: F
   }, []);
 
   if (sortedPosts.length === 0) {
+    if (emptyStateOverride) {
+      return (
+        <EmptyState
+          title={emptyStateOverride.title}
+          description={emptyStateOverride.description}
+          ctaLabel={emptyStateOverride.ctaLabel}
+        />
+      );
+    }
     return (
       <EmptyState
         title={selectedSort === "fav" ? "No favorite posts yet" : "No posts in this category yet"}

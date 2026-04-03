@@ -295,6 +295,32 @@ main {
   animation: overlay-fade-out 300ms ease-in both;
 }
 
+/* TipTap /new-post: paragraph rhythm + placeholder (Medium-style canvas) */
+.new-post-prose.tiptap p {
+  margin: 0.65em 0;
+}
+
+.new-post-prose.tiptap h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 1.25em 0 0.5em;
+  letter-spacing: -0.02em;
+}
+
+.new-post-prose.tiptap h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1em 0 0.4em;
+}
+
+.new-post-prose.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--text-muted);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .electric-glow,
   .animate-pulse-glow {

@@ -97,7 +97,7 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
                 className="relative min-h-[220px] lg:min-h-0"
               >
                 <Link
-                  href={`/discussions/${currentSlide.slug}`}
+                  href={currentSlide.discussionHref}
                   aria-label={`Open featured post ${currentSlide.title}`}
                   className="group/image relative block h-full overflow-hidden rounded-[24px] border border-(--border-default)/70 bg-(--bg-overlay)/45 shadow-[0_10px_24px_rgba(9,9,11,0.12)] transition-transform duration-300"
                 >
@@ -132,7 +132,7 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
               >
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-(--text-muted)">{currentSlide.eyebrow}</p>
 
-                <Link href={`/discussions/${currentSlide.slug}`} className="group/title block">
+                <Link href={currentSlide.discussionHref} className="group/title block">
                   <h2 className="line-clamp-2 text-3xl font-semibold leading-[1.12] text-(--text-primary) drop-shadow-[0_3px_10px_rgba(9,9,11,0.16)] transition-colors duration-200 group-hover/title:text-(--brand-primary) lg:text-5xl">
                     {currentSlide.title}
                   </h2>
@@ -164,7 +164,7 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
                   className="mt-6"
                 >
                   <Link
-                    href={`/discussions/${currentSlide.slug}`}
+                    href={currentSlide.discussionHref}
                     className={cn(
                       buttonVariants({ variant: "primary", size: "md" }),
                       "group/cta relative h-10 rounded-full px-6 text-sm font-semibold shadow-none transition-[box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(14,165,233,0.34)]",
