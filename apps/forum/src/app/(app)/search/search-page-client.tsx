@@ -7,6 +7,7 @@ import { FeedClient } from "@/components/feed/feed-client";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { api } from "@/lib/convex";
 import { isConvexConfigured } from "@cemvp/convex-client";
+import { useSharedData } from "@/providers/shared-data-context";
 import { reputationLabel } from "@/lib/discussion/reputation";
 import type { Category, Comment, Post, User } from "@/types";
 
@@ -26,7 +27,7 @@ function mergeUsers(a: User[], b: User[]): User[] {
 
 function SearchPageWithConvex({ q }: SearchPageClientProps) {
   const searchResult = useQuery(api.forum.queries.searchPostsAndUsers, q ? { q } : "skip");
-  const categories = useQuery(api.forum.queries.listCategories, {});
+  const { categories, categoriesLoading } = useSharedData();
 
   if (!q) {
     return (
@@ -39,7 +40,7 @@ function SearchPageWithConvex({ q }: SearchPageClientProps) {
     );
   }
 
-  if (searchResult === undefined || categories === undefined) {
+  if (searchResult === undefined || categoriesLoading) {
     return null;
   }
 

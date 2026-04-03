@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { FeedClient } from "@/components/feed/feed-client";
 import { api } from "@/lib/convex";
 import { isConvexConfigured } from "@cemvp/convex-client";
+import { useSharedData } from "@/providers/shared-data-context";
 import type { Category, Comment, Post, User } from "@/types";
 
 function mergeUsers(prev: User[], next: User[]): User[] {
@@ -69,7 +70,7 @@ function SavedPageWithConvex() {
     setUsers(page.users as User[]);
   }, [page]);
 
-  const categories = useQuery(api.forum.queries.listCategories, {});
+  const { categories, categoriesLoading } = useSharedData();
 
   const loadMore = useCallback(() => {
     if (!page?.continueCursor || page.isDone) {
@@ -81,7 +82,7 @@ function SavedPageWithConvex() {
 
   const canLoadMore = Boolean(page && !page.isDone && page.continueCursor);
 
-  if (page === undefined || categories === undefined) {
+  if (page === undefined || categoriesLoading) {
     return null;
   }
 

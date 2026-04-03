@@ -13,6 +13,7 @@ import { useQuery } from "convex/react";
 
 import { api } from "@/lib/convex";
 import { isConvexConfigured } from "@cemvp/convex-client";
+import { useSharedData } from "@/providers/shared-data-context";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@cemvp/auth-ui";
 import { useScroll } from "@/components/ui/use-scroll";
@@ -65,11 +66,18 @@ type NotificationRow = {
 
 function TopNavWithConvexNotifications() {
   const { authStatus } = useAuth();
+  const { unreadNotificationCount } = useSharedData();
   const notificationList = useQuery(
     api.forum.queries.listNotificationsForViewer,
     authStatus === "authenticated" ? {} : "skip",
   );
-  return <TopNavInner convexNotificationsEnabled notificationList={notificationList} />;
+  return (
+    <TopNavInner
+      convexNotificationsEnabled
+      notificationList={notificationList}
+      unreadCountOverride={unreadNotificationCount}
+    />
+  );
 }
 
 /**
@@ -79,9 +87,11 @@ function TopNavWithConvexNotifications() {
 function TopNavInner({
   convexNotificationsEnabled,
   notificationList,
+  unreadCountOverride,
 }: {
   convexNotificationsEnabled: boolean;
   notificationList?: NotificationRow[] | undefined;
+  unreadCountOverride?: number;
 }) {
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
@@ -98,7 +108,7 @@ function TopNavInner({
     return (notificationList ?? []) as NotificationRow[];
   }, [convexNotificationsEnabled, authStatus, notificationList]);
 
-  const unread = useMemo(() => effectiveList.filter((n) => !n.read).length, [effectiveList]);
+  const unread = unreadCountOverride ?? effectiveList.filter((n) => !n.read).length;
 
   const latestNotifications = useMemo(() => {
     return [...effectiveList]

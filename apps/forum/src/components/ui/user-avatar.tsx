@@ -65,6 +65,7 @@ export function UserAvatar({ user, size = "md", className }: UserAvatarProps) {
           width={imageSizeMap[size]}
           height={imageSizeMap[size]}
           className={`${sizeClassMap[size]} rounded-full object-cover`}
+          loading="lazy"
           referrerPolicy="no-referrer"
         />
       ) : (

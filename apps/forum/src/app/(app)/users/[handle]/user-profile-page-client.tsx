@@ -8,6 +8,7 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { api } from "@/lib/convex";
 import { reputationLabel } from "@/lib/discussion/reputation";
 import { isConvexConfigured } from "@cemvp/convex-client";
+import { useSharedData } from "@/providers/shared-data-context";
 import type { Category, Post, User } from "@/types";
 
 interface UserProfilePageClientProps {
@@ -43,7 +44,7 @@ function UserProfilePageWithConvex({ handle }: UserProfilePageClientProps) {
     user && postIds.length > 0 ? { postIds, limitPerPost: 6 } : "skip",
   );
 
-  const categories = useQuery(api.forum.queries.listCategories, {});
+  const { categories, categoriesLoading } = useSharedData();
 
   const feedUsers = useMemo(() => {
     if (!user || !previews) {
@@ -52,7 +53,7 @@ function UserProfilePageWithConvex({ handle }: UserProfilePageClientProps) {
     return mergeUsers([user as User], previews.users as User[]);
   }, [user, previews]);
 
-  if (user === undefined || authorPosts === undefined || categories === undefined) {
+  if (user === undefined || authorPosts === undefined || categoriesLoading) {
     return null;
   }
 

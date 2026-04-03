@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import "./globals.css";
 import { isConvexConfigured } from "@cemvp/convex-client";
 import { AppAuthProvider, AuthModal, OfflineAuthProvider } from "@cemvp/auth-ui";
 import { ConvexProvider } from "@/providers/convex-provider";
 import { ForumProfileEnsurer } from "@/providers/forum-profile-ensurer";
+import { SharedDataProvider } from "@/providers/shared-data-context";
 import { ThemeProvider } from "@/providers/theme-provider";
 
 const geistSans = localFont({
@@ -39,18 +42,24 @@ export default function RootLayout({
           <ConvexProvider>
             {convexConfigured ? (
               <AppAuthProvider>
-                <ForumProfileEnsurer />
-                {children}
-                <AuthModal />
+                <SharedDataProvider>
+                  <ForumProfileEnsurer />
+                  {children}
+                  <AuthModal />
+                </SharedDataProvider>
               </AppAuthProvider>
             ) : (
               <OfflineAuthProvider>
-                {children}
-                <AuthModal />
+                <SharedDataProvider>
+                  {children}
+                  <AuthModal />
+                </SharedDataProvider>
               </OfflineAuthProvider>
             )}
           </ConvexProvider>
         </ThemeProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

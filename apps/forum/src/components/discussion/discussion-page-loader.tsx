@@ -22,6 +22,10 @@ interface DiscussionPageLoaderProps {
 function DiscussionPageLoaderWithConvex({ pathSlug, feedPostSlug }: DiscussionPageLoaderProps) {
   const router = useRouter();
   const state = useQuery(api.forum.discussionRoute.getDiscussionRouteState, { pathSlug, feedPostSlug });
+  const sidebarData = useQuery(
+    api.forum.discussionRoute.getDiscussionSidebarData,
+    state?.kind === "rich" ? { threadSlug: pathSlug } : "skip",
+  );
 
   useEffect(() => {
     if (state?.kind === "redirect") {
@@ -52,9 +56,12 @@ function DiscussionPageLoaderWithConvex({ pathSlug, feedPostSlug }: DiscussionPa
         thread={state.thread as unknown as DiscussionThread}
         author={state.author}
         category={state.category as import("@/types").Category | null}
-        related={state.related}
-        trending={state.trending}
-        users={state.users as User[]}
+        related={sidebarData?.related ?? state.related}
+        trending={sidebarData?.trending ?? state.trending}
+        users={[
+          ...(state.users as User[]),
+          ...((sidebarData?.sidebarUsers ?? []) as User[]),
+        ]}
         feedOverlay={state.feedOverlay as FeedThreadOverlay | null | undefined}
       />
     );

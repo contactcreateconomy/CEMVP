@@ -103,7 +103,7 @@ export function coalesceRichThreadPayloadForClient(payload: RichThreadPayload): 
   }
   const ir = irRaw as Record<string, unknown>;
   const tc = ir.topContributor;
-  let topContributor = { ...DEFAULT_TOP_CONTRIBUTOR };
+  let topContributor: { userId: string; excerpt: string } = { ...DEFAULT_TOP_CONTRIBUTOR };
   if (tc && typeof tc === "object" && !Array.isArray(tc)) {
     const t = tc as Record<string, unknown>;
     topContributor = {

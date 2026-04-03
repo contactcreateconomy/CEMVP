@@ -7,6 +7,7 @@ import { FeedClient } from "@/components/feed/feed-client";
 import { TrendSorter } from "@/components/feed/trend-sorter";
 import { api } from "@/lib/convex";
 import { isConvexConfigured } from "@cemvp/convex-client";
+import { useSharedData } from "@/providers/shared-data-context";
 import type { Comment, Post, User } from "@/types";
 import type { Category } from "@/types";
 
@@ -89,7 +90,7 @@ function FeedRouteWithConvex({ selectedCategory, selectedSort }: FeedRouteClient
     setUsers(page.users as User[]);
   }, [page]);
 
-  const categories = useQuery(api.forum.queries.listCategories, {});
+  const { categories, categoriesLoading } = useSharedData();
 
   const loadMore = useCallback(() => {
     if (!page?.continueCursor || page.isDone) {
@@ -103,7 +104,7 @@ function FeedRouteWithConvex({ selectedCategory, selectedSort }: FeedRouteClient
 
   const initialPosts = useMemo(() => posts, [posts]);
 
-  if (page === undefined || categories === undefined) {
+  if (page === undefined || categoriesLoading) {
     return null;
   }
 

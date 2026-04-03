@@ -90,21 +90,9 @@ export const getDiscussionRouteState = query({
           }
         }
       }
-      const relatedSlugs = cappedRelatedSlugs(thread);
-      const trendingSlugs = cappedTrendingSlugs(thread);
       const rail = thread.insightRail as { topContributor?: { userId: string } } | undefined;
       if (rail?.topContributor?.userId) {
         userIds.add(rail.topContributor.userId);
-      }
-
-      const related = await hydrateRelatedThreads(ctx, relatedSlugs, DISCUSSION_RELATED_CAP);
-      const trending = await hydrateRelatedThreads(ctx, trendingSlugs, DISCUSSION_TRENDING_CAP);
-
-      for (const r of related) {
-        userIds.add(r.authorId);
-      }
-      for (const t of trending) {
-        userIds.add(t.authorId);
       }
 
       const users = await loadProfilesForIds(ctx, userIds);
@@ -120,8 +108,8 @@ export const getDiscussionRouteState = query({
         thread,
         author,
         category,
-        related,
-        trending,
+        related: [],
+        trending: [],
         users,
         feedOverlay,
         categories,
@@ -161,9 +149,10 @@ export const getDiscussionRouteState = query({
       const author = authorDoc ? profileToUser(authorDoc) : null;
       const commentDocs = await ctx.db
         .query("forumPostComments")
-        .withIndex("by_post", (q) => q.eq("postId", postByPath._id))
-        .collect();
-      const comments = commentDocs.slice(0, 12).map((c) => ({
+        .withIndex("by_post_createdAt", (q) => q.eq("postId", postByPath._id))
+        .order("desc")
+        .take(12);
+      const comments = [...commentDocs].reverse().map((c) => ({
         id: c._id as string,
         postId: c.postId as string,
         authorId: c.authorProfileId as string,
@@ -189,5 +178,45 @@ export const getDiscussionRouteState = query({
     }
 
     return { kind: "not_found" as const };
+  },
+});
+
+export const getDiscussionSidebarData = query({
+  args: {
+    threadSlug: v.string(),
+  },
+  returns: v.any(),
+  handler: async (ctx, { threadSlug }) => {
+    const richRow = await ctx.db
+      .query("forumRichThreads")
+      .withIndex("by_slug", (q) => q.eq("slug", threadSlug))
+      .unique();
+
+    if (!richRow?.payload) {
+      return { related: [], trending: [], sidebarUsers: [] };
+    }
+
+    const thread = richRow.payload as RichThreadPayload;
+    const relatedSlugs = cappedRelatedSlugs(thread);
+    const trendingSlugs = cappedTrendingSlugs(thread);
+
+    const related = await hydrateRelatedThreads(ctx, relatedSlugs, DISCUSSION_RELATED_CAP);
+    const trending = await hydrateRelatedThreads(ctx, trendingSlugs, DISCUSSION_TRENDING_CAP);
+
+    const userIds = new Set<string>();
+    for (const r of related) {
+      userIds.add(r.authorId);
+    }
+    for (const t of trending) {
+      userIds.add(t.authorId);
+    }
+    const rail = thread.insightRail as { topContributor?: { userId: string } } | undefined;
+    if (rail?.topContributor?.userId) {
+      userIds.add(rail.topContributor.userId);
+    }
+
+    const sidebarUsers = await loadProfilesForIds(ctx, userIds);
+
+    return { related, trending, sidebarUsers };
   },
 });

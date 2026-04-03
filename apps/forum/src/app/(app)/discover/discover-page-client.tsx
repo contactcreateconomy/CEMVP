@@ -1,17 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery } from "convex/react";
 import { Compass } from "lucide-react";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { api } from "@/lib/convex";
 import { isConvexConfigured } from "@cemvp/convex-client";
+import { useSharedData } from "@/providers/shared-data-context";
 
 function DiscoverPageWithConvex() {
-  const categories = useQuery(api.forum.queries.listCategories, {});
+  const { categories, categoriesLoading } = useSharedData();
 
-  if (categories === undefined) {
+  if (categoriesLoading) {
     return null;
   }
 

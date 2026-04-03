@@ -16,10 +16,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { useQuery } from "convex/react";
-
-import { api } from "@/lib/convex";
 import { isConvexConfigured } from "@cemvp/convex-client";
+import { useSharedData } from "@/providers/shared-data-context";
 import type { CategoryKey } from "@/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -116,7 +114,7 @@ function LeftSidebarShell({ discoverItems }: { discoverItems: DiscoverItem[] }) 
 }
 
 function LeftSidebarWithConvex() {
-  const categories = useQuery(api.forum.queries.listCategories, {}) ?? [];
+  const { categories } = useSharedData();
   const discoverItems: DiscoverItem[] = [
     { key: "home", label: "Home", href: "/feed", Icon: Home },
     ...categories.map((category) => ({

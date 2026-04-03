@@ -1,20 +1,35 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { lazy, Suspense } from "react";
 
-import { NewPostComposer } from "@/components/new-post/new-post-composer";
-import { api } from "@/lib/convex";
 import { isConvexConfigured } from "@cemvp/convex-client";
+import { useSharedData } from "@/providers/shared-data-context";
 import type { Category } from "@/types";
 
-function NewPostPageWithConvex() {
-  const categories = useQuery(api.forum.queries.listCategories, {});
+const NewPostComposer = lazy(() =>
+  import("@/components/new-post/new-post-composer").then((m) => ({
+    default: m.NewPostComposer,
+  })),
+);
 
-  if (categories === undefined) {
+function NewPostPageWithConvex() {
+  const { categories, categoriesLoading } = useSharedData();
+
+  if (categoriesLoading) {
     return null;
   }
 
-  return <NewPostComposer categories={categories as Category[]} />;
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[50vh] items-center justify-center text-sm text-(--text-muted)">
+          Loading editor…
+        </div>
+      }
+    >
+      <NewPostComposer categories={categories as Category[]} />
+    </Suspense>
+  );
 }
 
 export function NewPostPageClient() {

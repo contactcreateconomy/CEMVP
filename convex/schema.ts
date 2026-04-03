@@ -54,7 +54,8 @@ export default defineSchema({
   })
     .index("by_handle", ["handle"])
     .index("by_user", ["userId"])
-    .index("by_seed_key", ["seedKey"]),
+    .index("by_seed_key", ["seedKey"])
+    .searchIndex("search_name", { searchField: "name" }),
 
   forumCategories: defineTable({
     key: v.string(),
@@ -93,7 +94,9 @@ export default defineSchema({
     .index("by_author", ["authorProfileId"])
     .index("by_legacy_key", ["legacyKey"])
     .index("by_createdAt", ["createdAt"])
-    .index("by_category_createdAt", ["category", "createdAt"]),
+    .index("by_category_createdAt", ["category", "createdAt"])
+    .searchIndex("search_title", { searchField: "title", filterFields: ["category"] })
+    .searchIndex("search_body", { searchField: "body", filterFields: ["category"] }),
 
   forumRichThreads: defineTable({
     slug: v.string(),
@@ -133,7 +136,7 @@ export default defineSchema({
     rewardPoints: v.number(),
     endsAt: v.string(),
     participants: v.number(),
-  }),
+  }).index("by_endsAt", ["endsAt"]),
 
   forumLeaderboard: defineTable({
     rank: v.number(),
@@ -150,7 +153,9 @@ export default defineSchema({
     createdAt: v.string(),
     read: v.boolean(),
     postSlug: v.optional(v.string()),
-  }).index("by_profile", ["profileId"]),
+  })
+    .index("by_profile", ["profileId"])
+    .index("by_profile_createdAt", ["profileId", "createdAt"]),
 
   forumVibingItems: defineTable({
     kind: v.union(
@@ -193,4 +198,10 @@ export default defineSchema({
     count: v.number(),
     windowStartMs: v.number(),
   }).index("by_user_kind", ["userId", "kind"]),
+
+  forumFeedCache: defineTable({
+    cacheKey: v.string(),
+    postIds: v.array(v.string()),
+    computedAt: v.number(),
+  }).index("by_key", ["cacheKey"]),
 });

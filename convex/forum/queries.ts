@@ -13,11 +13,7 @@ import {
   viewerFlagsForPostIds,
 } from "./feedQueries";
 import { postDocToPost, profileToUser } from "./helpers";
-import {
-  SEARCH_MAX_POSTS_SCAN,
-  SEARCH_MAX_RESULTS_EACH,
-  SEARCH_MAX_USERS_SCAN,
-} from "./limits";
+import { SEARCH_MAX_RESULTS_EACH } from "./limits";
 
 export const listCategories = query({
   args: {},
@@ -143,7 +139,7 @@ export const getPostsByAuthorProfileId = query({
     const docs = await ctx.db
       .query("forumPosts")
       .withIndex("by_author", (q) => q.eq("authorProfileId", pid))
-      .collect();
+      .take(100);
     const { favoritePostIds, upvotePostIds } = await viewerFlagsForPostIds(
       ctx,
       userId,
@@ -197,8 +193,9 @@ export const getCommentsByPostId = query({
     const pid = postId as Id<"forumPosts">;
     const docs = await ctx.db
       .query("forumPostComments")
-      .withIndex("by_post", (q) => q.eq("postId", pid))
-      .collect();
+      .withIndex("by_post_createdAt", (q) => q.eq("postId", pid))
+      .order("desc")
+      .take(50);
     return docs.map((c) => ({
       id: c._id as string,
       postId: c.postId as string,
@@ -256,7 +253,7 @@ export const listCampaigns = query({
   args: {},
   returns: v.array(v.any()),
   handler: async (ctx) => {
-    const rows = await ctx.db.query("forumCampaigns").collect();
+    const rows = await ctx.db.query("forumCampaigns").take(50);
     return rows.map((r) => ({
       id: r._id as string,
       title: r.title,
@@ -272,8 +269,11 @@ export const getLeaderboardWithUsers = query({
   args: {},
   returns: v.array(v.any()),
   handler: async (ctx) => {
-    const rows = await ctx.db.query("forumLeaderboard").collect();
-    rows.sort((a, b) => a.rank - b.rank);
+    const rows = await ctx.db
+      .query("forumLeaderboard")
+      .withIndex("by_rank")
+      .order("asc")
+      .take(50);
     const out = [];
     for (const r of rows) {
       const profile = await ctx.db.get(r.profileId);
@@ -293,9 +293,12 @@ export const listVibingItems = query({
   args: { limit: v.optional(v.number()) },
   returns: v.array(v.any()),
   handler: async (ctx, { limit = 10 }) => {
-    const rows = await ctx.db.query("forumVibingItems").collect();
-    rows.sort((a, b) => a.sortOrder - b.sortOrder);
-    return rows.slice(0, limit).map((r) => ({
+    const rows = await ctx.db
+      .query("forumVibingItems")
+      .withIndex("by_sort")
+      .order("asc")
+      .take(limit);
+    return rows.map((r) => ({
       id: r._id as string,
       kind: r.kind,
       label: r.label,
@@ -322,8 +325,9 @@ export const listNotificationsForViewer = query({
     }
     const rows = await ctx.db
       .query("forumNotifications")
-      .withIndex("by_profile", (q) => q.eq("profileId", profile._id))
-      .collect();
+      .withIndex("by_profile_createdAt", (q) => q.eq("profileId", profile._id))
+      .order("desc")
+      .take(50);
     return rows.map((r) => ({
       id: r._id as string,
       userId: profile._id as string,
@@ -334,6 +338,46 @@ export const listNotificationsForViewer = query({
       read: r.read,
       postSlug: r.postSlug,
     }));
+  },
+});
+
+export const getUnreadNotificationCount = query({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) {
+      return 0;
+    }
+    const profile = await ctx.db
+      .query("forumProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .unique();
+    if (!profile) {
+      return 0;
+    }
+    const rows = await ctx.db
+      .query("forumNotifications")
+      .withIndex("by_profile_createdAt", (q) => q.eq("profileId", profile._id))
+      .order("desc")
+      .take(50);
+    return rows.filter((r) => !r.read).length;
+  },
+});
+
+export const hasViewerProfile = query({
+  args: {},
+  returns: v.boolean(),
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) {
+      return false;
+    }
+    const profile = await ctx.db
+      .query("forumProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .unique();
+    return profile !== null;
   },
 });
 
@@ -371,8 +415,11 @@ export const listHeroSlides = query({
   args: {},
   returns: v.array(v.any()),
   handler: async (ctx) => {
-    const slides = await ctx.db.query("forumHeroSlides").collect();
-    slides.sort((a, b) => a.sortOrder - b.sortOrder);
+    const slides = await ctx.db
+      .query("forumHeroSlides")
+      .withIndex("by_sort")
+      .order("asc")
+      .take(20);
     const out = [];
     for (const s of slides) {
       const post = await ctx.db
@@ -420,46 +467,50 @@ export const searchPostsAndUsers = query({
       return { posts: [], users: [], comments: [], commentUsers: [] };
     }
 
-    const recentPosts = await ctx.db
+    const matchedPostDocs = await ctx.db
       .query("forumPosts")
-      .withIndex("by_createdAt")
-      .order("desc")
-      .take(SEARCH_MAX_POSTS_SCAN);
+      .withSearchIndex("search_title", (q2) => q2.search("title", needle))
+      .take(SEARCH_MAX_RESULTS_EACH);
 
-    const matchedPostDocs = recentPosts
-      .filter(
-        (p) =>
-          p.title.toLowerCase().includes(needle) ||
-          p.summary.toLowerCase().includes(needle) ||
-          p.body.toLowerCase().includes(needle),
-      )
-      .slice(0, SEARCH_MAX_RESULTS_EACH);
+    const bodyMatches = await ctx.db
+      .query("forumPosts")
+      .withSearchIndex("search_body", (q2) => q2.search("body", needle))
+      .take(SEARCH_MAX_RESULTS_EACH);
+
+    const seenIds = new Set(matchedPostDocs.map((p) => p._id as string));
+    for (const p of bodyMatches) {
+      if (!seenIds.has(p._id as string)) {
+        seenIds.add(p._id as string);
+        matchedPostDocs.push(p);
+      }
+    }
+    const finalPosts = matchedPostDocs.slice(0, SEARCH_MAX_RESULTS_EACH);
 
     const userId = await getAuthUserId(ctx);
     const { favoritePostIds, upvotePostIds } = await viewerFlagsForPostIds(
       ctx,
       userId,
-      matchedPostDocs.map((p) => p._id),
+      finalPosts.map((p) => p._id),
     );
-    const posts = matchedPostDocs.map((p) =>
+    const posts = finalPosts.map((p) =>
       postDocToPost(p, {
         isFavorited: favoritePostIds.has(p._id),
         viewerHasUpvote: upvotePostIds.has(p._id),
       }),
     );
 
-    const profileRows = await ctx.db.query("forumProfiles").take(SEARCH_MAX_USERS_SCAN);
-    const users = profileRows
-      .filter((u) => u.name.toLowerCase().includes(needle) || u.handle.toLowerCase().includes(needle))
-      .slice(0, SEARCH_MAX_RESULTS_EACH)
-      .map(profileToUser);
+    const profileRows = await ctx.db
+      .query("forumProfiles")
+      .withSearchIndex("search_name", (q2) => q2.search("name", needle))
+      .take(SEARCH_MAX_RESULTS_EACH);
+    const users = profileRows.map(profileToUser);
 
     const comments = await loadCommentPreviewsForPostIds(
       ctx,
-      matchedPostDocs.map((p) => p._id),
+      finalPosts.map((p) => p._id),
       6,
     );
-    const commentUsers = await resolveUsersForFeed(ctx, matchedPostDocs, comments);
+    const commentUsers = await resolveUsersForFeed(ctx, finalPosts, comments);
 
     return { posts, users, comments, commentUsers };
   },
