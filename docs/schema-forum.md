@@ -15,16 +15,16 @@ Imported via `authTables` from `@convex-dev/auth/server`.
 
 | Table | Key fields | Indexes |
 |-------|------------|---------|
-| `forumProfiles` | `userId?`, `seedKey?`, `handle`, `name`, `image`, `bio`, `level`, `points`, `streakDays`, `role` | `by_handle`, `by_user`, `by_seed_key` |
+| `forumProfiles` | `userId?`, `seedKey?`, `handle`, `name`, `image`, `bio`, `level`, `points`, `streakDays`, `role` | `by_handle`, `by_user`, `by_seed_key`, **`search_name`** (full-text on `name`) |
 | `forumCategories` | `key`, `name`, `icon`, `description`, `primaryColor`, `lockedByDefault`, `pointsToUnlock?` | `by_key` |
 
-**Real users** get a `forumProfiles` row from [`convex/auth.ts`](../convex/auth.ts) on signup. **Seed** inserts profiles with `seedKey` only (no `userId`). [`ensureForumProfile`](../convex/forum/mutations.ts) backfills missing profiles for logged-in users.
+**Real users** get a `forumProfiles` row from [`convex/auth.ts`](../convex/auth.ts) on signup. **Seed** inserts profiles with `seedKey` only (no `userId`). [`ensureForumProfile`](../convex/forum/mutations.ts) backfills missing profiles for logged-in users. The client’s [`ForumProfileEnsurer`](../apps/forum/src/providers/forum-profile-ensurer.tsx) calls **`hasViewerProfile`** first and only runs the mutation when no profile exists (avoids redundant writes for normal signups).
 
 ## Forum — posts and threads
 
 | Table | Key fields | Indexes |
 |-------|------------|---------|
-| `forumPosts` | `slug`, `title`, `summary`, `body`, `category`, `authorProfileId`, optional **`authorName` / `authorHandle` / `authorImage`** (denormalized for feed), counters, `createdAt`, `trending`, `locked`, `isRichThread`, `legacyKey?` | `by_slug`, `by_category`, `by_author`, `by_legacy_key`, **`by_createdAt`**, **`by_category_createdAt`** |
+| `forumPosts` | `slug`, `title`, `summary`, `body`, `category`, `authorProfileId`, optional **`authorName` / `authorHandle` / `authorImage`** (denormalized for feed), counters, `createdAt`, `trending`, `locked`, `isRichThread`, `legacyKey?` | `by_slug`, `by_category`, `by_author`, `by_legacy_key`, **`by_createdAt`**, **`by_category_createdAt`**, **`search_title`**, **`search_body`** (full-text; filter field `category`) |
 | `forumRichThreads` | `slug`, `payload` (JSON blob for MVP rich threads) | `by_slug` |
 | `forumPostComments` | `postId`, `authorProfileId`, `body`, `createdAt`, `upvotes` | `by_post`, **`by_post_createdAt`** |
 
@@ -45,22 +45,26 @@ Seed **clears** favorites/upvotes/settings/buckets on force re-seed but does **n
 
 | Table | Role |
 |-------|------|
-| `forumCampaigns` | Campaign cards |
-| `forumLeaderboard` | Ranked rows → `forumProfiles` |
-| `forumNotifications` | In-app notifications → `forumProfiles` |
+| `forumCampaigns` | Campaign cards; index **`by_endsAt`** |
+| `forumLeaderboard` | Ranked rows → `forumProfiles`; index **`by_rank`** |
+| `forumNotifications` | In-app notifications → `forumProfiles`; indexes **`by_profile`**, **`by_profile_createdAt`** (time-ordered, bounded reads) |
 | `forumVibingItems` | Sidebar “vibing” links (`sortOrder`) |
-| `forumHeroSlides` | Hero carousel; joins posts via `legacyPostKey` → `forumPosts.legacyKey` |
+| `forumHeroSlides` | Hero carousel; joins posts via `legacyPostKey` → `forumPosts.legacyKey`; index **`by_sort`** |
+| **`forumFeedCache`** | Precomputed ranked post id lists for scheduled jobs; **`cacheKey`**, **`postIds`**, **`computedAt`**; index **`by_key`**. Populated by cron; query **`getCachedFeedPostIds`** exists for future feed wiring. |
 
 ## API layout (forum)
 
 | Area | File |
 |------|------|
-| Queries (feed pages, search, profiles, hero, …) | [`convex/forum/queries.ts`](../convex/forum/queries.ts) |
+| Queries (feed pages, search, profiles, hero, …) | [`convex/forum/queries.ts`](../convex/forum/queries.ts) — includes **`getUnreadNotificationCount`**, **`hasViewerProfile`**; **search** uses **`withSearchIndex`** on posts/profiles |
 | Mutations (posts, votes, favorites, settings, …) | [`convex/forum/mutations.ts`](../convex/forum/mutations.ts) |
-| Discussion route resolver | [`convex/forum/discussionRoute.ts`](../convex/forum/discussionRoute.ts) |
+| Discussion route | [`convex/forum/discussionRoute.ts`](../convex/forum/discussionRoute.ts) — **`getDiscussionRouteState`** (core thread/author/categories) + **`getDiscussionSidebarData`** (related/trending + sidebar users) |
+| Feed cache (cron target) | [`convex/forum/feedCache.ts`](../convex/forum/feedCache.ts) — internal **`recomputeHotFeed`**, query **`getCachedFeedPostIds`** |
+| Crons | [`convex/crons.ts`](../convex/crons.ts) |
 | Seed | [`convex/forum/seed.ts`](../convex/forum/seed.ts) (internal mutation `runForumSeed`) |
 | Limits / caps | [`convex/forum/limits.ts`](../convex/forum/limits.ts) |
 | Feed query helpers | [`convex/forum/feedQueries.ts`](../convex/forum/feedQueries.ts) |
+| Discussion helpers | [`convex/forum/discussionRouteHelpers.ts`](../convex/forum/discussionRouteHelpers.ts) |
 
 Frontend API re-export: [`apps/forum/src/lib/convex.ts`](../apps/forum/src/lib/convex.ts) (`api`, `Id`).
 

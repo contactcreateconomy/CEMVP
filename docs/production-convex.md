@@ -12,6 +12,8 @@ When prompted *Do you want to push your code to your prod deployment … now?*, 
 
 **Non-interactive / CI:** set a production **`CONVEX_DEPLOY_KEY`** in the environment, then `pnpm exec convex deploy` runs without prompts ([Convex docs — deploy](https://docs.convex.dev/cli#deploy-convex-functions-to-production)).
 
+**Scheduled functions:** Deploying registers jobs from [`convex/crons.ts`](../convex/crons.ts) (e.g. periodic **`forum/feedCache:recomputeHotFeed`**). Confirm they appear under **Scheduled functions** in the Convex dashboard for prod. The **`forumFeedCache`** table stays empty until the first successful run (or until you add posts for the job to rank).
+
 Production URL for this project (from README): `https://energetic-kangaroo-55.convex.cloud` — your published Next.js app must use **`NEXT_PUBLIC_CONVEX_URL`** pointing at **prod** `.convex.cloud`, not dev.
 
 ## User-only content (no demo seed)

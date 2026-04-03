@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-04-04 (forum: remove misleading Edge IP rate-limit middleware)
+- **`apps/forum/src/middleware.ts`**: Removed. In-memory per-IP counters on the Edge do not persist across Vercel instances or cold starts, so they gave a false sense of security.
+- **`README.md`**, **`docs/architecture.md`**, **`docs/forum-capacity.md`**, **`CLAUDE.md`**, **`AGENTS.md`**, **`docs/README.md`**: Document Convex **`forumWriteBuckets`** for writes and recommend **Vercel WAF** / shared stores (e.g. Upstash) for distributed IP throttling.
+
+## 2026-04-03 (docs: sync with forum scale hardening)
+- **`README.md`**, **`docs/architecture.md`**, **`docs/schema-forum.md`**, **`docs/forum-capacity.md`**, **`docs/overview.md`**, **`docs/README.md`**, **`docs/quick-start.md`**, **`docs/production-convex.md`**, **`CLAUDE.md`**: Document **`SharedDataProvider`**, middleware rate limiting, Vercel Analytics/Speed Insights, Convex crons + **`forumFeedCache`**, search indexes, split discussion queries (**`getDiscussionSidebarData`**), **`hasViewerProfile`**, lazy TipTap, preview env var note, monorepo Vercel CLI note.
+- **`apps/forum/README.md`**: Replaced create-next-app boilerplate with pointers to monorepo docs and forum-specific conventions.
+
 ## 2026-04-03 (convex prod: deploy + category bootstrap)
 - **`convex/forum/seed.ts`**: **`ensureForumCategories`** internal mutation — inserts missing **`forumCategories`** from catalog only (idempotent; no posts/profiles/demo data).
 - **`package.json`**: **`pnpm convex:prod:ensure-categories`** → `convex run forum/seed:ensureForumCategories --prod`.

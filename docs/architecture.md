@@ -16,14 +16,16 @@ flowchart LR
     DB[(Database)]
     Fn[Queries Mutations]
     Auth[Convex Auth]
+    Cr[Cron jobs]
   end
   Next -->|HTTPS WebSocket| Fn
   Next --> Auth
   Fn --> DB
+  Cr -->|scheduled internalMutation| DB
 ```
 
-- **Forum UI:** Next.js app in `apps/forum`, deployed (e.g. Vercel) with env `NEXT_PUBLIC_CONVEX_URL`.
-- **Backend:** Convex project (schema, functions, auth) in `convex/`.
+- **Forum UI:** Next.js app in `apps/forum`, deployed (e.g. Vercel) with env `NEXT_PUBLIC_CONVEX_URL`. **Per-user write rate limits** live in Convex (`forumWriteBuckets`); **IP-level** throttling should use platform WAF or a shared datastore, not in-process Edge memory (see [forum-capacity.md](forum-capacity.md)).
+- **Backend:** Convex project (schema, functions, auth, **scheduled crons**) in `convex/` — see [`convex/crons.ts`](../convex/crons.ts).
 - **Other apps:** `apps/seller`, `apps/admin`, `apps/marketplace` are placeholders; same workspace tooling, lighter dependencies.
 
 ## Monorepo and runtime
@@ -49,6 +51,8 @@ flowchart LR
 | **PostCSS** | **^8** | CSS tooling |
 | **motion** | **^12.34.3** | Animation |
 | **next-themes** | **^0.4.6** | Theme switching |
+| **@vercel/analytics** | **^2.0.1** | Web analytics (root layout) |
+| **@vercel/speed-insights** | **^2.0.0** | Real user performance metrics |
 | **lucide-react** | **^0.575.0** | Icons |
 | **clsx** | **^2.1.1** | Class names |
 | **tailwind-merge** | **^3.5.0** | Merge Tailwind classes |
@@ -64,7 +68,9 @@ flowchart LR
 | @radix-ui/react-tabs | ^1.1.13 |
 | @radix-ui/react-tooltip | ^1.2.8 |
 
-### TipTap (forum — e.g. `/new-post`)
+### TipTap (forum — `/new-post` only, lazy-loaded)
+
+The **new-post** page loads the composer with **`React.lazy`** + **`Suspense`** so the TipTap bundle is not in the main layout chunk.
 
 | Package | Version |
 |---------|---------|
@@ -106,6 +112,7 @@ flowchart LR
 |------|----------|
 | Schema | [`convex/schema.ts`](../convex/schema.ts) |
 | Forum API | [`convex/forum/`](../convex/forum/) |
+| Scheduled jobs | [`convex/crons.ts`](../convex/crons.ts) (e.g. feed cache recompute → [`convex/forum/feedCache.ts`](../convex/forum/feedCache.ts)) |
 | Auth config | [`convex/auth.ts`](../convex/auth.ts), [`convex/auth.config.ts`](../convex/auth.config.ts) |
 
 ## Deployment and external services (intent)
@@ -113,7 +120,7 @@ flowchart LR
 | Service | Use |
 |---------|-----|
 | **Convex** | Database, server functions, scheduled work, Convex Auth HTTP routes |
-| **Vercel** (typical) | Next.js hosting per app root (`apps/forum`, etc.) |
+| **Vercel** (typical) | Next.js hosting per app root (`apps/forum`, etc.); optional Analytics / Speed Insights from `@vercel/*` packages |
 | **OAuth providers** | GitHub, Google, Facebook — configured via Convex env (see [README.md](../README.md)) |
 
 Exact platform versions (Node on Vercel, Convex runtime) are controlled by those providers; not pinned in this repo.

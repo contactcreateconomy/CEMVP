@@ -37,6 +37,8 @@ pnpm exec convex dev --once
 # or keep watcher: pnpm convex:dev
 ```
 
+**Scheduled functions:** If you change [`convex/crons.ts`](../convex/crons.ts), deploy or run dev sync so crons register on the target deployment (see [forum-capacity.md](forum-capacity.md)).
+
 ## 4. Seed forum data (first time or after schema change)
 
 Idempotent (skips if categories already exist):
@@ -80,5 +82,6 @@ Deploy schema/functions and bootstrap **category keys only** (no demo posts): [p
 ## Troubleshooting (short)
 
 - **Empty feed / errors** — Check `NEXT_PUBLIC_CONVEX_URL`, run `pnpm convex:seed-forum`, confirm `pnpm exec convex dev --once` succeeded.
+- **Vercel build: `Could not find Convex client` / `useQuery` without provider** — Ensure **`NEXT_PUBLIC_CONVEX_URL`** is set for **Preview** and **Production** on the Vercel project; client components must not call **`useQuery`** when Convex is unconfigured (use **`isConvexConfigured()`** guards). See [README.md § Forum app (recent hardening)](../README.md).
 - **OAuth redirects** — `SITE_URL` and provider callback URLs must match Convex `.convex.site` host; see [README.md](../README.md).
 - **Type errors after schema change** — `pnpm exec convex codegen` from repo root.

@@ -16,10 +16,10 @@ Each app can be deployed separately (e.g. Vercel with per-app root directory). S
 ## Backend (`convex/`)
 
 - **Schema:** [`convex/schema.ts`](../convex/schema.ts) — Convex Auth tables (`users`, sessions, etc.), `memberships`, and all **`forum*`** tables.
-- **Forum API:** [`convex/forum/`](../convex/forum/) — `queries.ts`, `mutations.ts`, `discussionRoute.ts`, `seed.ts`, helpers, limits.
+- **Forum API:** [`convex/forum/`](../convex/forum/) — `queries.ts`, `mutations.ts`, `discussionRoute.ts`, `feedCache.ts`, `seed.ts`, helpers, limits. **Crons:** [`convex/crons.ts`](../convex/crons.ts).
 - **Auth:** [`convex/auth.ts`](../convex/auth.ts) — providers, `afterUserCreatedOrUpdated` (creates `forumProfiles` + memberships for new users).
 
-The forum **UI** uses `useQuery` / `useMutation` from `convex/react` against `api.forum.*` (see [`apps/forum/src/lib/convex.ts`](../apps/forum/src/lib/convex.ts)).
+The forum **UI** uses `useQuery` / `useMutation` from `convex/react` against `api.forum.*` (see [`apps/forum/src/lib/convex.ts`](../apps/forum/src/lib/convex.ts)). Shared reference data (categories, unread notification count) is loaded once via **`SharedDataProvider`** / **`useSharedData()`** to avoid duplicate subscriptions across routes (see [`apps/forum/src/providers/shared-data-context.tsx`](../apps/forum/src/providers/shared-data-context.tsx)).
 
 ## Data model (conceptual)
 
