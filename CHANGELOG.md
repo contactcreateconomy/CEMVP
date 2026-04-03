@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026-04-03 (forum: /new-post TipTap editor)
+- **`apps/forum`**: **`/new-post`** uses **`NewPostComposer`** — TipTap (StarterKit, underline, link, placeholder), **selection bubble menu** (`@tiptap/react/menus`), **category** pills aligned with **`getCategories()`** (locked categories disabled), title + optional subtitle, mock **Publish** / **Save draft** toasts. Global **`.new-post-prose`** styles in [`apps/forum/src/app/globals.css`](apps/forum/src/app/globals.css). Removed unused **`@tiptap/extension-bubble-menu`** dependency (menu comes from React package).
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` OK.
+
+## 2026-04-03 (forum: search, profiles, saved, legal, mobile nav)
+- **`apps/forum`**: Mock **`/search?q=`** (`mock-search.ts`, `FeedClient` optional **`emptyState`**), desktop **TopNav** GET form; **`/users/[handle]`** profiles (`getUserByHandle`, `getPostsByAuthor`) with author **Links** in **post-card**, **thread-header**, **thread-sidebar**; **`/saved`** (`isFavorited` mock filter); static **`/terms`** and **`/privacy`**; **AppShell** footer links; **MobileTabBar** Create → **`/new-post`**, Profile → **`/profile`**.
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` OK.
+
+## 2026-04-03 (forum: comment avatar flex stretch)
+- **`apps/forum`**: Thread **comments** and **composer** rows use **`items-start`** so `UserAvatar` is not stretched by default flex `align-items: stretch` (fixes tall pill-shaped level ring beside long comment bodies). Avatars get **`shrink-0`** in those rows.
+- **Validation:** `pnpm --filter ./apps/forum lint` OK.
+
+## 2026-04-03 (forum: legacy discussion URLs redirect)
+- **`apps/forum`**: `/discussions/[slug]` **redirects** to the canonical MVP path + optional `?post=` when `slug` matches a feed post but not a thread (fixes old links and slug-only URLs). **`searchParams.post`** normalized when repeated. **Post card**: larger click target (summary, comments preview, cover image link to the same discussion href).
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` OK.
+
+## 2026-04-03 (forum: feed → discussion slug mapping)
+- **`apps/forum`**: Feed cards, hero carousel, and share URLs use **`getDiscussionHrefForPost`** (`getFeedPostDiscussionSlug` + optional **`?post=<feedSlug>`**). Generic posts open the MVP thread path with a query so the server can **`resolveFeedOverlay`**: title, summary, body, author, views, upvotes, comment count, and date come from the **clicked post** while category body, tags, insight rail, and mock comments stay on the canonical thread. **`getDiscussionHrefForPost`**, **`FeedThreadOverlay`**, **`ThreadHeader.commentCount`**. Sample notifications use **`review-001`**.
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` OK.
+
+## 2026-04-03 (forum: thread MVP polish + QA index)
+- **`apps/forum`**: `ThreadDiscussionProvider` / composer wiring; **MAX-only insight rail extras** (list coverage, news timeline + conflicts, review sentiment, help troubleshooting); **showcase** pin + “See in media” from `mediaPin` on comments; **help-only** solution filter chip; **thread report** via `ReportPostDialog`; dev index route **`/discussions/mvp`** (`apps/forum/src/app/(app)/discussions/mvp/page.tsx`).
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint`, `build` OK.
+
+## 2026-04-03 (forum: thread discussion MVP UI + mocks)
+- **`apps/forum`**: Full **thread discussion** experience for nine MVP slugs (`news-001`, `review-001`, …) at `/discussions/[slug]` — shared shell (header with MIN/MAX, AI summary, actions), category-specific bodies, threaded comments (depth + continue, MAX filters, Help solution, Gigs/Showcase MAX toggles), composer + category nudges, context sidebar / MAX insight rail (desktop + mobile sheet), mock data in [`apps/forum/src/lib/mock-data/discussion-threads.ts`](apps/forum/src/lib/mock-data/discussion-threads.ts). Feed posts prepend these threads. Global leaderboard sidebar hidden on discussion routes via [`ConditionalRightSidebar`](apps/forum/src/components/layout/conditional-right-sidebar.tsx).
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint`, `build` OK.
+
+## 2026-04-03 (thread MVP: GitHub issues + creation script)
+- [`scripts/create-thread-discussion-issues.sh`](scripts/create-thread-discussion-issues.sh): **`gh issue create`** batch for 20 **[Thread MVP]** work items aligned with [`docs/THREAD_DISCUSSION_USER_STORIES.md`](docs/THREAD_DISCUSSION_USER_STORIES.md).
+- [`docs/github-issues/thread-discussion/`](docs/github-issues/thread-discussion/README.md): issue bodies + README (issues **#5–#24** on `contactcreateconomy/CEMVP`).
+
 ## 2026-03-29 (multi-app OAuth redirects: `AUTH_REDIRECT_ORIGINS`)
 - [`convex/auth.ts`](convex/auth.ts): **`callbacks.redirect`** + **`AUTH_REDIRECT_ORIGINS`** — allow social/OAuth return to seller/admin/marketplace origins when they differ from **`SITE_URL`** (still allows relative paths and `?query` per Convex Auth defaults).
 - [`convex/.env.example`](convex/.env.example), [`README.md`](README.md): document **`AUTH_REDIRECT_ORIGINS`**.

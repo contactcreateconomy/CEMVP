@@ -4,8 +4,6 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Flame, Bookmark, TrendingUp, Clock3 } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-
 const sortItems = [
   { key: "top", label: "Top", Icon: TrendingUp },
   { key: "hot", label: "Hot", Icon: Flame },

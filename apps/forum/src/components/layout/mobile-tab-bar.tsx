@@ -9,9 +9,9 @@ import { cn } from "@/lib/utils";
 const tabs = [
   { href: "/feed", label: "Home", icon: Home },
   { href: "/discover", label: "Search", icon: Search },
-  { href: "/feed", label: "Create", icon: PlusCircle, highlight: true },
+  { href: "/new-post", label: "Create", icon: PlusCircle, highlight: true },
   { href: "/notifications", label: "Alerts", icon: Bell },
-  { href: "/settings", label: "Profile", icon: User },
+  { href: "/profile", label: "Profile", icon: User },
 ];
 
 export function MobileTabBar() {

@@ -3,6 +3,7 @@ import {
   categories,
   comments,
   defaultSettings,
+  getDiscussionThreadBySlug as getDiscussionThreadBySlugFromMock,
   getTopPostHeroSlides as getTopPostHeroSlidesFromMock,
   leaderboard,
   notifications,
@@ -11,6 +12,7 @@ import {
   users,
   vibingItems,
 } from "@/lib/mock-data";
+import type { DiscussionThread } from "@/types/discussion";
 
 export type { TopPostHeroSlide } from "@/lib/mock-data";
 
@@ -40,6 +42,7 @@ export interface ContentDataSource {
       user: (typeof users)[number] | null;
     }
   >;
+  getDiscussionThreadBySlug: (slug: string) => DiscussionThread | null;
 }
 
 const mockContentDataSource: ContentDataSource = {
@@ -69,6 +72,7 @@ const mockContentDataSource: ContentDataSource = {
       ...entry,
       user: users.find((user) => user.id === entry.userId) ?? null,
     })),
+  getDiscussionThreadBySlug: (slug: string) => getDiscussionThreadBySlugFromMock(slug),
 };
 
 let activeContentDataSource: ContentDataSource = mockContentDataSource;
@@ -147,4 +151,8 @@ export function getUnreadNotifications(userId: string) {
 
 export function getLeaderboardWithUsers() {
   return activeContentDataSource.getLeaderboardWithUsers();
+}
+
+export function getDiscussionThreadBySlug(slug: string) {
+  return activeContentDataSource.getDiscussionThreadBySlug(slug);
 }

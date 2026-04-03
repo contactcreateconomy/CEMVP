@@ -106,16 +106,22 @@ export function TopNav() {
               <span className="text-sm font-semibold tracking-tight text-text-primary sm:text-base">Createconomy</span>
             </Link>
 
-            <div className="hidden flex-1 justify-center px-2 md:flex">
+            <form
+              action="/search"
+              method="get"
+              className="hidden flex-1 justify-center px-2 md:flex"
+              role="search"
+            >
               <label className="relative w-full max-w-[480px]" aria-label="Search">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
                 <input
+                  name="q"
                   type="search"
                   placeholder="Search"
                   className="h-9 w-full appearance-none rounded-full border border-(--border-default) bg-(--bg-surface) pl-9 pr-3 text-sm text-text-primary outline-hidden transition-[border-color] duration-200 placeholder:text-text-muted hover:border-(--border-prominent) focus:border-(--border-active) focus:outline-hidden focus:ring-0 focus-visible:outline-hidden focus-visible:ring-0"
                 />
               </label>
-            </div>
+            </form>
 
             <div className="ml-auto flex items-center gap-1 sm:gap-2">
               <Link

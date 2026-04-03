@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import type { Comment, Post, User } from "@/types";
 import { getCategories } from "@/lib/adapters/content";
+import { getDiscussionHrefForPost } from "@/lib/discussion/feed-post-discussion-slug";
 import { CommentsPreviewCycler } from "@/components/feed/comments-preview-cycler";
 import { PostActionsMenu } from "@/components/feed/post-actions-menu";
 import { PostInteractionRow } from "@/components/feed/post-interaction-row";
@@ -41,6 +42,7 @@ export function PostCard({
   const [isHovered, setIsHovered] = useState(false);
   const categories = getCategories();
   const category = categories.find((item) => item.key === post.category) ?? null;
+  const discussionHref = getDiscussionHrefForPost(post);
 
   const previewComments = comments.slice(0, 4).map((comment) => {
     const commentAuthor = commenters.find((user) => user.id === comment.authorId);
@@ -52,6 +54,27 @@ export function PostCard({
   });
 
   const hasCoverImage = Boolean(post.coverImage);
+
+  const authorRow = author ? (
+    <Link
+      href={`/users/${encodeURIComponent(author.handle)}`}
+      className="flex min-w-0 max-w-full items-center gap-2.5 rounded-lg outline-offset-2 transition-colors hover:bg-(--bg-overlay)/60 focus-visible:ring-2 focus-visible:ring-(--border-active)"
+    >
+      <UserAvatar user={author} size="md" />
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold text-(--text-primary)">{author.name}</p>
+        <p className="truncate font-mono text-[11px] font-light text-(--text-muted)">@{author.handle}</p>
+      </div>
+    </Link>
+  ) : (
+    <div className="flex min-w-0 items-center gap-2.5">
+      <UserAvatar user={author} size="md" />
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold text-(--text-primary)">Unknown author</p>
+        <p className="truncate font-mono text-[11px] font-light text-(--text-muted)">@unknown</p>
+      </div>
+    </div>
+  );
 
   return (
     <article
@@ -67,33 +90,23 @@ export function PostCard({
 
       {hasCoverImage ? (
         <div>
-          <div className="mb-3 flex items-start justify-between gap-3 pr-10">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <UserAvatar user={author} size="md" />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-(--text-primary)">
-                  {author?.name ?? "Unknown author"}
-                </p>
-                <p className="truncate font-mono text-[11px] font-light text-(--text-muted)">
-                  @{author?.handle ?? "unknown"}
-                </p>
-              </div>
-            </div>
-          </div>
+          <div className="mb-3 flex items-start justify-between gap-3 pr-10">{authorRow}</div>
 
           <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_208px] md:items-end">
-            <div className="min-w-0">
-              <Link href={`/discussions/${post.slug}`} className="block">
-                <h3 className="text-xl font-bold leading-snug text-(--text-primary)">{post.title}</h3>
-              </Link>
+            <Link href={discussionHref} className="min-w-0 block outline-offset-2 focus-visible:rounded-lg">
+              <h3 className="text-xl font-bold leading-snug text-(--text-primary)">{post.title}</h3>
               <p className="mt-2 wrap-break-word text-sm text-(--text-secondary)">{post.summary}</p>
 
               <div className="mt-4">
                 <CommentsPreviewCycler comments={previewComments} isActive={isHovered} />
               </div>
-            </div>
+            </Link>
 
-            <div className="relative h-[132px] w-full max-w-full overflow-hidden rounded-[14px] md:h-[140px]">
+            <Link
+              href={discussionHref}
+              className="relative block h-[132px] w-full max-w-full overflow-hidden rounded-[14px] outline-offset-2 md:h-[140px]"
+              aria-label={`Open discussion: ${post.title}`}
+            >
               <Image
                 src={post.coverImage!}
                 alt={post.title}
@@ -101,33 +114,21 @@ export function PostCard({
                 sizes="(max-width: 768px) 100vw, 208px"
                 className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
               />
-            </div>
+            </Link>
           </div>
         </div>
       ) : (
         <div className="pr-10">
-          <div className="mb-3 flex items-start justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <UserAvatar user={author} size="md" />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-(--text-primary)">
-                  {author?.name ?? "Unknown author"}
-                </p>
-                <p className="truncate font-mono text-[11px] font-light text-(--text-muted)">
-                  @{author?.handle ?? "unknown"}
-                </p>
-              </div>
-            </div>
-          </div>
+          <div className="mb-3 flex items-start justify-between gap-3">{authorRow}</div>
 
-          <Link href={`/discussions/${post.slug}`} className="block">
+          <Link href={discussionHref} className="block outline-offset-2 focus-visible:rounded-lg">
             <h3 className="text-xl font-bold leading-snug text-(--text-primary)">{post.title}</h3>
-          </Link>
-          <p className="mt-2 text-sm text-(--text-secondary)">{post.summary}</p>
+            <p className="mt-2 text-sm text-(--text-secondary)">{post.summary}</p>
 
-          <div className="mt-4">
-            <CommentsPreviewCycler comments={previewComments} isActive={isHovered} />
-          </div>
+            <div className="mt-4">
+              <CommentsPreviewCycler comments={previewComments} isActive={isHovered} />
+            </div>
+          </Link>
         </div>
       )}
 
