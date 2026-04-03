@@ -19,27 +19,15 @@ interface DiscussionPageLoaderProps {
   feedPostSlug: string | undefined;
 }
 
-export function DiscussionPageLoader({ pathSlug, feedPostSlug }: DiscussionPageLoaderProps) {
+function DiscussionPageLoaderWithConvex({ pathSlug, feedPostSlug }: DiscussionPageLoaderProps) {
   const router = useRouter();
-  const enabled = isConvexConfigured();
-  const state = useQuery(
-    api.forum.discussionRoute.getDiscussionRouteState,
-    enabled ? { pathSlug, feedPostSlug } : "skip",
-  );
+  const state = useQuery(api.forum.discussionRoute.getDiscussionRouteState, { pathSlug, feedPostSlug });
 
   useEffect(() => {
     if (state?.kind === "redirect") {
       router.replace(state.href);
     }
   }, [router, state]);
-
-  if (!enabled) {
-    return (
-      <p className="text-sm text-(--text-muted)">
-        Connect Convex (set <code className="font-mono">NEXT_PUBLIC_CONVEX_URL</code>) to load discussions.
-      </p>
-    );
-  }
 
   if (state === undefined) {
     return null;
@@ -126,4 +114,16 @@ export function DiscussionPageLoader({ pathSlug, feedPostSlug }: DiscussionPageL
       </Card>
     </section>
   );
+}
+
+export function DiscussionPageLoader({ pathSlug, feedPostSlug }: DiscussionPageLoaderProps) {
+  if (!isConvexConfigured()) {
+    return (
+      <p className="text-sm text-(--text-muted)">
+        Connect Convex (set <code className="font-mono">NEXT_PUBLIC_CONVEX_URL</code>) to load discussions.
+      </p>
+    );
+  }
+
+  return <DiscussionPageLoaderWithConvex pathSlug={pathSlug} feedPostSlug={feedPostSlug} />;
 }

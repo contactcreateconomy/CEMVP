@@ -37,8 +37,7 @@ function mergeComments(prev: Comment[], next: Comment[]): Comment[] {
   return out;
 }
 
-export function FeedRouteClient({ selectedCategory, selectedSort }: FeedRouteClientProps) {
-  const enabled = isConvexConfigured();
+function FeedRouteWithConvex({ selectedCategory, selectedSort }: FeedRouteClientProps) {
   const sortArg =
     selectedSort === "top" ? "top" : selectedSort === "hot" ? "hot" : selectedSort === "fav" ? "fav" : "new";
   const needsPagination = sortArg === "new" || sortArg === "fav";
@@ -57,17 +56,12 @@ export function FeedRouteClient({ selectedCategory, selectedSort }: FeedRouteCli
     setUsers([]);
   }, [selectedCategory, selectedSort]);
 
-  const page = useQuery(
-    api.forum.queries.listFeedPage,
-    enabled
-      ? {
-          sort: sortArg,
-          category: selectedCategory,
-          cursor: needsPagination ? cursor : null,
-          limit: 24,
-        }
-      : "skip",
-  );
+  const page = useQuery(api.forum.queries.listFeedPage, {
+    sort: sortArg,
+    category: selectedCategory,
+    cursor: needsPagination ? cursor : null,
+    limit: 24,
+  });
 
   useEffect(() => {
     if (page === undefined || page === null) {
@@ -95,7 +89,7 @@ export function FeedRouteClient({ selectedCategory, selectedSort }: FeedRouteCli
     setUsers(page.users as User[]);
   }, [page]);
 
-  const categories = useQuery(api.forum.queries.listCategories, enabled ? {} : "skip");
+  const categories = useQuery(api.forum.queries.listCategories, {});
 
   const loadMore = useCallback(() => {
     if (!page?.continueCursor || page.isDone) {
@@ -108,14 +102,6 @@ export function FeedRouteClient({ selectedCategory, selectedSort }: FeedRouteCli
   const canLoadMore = Boolean(needsPagination && page && !page.isDone && page.continueCursor);
 
   const initialPosts = useMemo(() => posts, [posts]);
-
-  if (!enabled) {
-    return (
-      <p className="text-sm text-(--text-muted)">
-        Set <code className="font-mono">NEXT_PUBLIC_CONVEX_URL</code> and run the forum seed to load the feed.
-      </p>
-    );
-  }
 
   if (page === undefined || categories === undefined) {
     return null;
@@ -150,4 +136,16 @@ export function FeedRouteClient({ selectedCategory, selectedSort }: FeedRouteCli
       ) : null}
     </section>
   );
+}
+
+export function FeedRouteClient({ selectedCategory, selectedSort }: FeedRouteClientProps) {
+  if (!isConvexConfigured()) {
+    return (
+      <p className="text-sm text-(--text-muted)">
+        Set <code className="font-mono">NEXT_PUBLIC_CONVEX_URL</code> and run the forum seed to load the feed.
+      </p>
+    );
+  }
+
+  return <FeedRouteWithConvex selectedCategory={selectedCategory} selectedSort={selectedSort} />;
 }

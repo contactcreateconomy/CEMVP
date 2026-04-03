@@ -8,13 +8,8 @@ import { api } from "@/lib/convex";
 import { formatPoints } from "@/lib/format";
 import { isConvexConfigured } from "@cemvp/convex-client";
 
-export function LeaderboardPageClient() {
-  const enabled = isConvexConfigured();
-  const rows = useQuery(api.forum.queries.getLeaderboardWithUsers, enabled ? {} : "skip");
-
-  if (!enabled) {
-    return <p className="text-sm text-(--text-muted)">Connect Convex to load the leaderboard.</p>;
-  }
+function LeaderboardPageWithConvex() {
+  const rows = useQuery(api.forum.queries.getLeaderboardWithUsers, {});
 
   if (rows === undefined) {
     return null;
@@ -48,4 +43,12 @@ export function LeaderboardPageClient() {
       </Card>
     </section>
   );
+}
+
+export function LeaderboardPageClient() {
+  if (!isConvexConfigured()) {
+    return <p className="text-sm text-(--text-muted)">Connect Convex to load the leaderboard.</p>;
+  }
+
+  return <LeaderboardPageWithConvex />;
 }

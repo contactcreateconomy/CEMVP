@@ -7,17 +7,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { api } from "@/lib/convex";
 import { isConvexConfigured } from "@cemvp/convex-client";
 
-export function SettingsPageClient() {
-  const enabled = isConvexConfigured();
-  const settings = useQuery(api.forum.queries.getViewerSettings, enabled ? {} : "skip");
-
-  if (!enabled) {
-    return (
-      <p className="text-sm text-(--text-muted)">
-        Connect Convex to load settings.
-      </p>
-    );
-  }
+function SettingsPageWithConvex() {
+  const settings = useQuery(api.forum.queries.getViewerSettings, {});
 
   if (settings === undefined) {
     return null;
@@ -47,4 +38,16 @@ export function SettingsPageClient() {
       </Card>
     </section>
   );
+}
+
+export function SettingsPageClient() {
+  if (!isConvexConfigured()) {
+    return (
+      <p className="text-sm text-(--text-muted)">
+        Connect Convex to load settings.
+      </p>
+    );
+  }
+
+  return <SettingsPageWithConvex />;
 }

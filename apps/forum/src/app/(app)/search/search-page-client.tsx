@@ -24,18 +24,9 @@ function mergeUsers(a: User[], b: User[]): User[] {
   return [...byId.values()];
 }
 
-export function SearchPageClient({ q }: SearchPageClientProps) {
-  const enabled = isConvexConfigured();
-  const searchResult = useQuery(api.forum.queries.searchPostsAndUsers, enabled && q ? { q } : "skip");
-  const categories = useQuery(api.forum.queries.listCategories, enabled ? {} : "skip");
-
-  if (!enabled) {
-    return (
-      <p className="text-sm text-(--text-muted)">
-        Connect Convex to search posts and members.
-      </p>
-    );
-  }
+function SearchPageWithConvex({ q }: SearchPageClientProps) {
+  const searchResult = useQuery(api.forum.queries.searchPostsAndUsers, q ? { q } : "skip");
+  const categories = useQuery(api.forum.queries.listCategories, {});
 
   if (!q) {
     return (
@@ -103,4 +94,16 @@ export function SearchPageClient({ q }: SearchPageClientProps) {
       </div>
     </section>
   );
+}
+
+export function SearchPageClient({ q }: SearchPageClientProps) {
+  if (!isConvexConfigured()) {
+    return (
+      <p className="text-sm text-(--text-muted)">
+        Connect Convex to search posts and members.
+      </p>
+    );
+  }
+
+  return <SearchPageWithConvex q={q} />;
 }

@@ -30,18 +30,18 @@ function mergeComments(prev: Comment[], next: Comment[]): Comment[] {
   return out;
 }
 
-export function SavedPageClient() {
-  const enabled = isConvexConfigured();
+function SavedPageWithConvex() {
   const [cursor, setCursor] = useState<string | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const appendNextRef = useRef(false);
 
-  const page = useQuery(
-    api.forum.queries.listFeedPage,
-    enabled ? { sort: "fav" as const, cursor, limit: 24 } : "skip",
-  );
+  const page = useQuery(api.forum.queries.listFeedPage, {
+    sort: "fav" as const,
+    cursor,
+    limit: 24,
+  });
 
   useEffect(() => {
     if (page === undefined || page === null) {
@@ -69,7 +69,7 @@ export function SavedPageClient() {
     setUsers(page.users as User[]);
   }, [page]);
 
-  const categories = useQuery(api.forum.queries.listCategories, enabled ? {} : "skip");
+  const categories = useQuery(api.forum.queries.listCategories, {});
 
   const loadMore = useCallback(() => {
     if (!page?.continueCursor || page.isDone) {
@@ -80,14 +80,6 @@ export function SavedPageClient() {
   }, [page?.continueCursor, page?.isDone]);
 
   const canLoadMore = Boolean(page && !page.isDone && page.continueCursor);
-
-  if (!enabled) {
-    return (
-      <p className="text-sm text-(--text-muted)">
-        Connect Convex to see saved posts.
-      </p>
-    );
-  }
 
   if (page === undefined || categories === undefined) {
     return null;
@@ -123,4 +115,16 @@ export function SavedPageClient() {
       ) : null}
     </section>
   );
+}
+
+export function SavedPageClient() {
+  if (!isConvexConfigured()) {
+    return (
+      <p className="text-sm text-(--text-muted)">
+        Connect Convex to see saved posts.
+      </p>
+    );
+  }
+
+  return <SavedPageWithConvex />;
 }

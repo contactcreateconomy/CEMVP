@@ -8,19 +8,19 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { api } from "@/lib/convex";
 import { formatRelativeDate } from "@/lib/format";
 import { isConvexConfigured } from "@cemvp/convex-client";
-import { useAuth } from "@cemvp/auth-ui";
+import { useAuth, type AuthMode, type AuthStatus } from "@cemvp/auth-ui";
 
-export function NotificationsPageClient() {
-  const { authStatus, openAuthModal } = useAuth();
-  const enabled = isConvexConfigured();
+function NotificationsPageWithConvex({
+  authStatus,
+  openAuthModal,
+}: {
+  authStatus: AuthStatus;
+  openAuthModal: (mode?: AuthMode) => void;
+}) {
   const viewerNotifications = useQuery(
     api.forum.queries.listNotificationsForViewer,
-    enabled && authStatus === "authenticated" ? {} : "skip",
+    authStatus === "authenticated" ? {} : "skip",
   );
-
-  if (!enabled) {
-    return <p className="text-sm text-(--text-muted)">Connect Convex to load notifications.</p>;
-  }
 
   if (authStatus !== "authenticated") {
     return (
@@ -90,5 +90,17 @@ export function NotificationsPageClient() {
         </CardContent>
       </Card>
     </section>
+  );
+}
+
+export function NotificationsPageClient() {
+  const { authStatus, openAuthModal } = useAuth();
+
+  if (!isConvexConfigured()) {
+    return <p className="text-sm text-(--text-muted)">Connect Convex to load notifications.</p>;
+  }
+
+  return (
+    <NotificationsPageWithConvex authStatus={authStatus} openAuthModal={openAuthModal} />
   );
 }

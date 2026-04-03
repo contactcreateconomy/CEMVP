@@ -7,11 +7,18 @@ import { api } from "@/lib/convex";
 import { isConvexConfigured } from "@cemvp/convex-client";
 import type { Category } from "@/types";
 
-export function NewPostPageClient() {
-  const enabled = isConvexConfigured();
-  const categories = useQuery(api.forum.queries.listCategories, enabled ? {} : "skip");
+function NewPostPageWithConvex() {
+  const categories = useQuery(api.forum.queries.listCategories, {});
 
-  if (!enabled) {
+  if (categories === undefined) {
+    return null;
+  }
+
+  return <NewPostComposer categories={categories as Category[]} />;
+}
+
+export function NewPostPageClient() {
+  if (!isConvexConfigured()) {
     return (
       <p className="px-4 text-sm text-(--text-muted)">
         Connect Convex to load categories and publish posts.
@@ -19,9 +26,5 @@ export function NewPostPageClient() {
     );
   }
 
-  if (categories === undefined) {
-    return null;
-  }
-
-  return <NewPostComposer categories={categories as Category[]} />;
+  return <NewPostPageWithConvex />;
 }

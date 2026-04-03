@@ -24,12 +24,11 @@ function mergeUsers(a: User[], b: User[]): User[] {
   return [...byId.values()];
 }
 
-export function UserProfilePageClient({ handle }: UserProfilePageClientProps) {
-  const enabled = isConvexConfigured();
-  const user = useQuery(api.forum.queries.getProfileByHandle, enabled ? { handle } : "skip");
+function UserProfilePageWithConvex({ handle }: UserProfilePageClientProps) {
+  const user = useQuery(api.forum.queries.getProfileByHandle, { handle });
   const authorPosts = useQuery(
     api.forum.queries.getPostsByAuthorProfileId,
-    enabled && user ? { profileId: user.id } : "skip",
+    user ? { profileId: user.id } : "skip",
   );
 
   const postIds = useMemo(() => {
@@ -41,10 +40,10 @@ export function UserProfilePageClient({ handle }: UserProfilePageClientProps) {
 
   const previews = useQuery(
     api.forum.queries.listCommentPreviewsWithUsers,
-    enabled && user && postIds.length > 0 ? { postIds, limitPerPost: 6 } : "skip",
+    user && postIds.length > 0 ? { postIds, limitPerPost: 6 } : "skip",
   );
 
-  const categories = useQuery(api.forum.queries.listCategories, enabled ? {} : "skip");
+  const categories = useQuery(api.forum.queries.listCategories, {});
 
   const feedUsers = useMemo(() => {
     if (!user || !previews) {
@@ -52,10 +51,6 @@ export function UserProfilePageClient({ handle }: UserProfilePageClientProps) {
     }
     return mergeUsers([user as User], previews.users as User[]);
   }, [user, previews]);
-
-  if (!enabled) {
-    return <p className="text-sm text-(--text-muted)">Connect Convex to view profiles.</p>;
-  }
 
   if (user === undefined || authorPosts === undefined || categories === undefined) {
     return null;
@@ -105,4 +100,12 @@ export function UserProfilePageClient({ handle }: UserProfilePageClientProps) {
       </div>
     </section>
   );
+}
+
+export function UserProfilePageClient({ handle }: UserProfilePageClientProps) {
+  if (!isConvexConfigured()) {
+    return <p className="text-sm text-(--text-muted)">Connect Convex to view profiles.</p>;
+  }
+
+  return <UserProfilePageWithConvex handle={handle} />;
 }

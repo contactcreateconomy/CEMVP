@@ -8,17 +8,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { api } from "@/lib/convex";
 import { isConvexConfigured } from "@cemvp/convex-client";
 
-export function DiscoverPageClient() {
-  const enabled = isConvexConfigured();
-  const categories = useQuery(api.forum.queries.listCategories, enabled ? {} : "skip");
-
-  if (!enabled) {
-    return (
-      <p className="text-sm text-(--text-muted)">
-        Connect Convex to load categories.
-      </p>
-    );
-  }
+function DiscoverPageWithConvex() {
+  const categories = useQuery(api.forum.queries.listCategories, {});
 
   if (categories === undefined) {
     return null;
@@ -48,4 +39,16 @@ export function DiscoverPageClient() {
       </Card>
     </section>
   );
+}
+
+export function DiscoverPageClient() {
+  if (!isConvexConfigured()) {
+    return (
+      <p className="text-sm text-(--text-muted)">
+        Connect Convex to load categories.
+      </p>
+    );
+  }
+
+  return <DiscoverPageWithConvex />;
 }
