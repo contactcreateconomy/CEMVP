@@ -71,3 +71,51 @@ export function cappedTrendingSlugs(thread: RichThreadPayload): string[] {
   const trendingSlugs = (thread.trendingSlugs as string[] | undefined) ?? [];
   return trendingSlugs.slice(0, DISCUSSION_TRENDING_CAP);
 }
+
+const DEFAULT_KEY_AGREEMENTS = [
+  "Practical, cited details beat hot takes.",
+  "Community wants primary sources in replies.",
+] as const;
+
+const DEFAULT_TOP_CONTRIBUTOR = {
+  userId: "u2",
+  excerpt: "Strong write-up — primary source link makes this easy to verify.",
+} as const;
+
+/** Normalize stored rich-thread JSON so the forum UI never sees missing arrays or insightRail. */
+export function coalesceRichThreadPayloadForClient(payload: RichThreadPayload): RichThreadPayload {
+  const thread: RichThreadPayload = { ...payload };
+  if (!Array.isArray(thread.comments)) {
+    thread.comments = [];
+  }
+  if (!Array.isArray(thread.tags)) {
+    thread.tags = [];
+  }
+  const irRaw = thread.insightRail;
+  if (!irRaw || typeof irRaw !== "object" || Array.isArray(irRaw)) {
+    thread.insightRail = {
+      summary: String(thread.aiSummary ?? ""),
+      keyAgreements: [...DEFAULT_KEY_AGREEMENTS],
+      openQuestions: [],
+      topContributor: { ...DEFAULT_TOP_CONTRIBUTOR },
+    };
+    return thread;
+  }
+  const ir = irRaw as Record<string, unknown>;
+  const tc = ir.topContributor;
+  let topContributor = { ...DEFAULT_TOP_CONTRIBUTOR };
+  if (tc && typeof tc === "object" && !Array.isArray(tc)) {
+    const t = tc as Record<string, unknown>;
+    topContributor = {
+      userId: String(t.userId ?? ""),
+      excerpt: String(t.excerpt ?? ""),
+    };
+  }
+  thread.insightRail = {
+    summary: String(ir.summary ?? thread.aiSummary ?? ""),
+    keyAgreements: Array.isArray(ir.keyAgreements) ? ir.keyAgreements : [...DEFAULT_KEY_AGREEMENTS],
+    openQuestions: Array.isArray(ir.openQuestions) ? ir.openQuestions : [],
+    topContributor,
+  };
+  return thread;
+}

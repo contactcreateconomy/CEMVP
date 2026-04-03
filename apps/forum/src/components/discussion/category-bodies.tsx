@@ -67,6 +67,7 @@ function NewsBody({
   author: User | null;
 }) {
   const b = thread.categoryBody;
+  const corroboration = b.corroboration ?? [];
 
   return (
     <div className="space-y-4">
@@ -106,13 +107,13 @@ function NewsBody({
 
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-(--text-muted)">Corroboration</p>
-        {b.corroboration.length === 0 ? (
+        {corroboration.length === 0 ? (
           <p className="rounded-[12px] border border-dashed border-(--border-default) bg-(--bg-inset) p-4 text-sm text-(--text-secondary)">
             No corroboration added yet. Know another source? Add it.
           </p>
         ) : (
           <div className="flex flex-wrap gap-2">
-            {b.corroboration.map((s) => (
+            {corroboration.map((s) => (
               <div
                 key={s.name}
                 className="flex min-w-[140px] flex-1 items-center gap-2 rounded-[12px] border border-(--border-default) bg-(--bg-surface) px-3 py-2"
@@ -964,17 +965,22 @@ function GigsBody({
   ensureAuthenticated: () => boolean;
 }) {
   const b = thread.categoryBody;
+  const requiredSkills = b.requiredSkills ?? [];
+  const preferredSkills = b.preferredSkills ?? [];
+  const stages = b.stages?.length ? b.stages : ["Applied", "Screening", "Interview", "Offer"];
+  const processStage = b.processStage ?? "applied";
+
   const [applyOpen, setApplyOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [checks, setChecks] = useState<boolean[]>(() => b.requiredSkills.map(() => false));
+  const [checks, setChecks] = useState<boolean[]>(() => requiredSkills.map(() => false));
 
   const matched = checks.filter(Boolean).length;
   const fitLabel =
-    matched >= b.requiredSkills.length - 1
+    requiredSkills.length === 0 || matched >= requiredSkills.length - 1
       ? "You're a strong fit → Apply"
-      : `You're missing ${b.requiredSkills.length - matched} required — consider applying anyway`;
+      : `You're missing ${requiredSkills.length - matched} required — consider applying anyway`;
 
-  const stageIndex = b.stages.findIndex((s) => s.toLowerCase().startsWith(b.processStage));
+  const stageIndex = stages.findIndex((s) => s.toLowerCase().startsWith(processStage));
 
   return (
     <div className="space-y-4">
@@ -1012,7 +1018,7 @@ function GigsBody({
       <div>
         <p className="text-xs font-semibold text-(--text-muted)">Required</p>
         <div className="mt-2 flex flex-wrap gap-2">
-          {b.requiredSkills.map((s) => (
+          {requiredSkills.map((s) => (
             <span key={s} className="rounded-full bg-(--brand-primary)/15 px-3 py-1 text-xs font-medium text-(--text-primary)">
               {s}
             </span>
@@ -1020,7 +1026,7 @@ function GigsBody({
         </div>
         <p className="mt-3 text-xs font-semibold text-(--text-muted)">Preferred</p>
         <div className="mt-2 flex flex-wrap gap-2">
-          {b.preferredSkills.map((s) => (
+          {preferredSkills.map((s) => (
             <span key={s} className="rounded-full border border-(--border-default) px-3 py-1 text-xs text-(--text-secondary)">
               {s}
             </span>
@@ -1057,7 +1063,7 @@ function GigsBody({
       <div className="space-y-2">
         <p className="text-xs font-semibold text-(--text-muted)">Process</p>
         <div className="flex flex-wrap gap-2">
-          {b.stages.map((s, i) => (
+          {stages.map((s, i) => (
             <span
               key={s}
               className={cn(
@@ -1075,7 +1081,7 @@ function GigsBody({
         <Card>
           <CardContent className="space-y-3 p-4">
             <p className="text-sm font-semibold text-(--text-primary)">How well do you fit?</p>
-            {b.requiredSkills.map((s, i) => (
+            {requiredSkills.map((s, i) => (
               <label key={s} className="flex items-center gap-2 text-sm text-(--text-secondary)">
                 <input
                   type="checkbox"

@@ -11,11 +11,13 @@ export function InsightRailExtras({ thread }: { thread: DiscussionThread }) {
 
   if (thread.category === "list") {
     const b = thread.categoryBody;
+    const gaps = b.coverageGaps ?? [];
+    if (gaps.length === 0) return null;
     return (
       <Card className="border-(--border-default) bg-(--bg-surface)">
         <CardContent className="space-y-3 p-4">
           <p className="text-xs font-semibold uppercase text-(--text-muted)">Coverage gaps</p>
-          {b.coverageGaps.map((g) => (
+          {gaps.map((g) => (
             <div key={g.text} className="rounded-[10px] border border-(--border-subtle) bg-(--bg-inset) p-3 text-sm text-(--text-secondary)">
               <p className="font-medium text-(--text-primary)">{g.text}</p>
               <p className="mt-1 text-xs text-(--text-muted)">{g.context}</p>
@@ -40,14 +42,16 @@ export function InsightRailExtras({ thread }: { thread: DiscussionThread }) {
 
   if (thread.category === "news") {
     const b = thread.categoryBody;
+    const timeline = b.timeline ?? [];
+    const corroboration = b.corroboration ?? [];
     return (
       <div className="space-y-4">
-        {b.timeline.length > 0 ? (
+        {timeline.length > 0 ? (
           <Card>
             <CardContent className="p-4">
               <p className="text-xs font-semibold uppercase text-(--text-muted)">Event timeline</p>
               <ul className="mt-2 space-y-2 text-sm text-(--text-secondary)">
-                {b.timeline.map((e) => (
+                {timeline.map((e) => (
                   <li key={e.date + e.label}>
                     <span className="font-medium text-(--text-primary)">{e.date}</span> — {e.label}
                   </li>
@@ -56,7 +60,7 @@ export function InsightRailExtras({ thread }: { thread: DiscussionThread }) {
             </CardContent>
           </Card>
         ) : null}
-        {b.conflictingSummary && b.corroboration.some((c) => c.stance === "contradicts") ? (
+        {b.conflictingSummary && corroboration.some((c) => c.stance === "contradicts") ? (
           <Card className="border-(--feedback-error)/30">
             <CardContent className="grid gap-2 p-4 sm:grid-cols-2">
               <p className="text-sm font-semibold text-(--text-primary) sm:col-span-2">Conflicting reports</p>
@@ -77,6 +81,7 @@ export function InsightRailExtras({ thread }: { thread: DiscussionThread }) {
 
   if (thread.category === "review") {
     const s = thread.categoryBody.sentiment;
+    if (!s) return null;
     return (
       <Card>
         <CardContent className="space-y-3 p-4">
@@ -99,7 +104,8 @@ export function InsightRailExtras({ thread }: { thread: DiscussionThread }) {
   }
 
   if (thread.category === "help") {
-    const steps = thread.categoryBody.diagnosticSteps;
+    const steps = thread.categoryBody.diagnosticSteps ?? [];
+    if (steps.length === 0) return null;
     return (
       <Card>
         <CardContent className="p-4">

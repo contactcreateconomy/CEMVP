@@ -6,6 +6,7 @@ import { DISCUSSION_RELATED_CAP, DISCUSSION_TRENDING_CAP } from "./limits";
 import {
   cappedRelatedSlugs,
   cappedTrendingSlugs,
+  coalesceRichThreadPayloadForClient,
   hydrateRelatedThreads,
   loadProfilesForIds,
   type RichThreadPayload,
@@ -39,7 +40,7 @@ export const getDiscussionRouteState = query({
       .unique();
 
     if (richRow?.payload) {
-      const thread = richRow.payload as RichThreadPayload;
+      const thread = coalesceRichThreadPayloadForClient(richRow.payload as RichThreadPayload);
       const threadSlug = String(thread.slug ?? pathSlug);
 
       const resolveOverlay = () => {
