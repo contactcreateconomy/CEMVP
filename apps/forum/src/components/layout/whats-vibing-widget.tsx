@@ -13,9 +13,8 @@ import { cn } from "@/lib/utils";
 
 const SLIDE_INTERVAL_MS = 4000;
 
-export function WhatsVibingWidget() {
-  const enabled = isConvexConfigured();
-  const fetched = useQuery(api.forum.queries.listVibingItems, enabled ? { limit: 10 } : "skip");
+function WhatsVibingWidgetInner() {
+  const fetched = useQuery(api.forum.queries.listVibingItems, { limit: 10 });
   const items = useMemo(() => fetched ?? [], [fetched]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -90,8 +89,15 @@ export function WhatsVibingWidget() {
             );
           })}
         </div>
-
       </CardContent>
     </Card>
   );
+}
+
+/** Only mounted from `RightSidebarWithConvex` today; guard keeps `useQuery` off the tree when Convex URL is missing. */
+export function WhatsVibingWidget() {
+  if (!isConvexConfigured()) {
+    return null;
+  }
+  return <WhatsVibingWidgetInner />;
 }

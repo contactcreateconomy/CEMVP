@@ -54,7 +54,35 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
-export function TopNav() {
+type NotificationRow = {
+  id: string;
+  type: "comment" | "upvote" | "follow" | "system";
+  title: string;
+  message: string;
+  createdAt: string;
+  read: boolean;
+};
+
+function TopNavWithConvexNotifications() {
+  const { authStatus } = useAuth();
+  const notificationList = useQuery(
+    api.forum.queries.listNotificationsForViewer,
+    authStatus === "authenticated" ? {} : "skip",
+  );
+  return <TopNavInner convexNotificationsEnabled notificationList={notificationList} />;
+}
+
+/**
+ * When Convex URL is missing, do not call `useQuery` (no provider during Vercel prerender).
+ * `notificationList` is ignored; notifications UI shows sign-in / empty as appropriate.
+ */
+function TopNavInner({
+  convexNotificationsEnabled,
+  notificationList,
+}: {
+  convexNotificationsEnabled: boolean;
+  notificationList?: NotificationRow[] | undefined;
+}) {
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
   const { authStatus, user, openAuthModal, logout } = useAuth();
@@ -63,28 +91,20 @@ export function TopNav() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const scrolled = useScroll(10);
 
-  const convexOn = isConvexConfigured();
-  const notificationList = useQuery(
-    api.forum.queries.listNotificationsForViewer,
-    authStatus === "authenticated" && convexOn ? {} : "skip",
-  );
-
-  const unread = useMemo(() => {
-    if (!notificationList) {
-      return 0;
-    }
-    return notificationList.filter((n) => !n.read).length;
-  }, [notificationList]);
-
-  const latestNotifications = useMemo(() => {
-    if (!notificationList) {
+  const effectiveList: NotificationRow[] = useMemo(() => {
+    if (!convexNotificationsEnabled || authStatus !== "authenticated") {
       return [];
     }
-    return notificationList
-      .slice()
+    return (notificationList ?? []) as NotificationRow[];
+  }, [convexNotificationsEnabled, authStatus, notificationList]);
+
+  const unread = useMemo(() => effectiveList.filter((n) => !n.read).length, [effectiveList]);
+
+  const latestNotifications = useMemo(() => {
+    return [...effectiveList]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 5);
-  }, [notificationList]);
+  }, [effectiveList]);
 
   useEffect(() => {
     setMounted(true);
@@ -188,30 +208,34 @@ export function TopNav() {
                         </div>
 
                         <div className="max-h-[320px] overflow-y-auto p-1.5">
-                          {latestNotifications.map((notification) => (
-                            <DropdownMenu.Item
-                              key={notification.id}
-                              className="group relative cursor-pointer rounded-[10px] px-3 py-2.5 outline-hidden transition-[background-color,transform] duration-200 data-highlighted:bg-(--bg-overlay) data-highlighted:translate-x-[2px]"
-                            >
-                              <div className="pr-12">
-                                <div className="flex items-start gap-2">
-                                  <span
-                                    className={cn(
-                                      "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full",
-                                      notification.read ? "bg-(--border-default)" : TYPE_ACCENT_CLASS[notification.type],
-                                    )}
-                                  />
-                                  <p className={cn("text-sm text-text-primary", !notification.read && "font-semibold")}>
-                                    {notification.title}
-                                  </p>
+                          {convexNotificationsEnabled && notificationList === undefined ? (
+                            <p className="px-3 py-4 text-sm text-text-muted">Loading…</p>
+                          ) : (
+                            latestNotifications.map((notification) => (
+                              <DropdownMenu.Item
+                                key={notification.id}
+                                className="group relative cursor-pointer rounded-[10px] px-3 py-2.5 outline-hidden transition-[background-color,transform] duration-200 data-highlighted:bg-(--bg-overlay) data-highlighted:translate-x-[2px]"
+                              >
+                                <div className="pr-12">
+                                  <div className="flex items-start gap-2">
+                                    <span
+                                      className={cn(
+                                        "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full",
+                                        notification.read ? "bg-(--border-default)" : TYPE_ACCENT_CLASS[notification.type],
+                                      )}
+                                    />
+                                    <p className={cn("text-sm text-text-primary", !notification.read && "font-semibold")}>
+                                      {notification.title}
+                                    </p>
+                                  </div>
+                                  <p className="mt-1 line-clamp-2 pl-3.5 text-xs text-text-secondary">{notification.message}</p>
                                 </div>
-                                <p className="mt-1 line-clamp-2 pl-3.5 text-xs text-text-secondary">{notification.message}</p>
-                              </div>
-                              <span className="absolute right-3 top-2.5 text-[11px] text-text-muted">
-                                {formatRelativeNotificationTime(notification.createdAt)}
-                              </span>
-                            </DropdownMenu.Item>
-                          ))}
+                                <span className="absolute right-3 top-2.5 text-[11px] text-text-muted">
+                                  {formatRelativeNotificationTime(notification.createdAt)}
+                                </span>
+                              </DropdownMenu.Item>
+                            ))
+                          )}
                         </div>
 
                         <div className="border-t border-(--border-subtle) p-1.5">
@@ -343,4 +367,11 @@ export function TopNav() {
       </div>
     </header>
   );
+}
+
+export function TopNav() {
+  if (!isConvexConfigured()) {
+    return <TopNavInner convexNotificationsEnabled={false} />;
+  }
+  return <TopNavWithConvexNotifications />;
 }

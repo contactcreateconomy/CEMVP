@@ -38,24 +38,15 @@ const categoryIconMap: Record<CategoryKey, LucideIcon> = {
   gigs: Briefcase,
 };
 
-export function LeftSidebar() {
+type DiscoverItem = { key: string; label: string; href: string; Icon: LucideIcon };
+
+function LeftSidebarShell({ discoverItems }: { discoverItems: DiscoverItem[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const enabled = isConvexConfigured();
-  const categories = useQuery(api.forum.queries.listCategories, enabled ? {} : "skip") ?? [];
   const selectedCategory = searchParams.get("category");
 
-  const discoverItems = [
-    { key: "home", label: "Home", href: "/feed", Icon: Home },
-    ...categories.map((category) => ({
-      key: category.key,
-      label: category.name,
-      href: `/feed?category=${category.key}`,
-      Icon: categoryIconMap[category.key as CategoryKey],
-    })),
-  ];
-
-  const activeKey = selectedCategory && discoverItems.some((item) => item.key === selectedCategory) ? selectedCategory : "home";
+  const activeKey =
+    selectedCategory && discoverItems.some((item) => item.key === selectedCategory) ? selectedCategory : "home";
   const activeIndex = discoverItems.findIndex((item) => item.key === activeKey);
 
   const itemHeight = 40;
@@ -120,7 +111,28 @@ export function LeftSidebar() {
           </div>
         </CardContent>
       </Card>
-
     </aside>
   );
+}
+
+function LeftSidebarWithConvex() {
+  const categories = useQuery(api.forum.queries.listCategories, {}) ?? [];
+  const discoverItems: DiscoverItem[] = [
+    { key: "home", label: "Home", href: "/feed", Icon: Home },
+    ...categories.map((category) => ({
+      key: category.key,
+      label: category.name,
+      href: `/feed?category=${category.key}`,
+      Icon: categoryIconMap[category.key as CategoryKey],
+    })),
+  ];
+  return <LeftSidebarShell discoverItems={discoverItems} />;
+}
+
+/** When Convex URL is missing, show Home only — do not call `useQuery` without a ConvexProvider. */
+export function LeftSidebar() {
+  if (!isConvexConfigured()) {
+    return <LeftSidebarShell discoverItems={[{ key: "home", label: "Home", href: "/feed", Icon: Home }]} />;
+  }
+  return <LeftSidebarWithConvex />;
 }
