@@ -23,6 +23,7 @@ import type * as forum_rateLimit from "../forum/rateLimit.js";
 import type * as forum_seed from "../forum/seed.js";
 import type * as forum_seed_catalog from "../forum/seed/catalog.js";
 import type * as forum_seed_discussionThreads from "../forum/seed/discussionThreads.js";
+import type * as forum_seed_ensureCategoryRows from "../forum/seed/ensureCategoryRows.js";
 import type * as forum_seed_generatePosts from "../forum/seed/generatePosts.js";
 import type * as http from "../http.js";
 import type * as profile from "../profile.js";
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   "forum/seed": typeof forum_seed;
   "forum/seed/catalog": typeof forum_seed_catalog;
   "forum/seed/discussionThreads": typeof forum_seed_discussionThreads;
+  "forum/seed/ensureCategoryRows": typeof forum_seed_ensureCategoryRows;
   "forum/seed/generatePosts": typeof forum_seed_generatePosts;
   http: typeof http;
   profile: typeof profile;

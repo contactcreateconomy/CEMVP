@@ -2,6 +2,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 import { mutation } from "../_generated/server";
+import { insertMissingForumCategories } from "./seed/ensureCategoryRows";
 import { slugify } from "./seed/generatePosts";
 import {
   MAX_POST_BODY_LEN,
@@ -79,10 +80,17 @@ export const createPost = mutation({
     }
 
     const catKey = category.trim();
-    const categoryRow = await ctx.db
+    let categoryRow = await ctx.db
       .query("forumCategories")
       .withIndex("by_key", (q) => q.eq("key", catKey))
       .unique();
+    if (!categoryRow) {
+      await insertMissingForumCategories(ctx);
+      categoryRow = await ctx.db
+        .query("forumCategories")
+        .withIndex("by_key", (q) => q.eq("key", catKey))
+        .unique();
+    }
     if (!categoryRow) {
       throw new Error("Unknown category.");
     }
@@ -266,4 +274,15 @@ export const markNotificationRead = mutation({
     await ctx.db.patch(notificationId, { read: true });
     return null;
   },
+});
+
+/**
+ * Same catalog insert as `forum/seed:ensureForumCategories` (CLI / internal).
+ * Callable from the forum client so production self-heals when `forumCategories` is empty.
+ * Idempotent; no auth required (static taxonomy only).
+ */
+export const ensureForumCategories = mutation({
+  args: {},
+  returns: v.object({ inserted: v.number(), skipped: v.number() }),
+  handler: async (ctx) => insertMissingForumCategories(ctx),
 });

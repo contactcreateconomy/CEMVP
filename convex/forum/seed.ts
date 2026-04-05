@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { internalMutation } from "../_generated/server";
 import { categoryRows, campaignRows, heroSlideRows, profileSeeds, vibingRows } from "./seed/catalog";
+import { insertMissingForumCategories } from "./seed/ensureCategoryRows";
 import { allGeneratedPostShapes } from "./seed/generatePosts";
 import { discussionThreads } from "./seed/discussionThreads";
 
@@ -287,21 +288,5 @@ export const runForumSeed = internalMutation({
 export const ensureForumCategories = internalMutation({
   args: {},
   returns: v.object({ inserted: v.number(), skipped: v.number() }),
-  handler: async (ctx) => {
-    let inserted = 0;
-    let skipped = 0;
-    for (const c of categoryRows) {
-      const existing = await ctx.db
-        .query("forumCategories")
-        .withIndex("by_key", (q) => q.eq("key", c.key))
-        .unique();
-      if (existing) {
-        skipped++;
-        continue;
-      }
-      await ctx.db.insert("forumCategories", { ...c });
-      inserted++;
-    }
-    return { inserted, skipped };
-  },
+  handler: async (ctx) => insertMissingForumCategories(ctx),
 });

@@ -11,7 +11,8 @@ export function getFeedPostDiscussionSlug(post: Post): string {
   if (post.isRichThread) {
     return post.slug;
   }
-  return CATEGORY_TO_MVP_THREAD_SLUG[post.category as CategoryKey];
+  const mapped = CATEGORY_TO_MVP_THREAD_SLUG[post.category as CategoryKey];
+  return mapped ?? post.slug;
 }
 
 /** Path for navigation from a feed card (includes `?post=` when the card is not the canonical thread). */

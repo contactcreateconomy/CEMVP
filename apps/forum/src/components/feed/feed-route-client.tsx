@@ -64,11 +64,13 @@ function FeedRouteWithConvex({
   const [comments, setComments] = useState<Comment[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const appendNextRef = useRef(false);
-  const hasReceivedQueryResult = useRef(false);
+  /** Replaces a ref so we do not read `.current` during render (React Compiler / eslint rules). */
+  const [feedPageReady, setFeedPageReady] = useState(false);
 
   useEffect(() => {
     setCursor(null);
     appendNextRef.current = false;
+    setFeedPageReady(false);
   }, [selectedCategory, selectedSort]);
 
   const page = useQuery(api.forum.queries.listFeedPage, {
@@ -82,7 +84,7 @@ function FeedRouteWithConvex({
     if (page === undefined || page === null) {
       return;
     }
-    hasReceivedQueryResult.current = true;
+    setFeedPageReady(true);
     if (appendNextRef.current) {
       appendNextRef.current = false;
       setPosts((prev) => {
@@ -113,7 +115,7 @@ function FeedRouteWithConvex({
     }
     appendNextRef.current = true;
     setCursor(page.continueCursor);
-  }, [page?.continueCursor, page?.isDone]);
+  }, [page]);
 
   const canLoadMore = Boolean(needsPagination && page && !page.isDone && page.continueCursor);
 
@@ -123,7 +125,7 @@ function FeedRouteWithConvex({
     return null;
   }
 
-  if (page === undefined && !hasReceivedQueryResult.current) {
+  if (page === undefined && !feedPageReady) {
     return null;
   }
 

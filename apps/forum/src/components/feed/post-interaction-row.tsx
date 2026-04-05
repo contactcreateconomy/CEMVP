@@ -43,7 +43,7 @@ export function PostInteractionRow({
   onToggleUpvote,
 }: PostInteractionRowProps) {
   const UpvoteIcon = isUpvoted ? ChevronsUp : ArrowUp;
-  const CategoryIcon = category ? categoryIconMap[category.key] : Sparkles;
+  const CategoryIcon = category ? (categoryIconMap[category.key] ?? Sparkles) : Sparkles;
 
   return (
     <div className="flex items-center justify-between gap-2 overflow-hidden rounded-[14px] border border-(--border-subtle) bg-(--bg-overlay)/20 px-2 py-2 sm:px-3">

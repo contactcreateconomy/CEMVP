@@ -119,7 +119,7 @@ function LeftSidebarWithConvex() {
       key: category.key,
       label: category.name,
       href: `/feed?category=${category.key}`,
-      Icon: categoryIconMap[category.key as CategoryKey],
+      Icon: categoryIconMap[category.key as CategoryKey] ?? LayoutList,
     })),
   ];
   return <LeftSidebarShell discoverItems={discoverItems} />;
