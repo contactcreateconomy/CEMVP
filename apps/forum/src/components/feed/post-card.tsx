@@ -78,7 +78,7 @@ export function PostCard({
 
   return (
     <article
-      className="card-surface group animate-soft-float relative overflow-hidden border border-(--border-subtle) p-4 transition-transform duration-200 hover:-translate-y-[2px] hover:border-(--border-active)/60 hover:shadow-[0_8px_24px_rgba(14,165,233,0.16)]"
+      className="card-surface feed-post-card group relative overflow-hidden p-4"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onFocus={() => setIsHovered(true)}

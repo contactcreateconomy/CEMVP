@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-04-05 (forum: feed UX + dark panels + glow)
+- **No flash on sort/category**: **`feed/page.tsx`** static + **`Suspense`** (no **`await searchParams`**); removed **`feed/loading.tsx`**; **`feed-route-client`** reads URL via **`useSearchParams`**, keeps **stale posts** during refetch, avoids **full-tree `null`** after first load (**`hasReceivedQueryResult`**); sort header **no `animate-soft-float`**; **post-card** **no `animate-soft-float`** on list updates.
+- **`globals.css` `.dark`**: Near-black canvas + **`~#121212`** **`--bg-surface`**; **`.feed-post-card`** hover glow.
+- **`trend-sorter.tsx`**: Solid bar bg; hover cyan; **700ms** pill slide (**150ms** reduced motion).
+- **`left-sidebar.tsx`**: Discover — **active** row only: pill **border** + **glow** + light fill; **inactive** **hover** = **text color** only (no hover oval/shadow/bg).
+
 ## 2026-04-04 (auth-ui: auth modal top accent)
 - **`packages/auth-ui/src/auth-modal.tsx`**: Removed the 1px **`bg-brand-primary`** strip at the top of the login/signup dialog (user-facing “blue line”).
 

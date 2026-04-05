@@ -2,6 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { FeedClient } from "@/components/feed/feed-client";
 import { TrendSorter } from "@/components/feed/trend-sorter";
@@ -11,9 +12,18 @@ import { useSharedData } from "@/providers/shared-data-context";
 import type { Comment, Post, User } from "@/types";
 import type { Category } from "@/types";
 
-interface FeedRouteClientProps {
+function parseFeedSearchParams(searchParams: URLSearchParams): {
   selectedCategory?: string;
   selectedSort: "top" | "hot" | "new" | "fav";
+} {
+  const category = searchParams.get("category");
+  const rawSort = searchParams.get("sort");
+  const selectedSort: "top" | "hot" | "new" | "fav" =
+    rawSort === "hot" || rawSort === "new" || rawSort === "fav" ? rawSort : "top";
+  return {
+    selectedCategory: category && category.length > 0 ? category : undefined,
+    selectedSort,
+  };
 }
 
 function mergeUsers(prev: User[], next: User[]): User[] {
@@ -38,7 +48,13 @@ function mergeComments(prev: Comment[], next: Comment[]): Comment[] {
   return out;
 }
 
-function FeedRouteWithConvex({ selectedCategory, selectedSort }: FeedRouteClientProps) {
+function FeedRouteWithConvex({
+  selectedCategory,
+  selectedSort,
+}: {
+  selectedCategory?: string;
+  selectedSort: "top" | "hot" | "new" | "fav";
+}) {
   const sortArg =
     selectedSort === "top" ? "top" : selectedSort === "hot" ? "hot" : selectedSort === "fav" ? "fav" : "new";
   const needsPagination = sortArg === "new" || sortArg === "fav";
@@ -48,13 +64,11 @@ function FeedRouteWithConvex({ selectedCategory, selectedSort }: FeedRouteClient
   const [comments, setComments] = useState<Comment[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const appendNextRef = useRef(false);
+  const hasReceivedQueryResult = useRef(false);
 
   useEffect(() => {
     setCursor(null);
     appendNextRef.current = false;
-    setPosts([]);
-    setComments([]);
-    setUsers([]);
   }, [selectedCategory, selectedSort]);
 
   const page = useQuery(api.forum.queries.listFeedPage, {
@@ -68,6 +82,7 @@ function FeedRouteWithConvex({ selectedCategory, selectedSort }: FeedRouteClient
     if (page === undefined || page === null) {
       return;
     }
+    hasReceivedQueryResult.current = true;
     if (appendNextRef.current) {
       appendNextRef.current = false;
       setPosts((prev) => {
@@ -104,13 +119,17 @@ function FeedRouteWithConvex({ selectedCategory, selectedSort }: FeedRouteClient
 
   const initialPosts = useMemo(() => posts, [posts]);
 
-  if (page === undefined || categoriesLoading) {
+  if (categoriesLoading) {
+    return null;
+  }
+
+  if (page === undefined && !hasReceivedQueryResult.current) {
     return null;
   }
 
   return (
     <section className="space-y-4">
-      <header className="card-surface animate-soft-float p-2">
+      <header className="card-surface p-2">
         <Suspense fallback={null}>
           <TrendSorter />
         </Suspense>
@@ -139,7 +158,17 @@ function FeedRouteWithConvex({ selectedCategory, selectedSort }: FeedRouteClient
   );
 }
 
-export function FeedRouteClient({ selectedCategory, selectedSort }: FeedRouteClientProps) {
+function FeedRouteWithSearchParams() {
+  const searchParams = useSearchParams();
+  const queryKey = searchParams.toString();
+  const { selectedCategory, selectedSort } = useMemo(
+    () => parseFeedSearchParams(new URLSearchParams(queryKey)),
+    [queryKey],
+  );
+  return <FeedRouteWithConvex selectedCategory={selectedCategory} selectedSort={selectedSort} />;
+}
+
+export function FeedRouteClient() {
   if (!isConvexConfigured()) {
     return (
       <p className="text-sm text-(--text-muted)">
@@ -148,5 +177,5 @@ export function FeedRouteClient({ selectedCategory, selectedSort }: FeedRouteCli
     );
   }
 
-  return <FeedRouteWithConvex selectedCategory={selectedCategory} selectedSort={selectedSort} />;
+  return <FeedRouteWithSearchParams />;
 }

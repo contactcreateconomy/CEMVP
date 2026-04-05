@@ -1,20 +1,15 @@
 /**
  * Route: /feed
- * Data: Convex listFeedPage + listCategories
+ * Data: Convex listFeedPage + listCategories (client; URL query is read in FeedRouteClient so sort/category changes do not refetch this RSC or flash loading.tsx).
  */
+import { Suspense } from "react";
+
 import { FeedRouteClient } from "@/components/feed/feed-route-client";
 
-interface FeedPageProps {
-  searchParams?: Promise<{
-    category?: string;
-    sort?: "top" | "hot" | "new" | "fav";
-  }>;
-}
-
-export default async function FeedPage({ searchParams }: FeedPageProps) {
-  const resolvedSearchParams = await searchParams;
-  const selectedCategory = resolvedSearchParams?.category;
-  const selectedSort = resolvedSearchParams?.sort ?? "top";
-
-  return <FeedRouteClient selectedCategory={selectedCategory} selectedSort={selectedSort} />;
+export default function FeedPage() {
+  return (
+    <Suspense fallback={null}>
+      <FeedRouteClient />
+    </Suspense>
+  );
 }

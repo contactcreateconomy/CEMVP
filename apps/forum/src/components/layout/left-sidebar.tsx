@@ -45,11 +45,6 @@ function LeftSidebarShell({ discoverItems }: { discoverItems: DiscoverItem[] }) 
 
   const activeKey =
     selectedCategory && discoverItems.some((item) => item.key === selectedCategory) ? selectedCategory : "home";
-  const activeIndex = discoverItems.findIndex((item) => item.key === activeKey);
-
-  const itemHeight = 40;
-  const itemGap = 4;
-  const indicatorTop = activeIndex * (itemHeight + itemGap);
 
   return (
     <aside className="sticky top-20 hidden h-fit w-[240px] shrink-0 space-y-4 lg:block">
@@ -57,17 +52,17 @@ function LeftSidebarShell({ discoverItems }: { discoverItems: DiscoverItem[] }) 
         <CardContent className="p-3">
           <div className="relative rounded-full">
             <GlowingEffect
-              spread={34}
+              spread={28}
               glow
               disabled={false}
-              proximity={56}
-              inactiveZone={0.15}
+              proximity={48}
+              inactiveZone={0.18}
               borderWidth={2}
-              movementDuration={0.65}
+              movementDuration={0.5}
             />
             <Button
               onClick={() => router.push("/new-post")}
-              className="relative z-10 h-9 w-full rounded-full text-base font-semibold shadow-[0_8px_24px_rgba(14,165,233,0.28)] transition-all duration-300 hover:shadow-[0_10px_28px_rgba(14,165,233,0.35)]"
+              className="relative z-10 h-9 w-full rounded-full text-base font-semibold shadow-[0_6px_20px_rgba(14,165,233,0.2)] transition-[box-shadow] duration-300 ease-out hover:shadow-[0_8px_22px_rgba(14,165,233,0.26)]"
               style={{ color: "black" }}
             >
               + Start Discussion
@@ -82,15 +77,7 @@ function LeftSidebarShell({ discoverItems }: { discoverItems: DiscoverItem[] }) 
         </CardHeader>
 
         <CardContent className="relative p-3 pt-0">
-          <div className="relative space-y-1 rounded-[14px]">
-            <div
-              className="pointer-events-none absolute left-0 right-0 rounded-full border border-border-active/70 bg-bg-overlay/55 transition-all duration-300 ease-out dark:shadow-[0_0_12px_rgba(14,165,233,0.22)]"
-              style={{
-                top: `${indicatorTop}px`,
-                height: `${itemHeight}px`,
-              }}
-            />
-
+          <nav className="space-y-1 rounded-[14px]" aria-label="Discover categories">
             {discoverItems.map(({ key, label, href, Icon }) => {
               const isActive = key === activeKey;
 
@@ -98,15 +85,26 @@ function LeftSidebarShell({ discoverItems }: { discoverItems: DiscoverItem[] }) 
                 <Link
                   key={key}
                   href={href}
-                  className="relative z-10 flex h-10 w-full items-center gap-2.5 rounded-full px-3 text-sm font-semibold transition-colors duration-200 hover:bg-bg-overlay/55"
-                  style={{ color: isActive ? "var(--brand-primary)" : "var(--text-primary)" }}
+                  className={cn(
+                    "relative flex h-10 w-full items-center gap-2.5 rounded-full border px-3 text-sm font-semibold",
+                    "outline-offset-2 focus-visible:ring-2 focus-visible:ring-(--border-active) focus-visible:ring-offset-2 focus-visible:ring-offset-(--bg-surface)",
+                    isActive
+                      ? "border-(--border-active)/75 bg-(--brand-primary)/10 text-(--brand-primary) shadow-[0_0_16px_hsl(199_89%_48%_/_0.2),0_0_0_1px_hsl(199_89%_48%_/_0.35)] transition-[color,box-shadow,border-color,background-color] duration-200 ease-out"
+                      : "border-transparent text-(--text-primary) transition-colors duration-200 ease-out hover:text-(--brand-primary)",
+                  )}
                 >
-                  <Icon className={cn("h-4 w-4", isActive && "scale-105")} strokeWidth={2.5} />
+                  <Icon
+                    className={cn(
+                      "h-4 w-4 shrink-0 transition-[transform,color] duration-200 ease-out",
+                      isActive && "scale-105",
+                    )}
+                    strokeWidth={2.5}
+                  />
                   <span>{label}</span>
                 </Link>
               );
             })}
-          </div>
+          </nav>
         </CardContent>
       </Card>
     </aside>
