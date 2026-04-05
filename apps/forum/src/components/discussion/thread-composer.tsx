@@ -7,7 +7,6 @@ import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAuth } from "@cemvp/auth-ui";
-import { getUserById } from "@/lib/adapters/content";
 import { cn } from "@/lib/utils";
 import type { CategoryKey } from "@/types";
 import type { DiscussionThread } from "@/types/discussion";
@@ -67,7 +66,19 @@ export function ThreadComposer({
   const setText = isMainControlled ? onMainValueChange : setLocalText;
 
   const mockUser = mockUserForComposer(authStatus === "authenticated" && authUser ? { ...authUser, id: authUser.id } : null);
-  const u = mockUser ?? getUserById("u1");
+  const u =
+    mockUser ??
+    ({
+      id: "guest",
+      name: "Guest",
+      handle: "guest",
+      avatar: "",
+      bio: "",
+      level: 1,
+      points: 0,
+      streakDays: 0,
+      role: "member" as const,
+    } satisfies User);
 
   const nudgeText = NUDGES[thread.category];
   const showNudge = text.trim().length >= 20 && !dismissNudge && !compact;

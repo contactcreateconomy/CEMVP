@@ -2,6 +2,12 @@
 
 This repository is a pnpm workspace monorepo.
 
+## Documentation (`docs/`)
+
+- **[docs/README.md](docs/README.md)** — index of overview, architecture (stack + versions), quick start, forum schema reference, and capacity/seed docs (for contributors and AI agents).
+- **[docs/architecture.md](docs/architecture.md)** — architecture, software stack, and declared dependency versions.
+- **[CLAUDE.md](CLAUDE.md)** — links the same docs in a table for Claude Code.
+
 ## Workspace layout
 
 - `apps/forum` — Next.js forum app (migrated from `CEfrontend` with behavior-preserving structure)
@@ -73,6 +79,23 @@ pnpm dlx vercel@latest env add NEXT_PUBLIC_CONVEX_URL production --value "https:
 Redeploy the production deployment after changing env vars so the build picks them up.
 
 **Vercel / production builds:** Next.js 16 defaults to **Turbopack** for `next build`, which does not apply the same `convex` dedupe as webpack and can fail prerender with **`Could not find ConvexProviderWithAuth`**. Forum (and other apps using `@cemvp/auth-ui`) use **`next build --webpack`** in `package.json` so production matches local auth.
+
+**Preview environment:** Set **`NEXT_PUBLIC_CONVEX_URL`** for Preview as well as Production (often the dev Convex URL for previews). If the third argument to `vercel env add` fails for “branch”, pass an empty string to apply to all preview branches:
+
+```bash
+pnpm dlx vercel@latest env add NEXT_PUBLIC_CONVEX_URL preview '' --value "https://<your-dev-deployment>.convex.cloud" --yes --force
+```
+
+**CLI deploy from monorepo root:** If the Vercel project’s Root Directory is **`apps/forum`**, run `vercel` / `vercel deploy` from the **repository root** with a linked **`.vercel/project.json`** at the root that matches that project (so the CLI does not double-resolve `apps/forum`).
+
+### Forum app (recent hardening)
+
+- **Shared Convex subscriptions:** [`SharedDataProvider`](apps/forum/src/providers/shared-data-context.tsx) loads **`listCategories`** and **`getUnreadNotificationCount`** once per session; pages use **`useSharedData()`** instead of duplicating **`listCategories`**.
+- **Rate limiting:** Writes are capped in Convex via **`forumWriteBuckets`** ([`convex/forum/rateLimit.ts`](convex/forum/rateLimit.ts)). **IP / edge request** limits are not implemented in-app: in-memory middleware would reset per instance and cold start (false security). Use **Vercel WAF**, **Firewall**, or a **shared store** (e.g. Upstash Redis + `@upstash/ratelimit`) if you need distributed IP throttling.
+- **Observability:** **`@vercel/analytics`** and **`@vercel/speed-insights`** in root layout (no extra env vars for basic usage).
+- **Convex crons:** [`convex/crons.ts`](convex/crons.ts) registers scheduled jobs (e.g. feed cache recompute); deploy Convex after changing crons.
+
+Details: [docs/architecture.md](docs/architecture.md), [docs/schema-forum.md](docs/schema-forum.md), [docs/forum-capacity.md](docs/forum-capacity.md).
 
 ## Run apps
 

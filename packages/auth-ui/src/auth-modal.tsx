@@ -41,8 +41,6 @@ export function AuthModal() {
               "origin-center",
             )}
           >
-          <div className="absolute inset-x-0 top-0 h-px bg-brand-primary/70" />
-
           <div className="relative p-5 sm:p-6">
             <Dialog.Close asChild>
               <button

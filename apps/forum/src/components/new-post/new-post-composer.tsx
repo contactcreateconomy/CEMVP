@@ -1,6 +1,8 @@
 "use client";
 
+import { useMutation } from "convex/react";
 import type { ComponentType, ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import TiptapLink from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -30,8 +32,11 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/convex";
 import { cn } from "@/lib/utils";
 import type { Category, CategoryKey } from "@/types";
+import { useAuth } from "@cemvp/auth-ui";
+import { isConvexConfigured } from "@cemvp/convex-client";
 
 const categoryIconMap: Record<CategoryKey, ComponentType<{ className?: string }>> = {
   news: Newspaper,
@@ -82,6 +87,9 @@ function MenuBtn({
 }
 
 export function NewPostComposer({ categories }: NewPostComposerProps) {
+  const router = useRouter();
+  const { authStatus, openAuthModal } = useAuth();
+  const createPost = useMutation(api.forum.mutations.createPost);
   const defaultCategory = useMemo(
     () => categories.find((c) => !c.lockedByDefault)?.key ?? categories[0]?.key ?? "news",
     [categories],
@@ -140,7 +148,15 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
   }, [editor]);
 
-  const handlePublish = useCallback(() => {
+  const handlePublish = useCallback(async () => {
+    if (!isConvexConfigured()) {
+      showToast("Convex is not configured.");
+      return;
+    }
+    if (authStatus !== "authenticated") {
+      openAuthModal();
+      return;
+    }
     if (!title.trim()) {
       showToast("Add a title before publishing.");
       return;
@@ -150,11 +166,33 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
       showToast("Write something in the body before publishing.");
       return;
     }
-    showToast("Mock publish: post is not saved yet (API pending).");
-  }, [editor, showToast, title]);
+    const bodyHtml = editor?.getHTML().trim() ?? "";
+    try {
+      await createPost({
+        title: title.trim(),
+        summary: summary.trim() || title.trim().slice(0, 160),
+        body: bodyHtml || `<p>${bodyText}</p>`,
+        category: categoryKey,
+      });
+      showToast("Published.");
+      router.push("/feed");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Could not publish.");
+    }
+  }, [
+    authStatus,
+    categoryKey,
+    createPost,
+    editor,
+    openAuthModal,
+    router,
+    showToast,
+    summary,
+    title,
+  ]);
 
   const handleDraft = useCallback(() => {
-    showToast("Draft saved locally in this session only (mock).");
+    showToast("Drafts are not synced yet — use Publish to save to the forum.");
   }, [showToast]);
 
   if (!editor) {

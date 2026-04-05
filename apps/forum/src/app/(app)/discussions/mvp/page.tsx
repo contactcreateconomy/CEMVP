@@ -20,7 +20,7 @@ export default function DiscussionsMvpIndexPage() {
       <div>
         <h1 className="text-2xl font-semibold text-(--text-primary)">Thread discussion MVP</h1>
         <p className="mt-2 text-sm text-(--text-secondary)">
-          Open each slug below to exercise the full discussion shell and category-specific UI (mock data).
+          Open each slug below to exercise the full discussion shell and category-specific UI (seeded Convex content).
         </p>
       </div>
 

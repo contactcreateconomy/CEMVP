@@ -51,18 +51,24 @@ export function ThreadSidebar({
     return () => window.removeEventListener("resize", q);
   }, []);
 
-  const topUser = usersById.get(thread.insightRail.topContributor.userId);
+  const rail = thread.insightRail;
+  const topContributorId = rail?.topContributor?.userId ?? "";
+  const topUser = topContributorId ? usersById.get(topContributorId) : undefined;
+  const summary = rail?.summary ?? "";
+  const keyAgreements = Array.isArray(rail?.keyAgreements) ? rail.keyAgreements : [];
+  const openQuestions = Array.isArray(rail?.openQuestions) ? rail.openQuestions : [];
+  const topExcerpt = rail?.topContributor?.excerpt ?? "";
 
   const insightInner = (
     <div className="space-y-4">
       <div>
         <p className="text-xs font-semibold uppercase text-(--text-muted)">Key points</p>
-        <p className="mt-2 text-sm text-(--text-secondary)">{thread.insightRail.summary}</p>
+        <p className="mt-2 text-sm text-(--text-secondary)">{summary}</p>
       </div>
       <div>
         <p className="text-xs font-semibold uppercase text-(--text-muted)">Key agreements</p>
         <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-(--text-secondary)">
-          {thread.insightRail.keyAgreements.map((x) => (
+          {keyAgreements.map((x) => (
             <li key={x}>{x}</li>
           ))}
         </ul>
@@ -70,7 +76,7 @@ export function ThreadSidebar({
       <div>
         <p className="text-xs font-semibold uppercase text-(--text-muted)">Open questions</p>
         <ul className="mt-2 space-y-2 text-sm">
-          {thread.insightRail.openQuestions.map((q) => (
+          {openQuestions.map((q) => (
             <li key={q.anchorId}>
               <a href={`#comment-${q.anchorId}`} className="text-(--brand-primary) hover:underline">
                 {q.text}
@@ -85,7 +91,7 @@ export function ThreadSidebar({
           <UserAvatar user={topUser ?? null} size="sm" />
           <span className="text-sm font-medium text-(--text-primary)">{topUser?.name ?? "Member"}</span>
         </div>
-        <p className="mt-2 text-xs text-(--text-secondary)">{thread.insightRail.topContributor.excerpt}</p>
+        <p className="mt-2 text-xs text-(--text-secondary)">{topExcerpt}</p>
       </div>
       <InsightRailExtras thread={thread} />
     </div>

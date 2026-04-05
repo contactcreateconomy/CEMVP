@@ -110,9 +110,9 @@ function DiscussionPageInner({
   };
 
   const feedbackChips =
-    thread.category === "launch-pad"
+    thread.category === "launch-pad" && "feedbackChips" in thread.categoryBody
       ? thread.categoryBody.feedbackChips
-      : thread.category === "showcase"
+      : thread.category === "showcase" && "feedbackChips" in thread.categoryBody
         ? thread.categoryBody.feedbackChips
         : null;
 

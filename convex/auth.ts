@@ -115,6 +115,18 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
           updatedAt: now,
         });
 
+        await ctx.db.insert("forumProfiles", {
+          userId,
+          handle,
+          name: name ?? handle,
+          image: typeof profile.image === "string" ? profile.image : "",
+          bio: "",
+          level: 1,
+          points: 0,
+          streakDays: 0,
+          role: "member",
+        });
+
         await ctx.db.insert("memberships", {
           userId,
           app: "forum",

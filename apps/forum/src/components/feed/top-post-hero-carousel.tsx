@@ -7,7 +7,7 @@ import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { BarChart3, ChevronLeft, ChevronRight, MessageSquare, Share2, ArrowRight } from "lucide-react";
 
-import type { TopPostHeroSlide } from "@/lib/adapters/content";
+import type { TopPostHeroSlide } from "@/types/hero";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";

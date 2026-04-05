@@ -4,14 +4,18 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, TrendingUp } from "lucide-react";
 
-import { getVibingItems } from "@/lib/adapters/content";
+import { useQuery } from "convex/react";
+
+import { api } from "@/lib/convex";
+import { isConvexConfigured } from "@cemvp/convex-client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 const SLIDE_INTERVAL_MS = 4000;
 
-export function WhatsVibingWidget() {
-  const items = useMemo(() => getVibingItems(10), []);
+function WhatsVibingWidgetInner() {
+  const fetched = useQuery(api.forum.queries.listVibingItems, { limit: 10 });
+  const items = useMemo(() => fetched ?? [], [fetched]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -85,8 +89,15 @@ export function WhatsVibingWidget() {
             );
           })}
         </div>
-
       </CardContent>
     </Card>
   );
+}
+
+/** Only mounted from `RightSidebarWithConvex` today; guard keeps `useQuery` off the tree when Convex URL is missing. */
+export function WhatsVibingWidget() {
+  if (!isConvexConfigured()) {
+    return null;
+  }
+  return <WhatsVibingWidgetInner />;
 }
