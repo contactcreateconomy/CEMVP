@@ -217,7 +217,7 @@ export function FeedClient({
         description={
           selectedSort === "fav"
             ? "Bookmark posts as favorites and they will appear here."
-            : "Try another Discover filter or switch back to Home for all discussions."
+            : "Be the first to post, or try another Discover filter."
         }
         ctaLabel="Create Post"
       />

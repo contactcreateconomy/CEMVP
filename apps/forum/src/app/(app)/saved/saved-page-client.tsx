@@ -78,7 +78,7 @@ function SavedPageWithConvex() {
     }
     appendNextRef.current = true;
     setCursor(page.continueCursor);
-  }, [page?.continueCursor, page?.isDone]);
+  }, [page]);
 
   const canLoadMore = Boolean(page && !page.isDone && page.continueCursor);
 

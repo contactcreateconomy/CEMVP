@@ -51,7 +51,7 @@ const categoryIconMap: Record<CategoryKey, ComponentType<{ className?: string }>
 };
 
 function CategoryLucideIcon({ categoryKey, className }: { categoryKey: CategoryKey; className?: string }) {
-  const Icon = categoryIconMap[categoryKey];
+  const Icon = categoryIconMap[categoryKey] ?? LayoutList;
   return <Icon className={className} />;
 }
 

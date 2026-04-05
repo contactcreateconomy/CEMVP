@@ -1,7 +1,26 @@
 # Changelog
 
+## 2026-04-05 (forum: restore sort + Discover animations)
+- **`trend-sorter.tsx`**: Restored pre–feed-refresh behavior — **`duration-300`** sliding pill, **`bg-(--bg-surface)/70`** + **`backdrop-blur-md`** track, simpler link styling (matches **`6a842ec`** era).
+- **`left-sidebar.tsx`**: Restored sliding **absolute indicator** for Discover (**`transition-all duration-300`**), prior **GlowingEffect** / CTA shadow tuning; kept **`?? LayoutList`** and focus rings.
+
+## 2026-04-05 (forum: auto prod category bootstrap)
+- **Convex**: **`insertMissingForumCategories`** in **`convex/forum/seed/ensureCategoryRows.ts`** — shared by **`forum/seed:ensureForumCategories`** (CLI) and new public **`forum/mutations:ensureForumCategories`**.
+- **`createPost`**: If the category row is missing, runs the same insert helper then re-resolves the category (self-heal).
+- **Forum client**: **`SharedDataProvider`** calls **`ensureForumCategories`** in **`useLayoutEffect`** when **`listCategories`** is empty, keeps **`categoriesLoading`** true until the mutation finishes — Discover sidebar / sort toolbar / new-post categories match dev without manual CLI.
+- **Docs**: **`docs/production-convex.md`** — automatic bootstrap vs optional **`pnpm convex:prod:ensure-categories`**.
+- **Validation:** `pnpm exec convex codegen`, `pnpm --filter ./apps/forum typecheck`, `lint`.
+
+## 2026-04-05 (forum: empty Convex / prod resilience)
+- **Hardening**: **`left-sidebar`**, **`post-interaction-row`**, **`new-post-composer`** — fallback Lucide icon when a category key is missing from the static map (avoids **“Element type is invalid … undefined”** if taxonomy and UI diverge).
+- **`feed-post-discussion-slug`**: Match Convex **`discussionHrefForPostShape`** — use **`?? post.slug`** when category has no MVP mapping.
+- **Empty taxonomy UX**: **`feed-client`** empty copy when **`categories.length === 0`**; **`discover-page-client`** message; **`new-post-page-client`** blocks composer until categories exist (points to **`pnpm convex:prod:ensure-categories`**).
+- **`global-error.tsx`**: Root-level error UI (required **`html`/`body`**) for failures in **`layout`** / providers.
+- **`feed-route-client`**: Replace feed-ready **ref read during render** with **`feedPageReady`** state (resets on sort/category change); **`loadMore`** deps **`[page]`**. **`saved-page-client`**: **`loadMore`** deps **`[page]`** (React Compiler eslint).
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` (one pre-existing warning in **`thread-comments.tsx`**).
+
 ## 2026-04-05 (forum: feed UX + dark panels + glow)
-- **No flash on sort/category**: **`feed/page.tsx`** static + **`Suspense`** (no **`await searchParams`**); removed **`feed/loading.tsx`**; **`feed-route-client`** reads URL via **`useSearchParams`**, keeps **stale posts** during refetch, avoids **full-tree `null`** after first load (**`hasReceivedQueryResult`**); sort header **no `animate-soft-float`**; **post-card** **no `animate-soft-float`** on list updates.
+- **No flash on sort/category**: **`feed/page.tsx`** static + **`Suspense`** (no **`await searchParams`**); removed **`feed/loading.tsx`**; **`feed-route-client`** reads URL via **`useSearchParams`**, keeps **stale posts** during refetch, avoids **full-tree `null`** after first load (**feed ready** gate); sort header **no `animate-soft-float`**; **post-card** **no `animate-soft-float`** on list updates.
 - **`globals.css` `.dark`**: Near-black canvas + **`~#121212`** **`--bg-surface`**; **`.feed-post-card`** hover glow.
 - **`trend-sorter.tsx`**: Solid bar bg; hover cyan; **700ms** pill slide (**150ms** reduced motion).
 - **`left-sidebar.tsx`**: Discover — **active** row only: pill **border** + **glow** + light fill; **inactive** **hover** = **text color** only (no hover oval/shadow/bg).

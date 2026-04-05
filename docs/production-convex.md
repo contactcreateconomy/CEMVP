@@ -23,17 +23,19 @@ The full forum seed (`pnpm convex:seed-forum` / force seed) inserts **posts, see
 On **production** you typically want:
 
 - **No** full seed — the feed stays empty until real users sign up and publish.
-- **Category taxonomy** must still exist: `createPost` validates `category` against **`forumCategories`**. If that table is empty, publishing fails with “Unknown category.”
+- **Category taxonomy** must still exist: `createPost` validates `category` against **`forumCategories`**.
 
-### Bootstrap categories only (idempotent)
+**Automatic bootstrap (recommended):** The forum app calls **`forum/mutations:ensureForumCategories`** from **`SharedDataProvider`** when **`listCategories`** returns an empty array, so the first production visit installs the same catalog as **`pnpm convex:prod:ensure-categories`** (idempotent). **`createPost`** also runs the same insert helper once if the chosen category row is still missing (e.g. race or non-browser client).
 
-After each prod deploy that changes categories, run once (safe to re-run; only inserts missing keys):
+### Bootstrap categories only (idempotent, optional CLI / CI)
+
+You can still run the internal mutation manually after deploy (safe to re-run; only inserts missing keys):
 
 ```bash
 pnpm convex:prod:ensure-categories
 ```
 
-This runs `forum/seed:ensureForumCategories` on **`--prod`**: inserts rows from [`convex/forum/seed/catalog.ts`](../convex/forum/seed/catalog.ts) when missing. It does **not** add posts, profiles, comments, or sidebar demo rows.
+This runs `forum/seed:ensureForumCategories` on **`--prod`**: same rows as [`convex/forum/seed/catalog.ts`](../convex/forum/seed/catalog.ts) when missing. It does **not** add posts, profiles, comments, or sidebar demo rows.
 
 ### Environment variables on prod
 
