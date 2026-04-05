@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-04-05 (forum: new-post — no mandatory fields, TipTap category UX)
+- **`category-composer-fields.ts`**: Removed required-field validation and HTML meta merging; exports **`categoryWritingHints`**, **`categoryEditorPlaceholders`**, **`categoryScaffoldHtml`**, **`isEditorDocumentBare`**, and draft payload **without** `extraFields`.
+- **`new-post-composer.tsx`**: Dropped per-category input panel and publish validation for extra fields; **`body`** is TipTap HTML only; category row uses **`flex-wrap`** (all chips visible); hint line above editor; dynamic TipTap placeholder; optional **empty-doc scaffold** when switching category; drafts ignore legacy `extraFields` in JSON.
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` (existing **`thread-comments.tsx`** warning only).
+
+## 2026-04-05 (forum: new-post category strip matches Discover)
+- **`new-post-composer.tsx`**: Category picker at the top inside a **Discover**-style **Card** (uppercase **Category** label, **`rounded-[14px]`** row, **`h-10`** rows, Lucide **`h-4 w-4`** **`strokeWidth={2.5}`**, brand vs primary text); **sliding pill** indicator + horizontal scroll / **`scrollIntoView`** for the active item (parity with feed sidebar).
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint`.
+
+## 2026-04-05 (forum: new-post category UX + drafts)
+- **`category-composer-fields.ts`**: Per-**`CategoryKey`** required/optional fields (aligned with discussion seed **`categoryBody`**), URL validation, escaped HTML meta block prepended to post **`body`** on publish; **`NEW_POST_DRAFT_STORAGE_KEY`** + draft payload type.
+- **`new-post-composer.tsx`**: Discover-style category row (**`h-10`**, **`rounded-full`**, Lucide **`h-4 w-4`** **`strokeWidth={2.5}`**, active border/glow); conditional extra-field form; **`validateComposerFields`** before publish; **localStorage** draft save + one-time restore + toasts; fixed bottom bar (**Save** / **Publish** icons); toast **`bottom-24`** above bar.
+- **`compose-shell.tsx`**: **`main`** **`pb-28`** so content clears the composer bottom bar.
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` (existing **`thread-comments.tsx`** warning only).
+
+## 2026-04-05 (forum: Medium-style distraction-free /new-post)
+- **Route**: Moved **`/new-post`** from **`(app)`** to **`(compose)`** so it no longer uses **`AppShell`** (no main top nav, sidebars, hero, footer, or mobile tab bar).
+- **`compose-shell.tsx`**: Minimal sticky bar — logo → **`/feed`**, close (**`X`**), **Publish** (delegates to **`#compose-publish-btn`**).
+- **`new-post-composer.tsx`**: Category icon pills in a horizontal strip (Discover/feed icons); large title + optional subtitle; divider; TipTap + bubble menu; hidden publish trigger for the shell; removed in-page Publish/Save draft row.
+- **`apps/forum/README.md`**: Note **`(compose)`** layout for **`/new-post`**.
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` (cleared stale **`.next`** types after route move).
+
 ## 2026-04-05 (forum: restore sort + Discover animations)
 - **`trend-sorter.tsx`**: Restored pre–feed-refresh behavior — **`duration-300`** sliding pill, **`bg-(--bg-surface)/70`** + **`backdrop-blur-md`** track, simpler link styling (matches **`6a842ec`** era).
 - **`left-sidebar.tsx`**: Restored sliding **absolute indicator** for Discover (**`transition-all duration-300`**), prior **GlowingEffect** / CTA shadow tuning; kept **`?? LayoutList`** and focus rings.

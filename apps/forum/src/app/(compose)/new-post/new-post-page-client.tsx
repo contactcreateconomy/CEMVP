@@ -16,13 +16,17 @@ function NewPostPageWithConvex() {
   const { categories, categoriesLoading } = useSharedData();
 
   if (categoriesLoading) {
-    return null;
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-(--text-muted)">
+        Loading editor…
+      </div>
+    );
   }
 
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[50vh] items-center justify-center text-sm text-(--text-muted)">
+        <div className="flex min-h-[40vh] items-center justify-center text-sm text-(--text-muted)">
           Loading editor…
         </div>
       }
@@ -35,7 +39,7 @@ function NewPostPageWithConvex() {
 export function NewPostPageClient() {
   if (!isConvexConfigured()) {
     return (
-      <p className="px-4 text-sm text-(--text-muted)">
+      <p className="text-sm text-(--text-muted)">
         Connect Convex to load categories and publish posts.
       </p>
     );
