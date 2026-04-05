@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-04-04 (auth-ui: auth modal top accent)
+- **`packages/auth-ui/src/auth-modal.tsx`**: Removed the 1px **`bg-brand-primary`** strip at the top of the login/signup dialog (user-facing “blue line”).
+
 ## 2026-04-04 (forum: remove misleading Edge IP rate-limit middleware)
 - **`apps/forum/src/middleware.ts`**: Removed. In-memory per-IP counters on the Edge do not persist across Vercel instances or cold starts, so they gave a false sense of security.
 - **`README.md`**, **`docs/architecture.md`**, **`docs/forum-capacity.md`**, **`CLAUDE.md`**, **`AGENTS.md`**, **`docs/README.md`**: Document Convex **`forumWriteBuckets`** for writes and recommend **Vercel WAF** / shared stores (e.g. Upstash) for distributed IP throttling.

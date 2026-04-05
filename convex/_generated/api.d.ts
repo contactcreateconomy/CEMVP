@@ -9,9 +9,11 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as crons from "../crons.js";
 import type * as forum_constants from "../forum/constants.js";
 import type * as forum_discussionRoute from "../forum/discussionRoute.js";
 import type * as forum_discussionRouteHelpers from "../forum/discussionRouteHelpers.js";
+import type * as forum_feedCache from "../forum/feedCache.js";
 import type * as forum_feedQueries from "../forum/feedQueries.js";
 import type * as forum_helpers from "../forum/helpers.js";
 import type * as forum_limits from "../forum/limits.js";
@@ -33,9 +35,11 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  crons: typeof crons;
   "forum/constants": typeof forum_constants;
   "forum/discussionRoute": typeof forum_discussionRoute;
   "forum/discussionRouteHelpers": typeof forum_discussionRouteHelpers;
+  "forum/feedCache": typeof forum_feedCache;
   "forum/feedQueries": typeof forum_feedQueries;
   "forum/helpers": typeof forum_helpers;
   "forum/limits": typeof forum_limits;
