@@ -4,8 +4,6 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Flame, Bookmark, TrendingUp, Clock3 } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-
 const sortItems = [
   { key: "top", label: "Top", Icon: TrendingUp },
   { key: "hot", label: "Hot", Icon: Flame },
@@ -22,9 +20,9 @@ export function TrendSorter() {
   const activeIndex = sortItems.findIndex((item) => item.key === selectedSort);
 
   return (
-    <div className="relative mx-auto w-full max-w-[864px] rounded-full border border-(--border-default) bg-(--bg-surface) p-1">
+    <div className="relative mx-auto w-full max-w-[864px] rounded-full border border-(--border-default) bg-(--bg-surface)/70 p-1 backdrop-blur-md">
       <div
-        className="pointer-events-none absolute bottom-1 left-1 top-1 w-[calc(25%-0.25rem)] rounded-full bg-brand-primary shadow-[0_8px_24px_rgba(14,165,233,0.28)] transition-[transform] duration-700 ease-[cubic-bezier(0.25,0.85,0.35,1)] motion-reduce:duration-150 motion-reduce:ease-out"
+        className="pointer-events-none absolute bottom-1 left-1 top-1 w-[calc(25%-0.25rem)] rounded-full bg-brand-primary shadow-[0_8px_24px_rgba(14,165,233,0.28)] transition-transform duration-300 ease-out"
         style={{ transform: `translateX(${activeIndex * 100}%)` }}
       />
 
@@ -38,20 +36,10 @@ export function TrendSorter() {
             <Link
               key={key}
               href={`${pathname}?${next.toString()}`}
-              className={cn(
-                "group flex h-9 items-center justify-center gap-1.5 rounded-full text-base font-semibold transition-colors duration-200 ease-out",
-                isActive
-                  ? "text-black"
-                  : "text-(--text-primary) hover:text-(--brand-primary)",
-              )}
+              className="flex h-9 items-center justify-center gap-1.5 rounded-full text-base font-semibold transition-colors duration-200"
+              style={{ color: isActive ? "black" : "var(--text-primary)" }}
             >
-              <Icon
-                className={cn(
-                  "h-3.5 w-3.5 transition-transform duration-200 ease-out",
-                  !isActive && "group-hover:scale-105",
-                )}
-                strokeWidth={2.25}
-              />
+              <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
               <span>{label}</span>
             </Link>
           );

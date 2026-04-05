@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-04-05 (forum: restore sort + Discover animations)
+- **`trend-sorter.tsx`**: Restored pre–feed-refresh behavior — **`duration-300`** sliding pill, **`bg-(--bg-surface)/70`** + **`backdrop-blur-md`** track, simpler link styling (matches **`6a842ec`** era).
+- **`left-sidebar.tsx`**: Restored sliding **absolute indicator** for Discover (**`transition-all duration-300`**), prior **GlowingEffect** / CTA shadow tuning; kept **`?? LayoutList`** and focus rings.
+
 ## 2026-04-05 (forum: auto prod category bootstrap)
 - **Convex**: **`insertMissingForumCategories`** in **`convex/forum/seed/ensureCategoryRows.ts`** — shared by **`forum/seed:ensureForumCategories`** (CLI) and new public **`forum/mutations:ensureForumCategories`**.
 - **`createPost`**: If the category row is missing, runs the same insert helper then re-resolves the category (self-heal).
