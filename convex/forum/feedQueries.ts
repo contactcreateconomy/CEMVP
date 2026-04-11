@@ -24,20 +24,27 @@ export async function viewerFlagsForPostIds(
     return { favoritePostIds, upvotePostIds };
   }
   const uid = userId as Id<"users">;
-  await Promise.all(
-    postIds.map(async (pid) => {
-      const fav = await ctx.db
-        .query("forumFavorites")
-        .withIndex("by_user_post", (q) => q.eq("userId", uid).eq("postId", pid))
-        .unique();
-      if (fav) favoritePostIds.add(pid);
-      const up = await ctx.db
-        .query("forumUpvotes")
-        .withIndex("by_user_post", (q) => q.eq("userId", uid).eq("postId", pid))
-        .unique();
-      if (up) upvotePostIds.add(pid);
-    }),
-  );
+
+  // Batch: fetch all favorites for user, then filter in memory
+  const allFavs = await ctx.db
+    .query("forumFavorites")
+    .withIndex("by_user", (q) => q.eq("userId", uid))
+    .collect();
+  const favPostIdSet = new Set(allFavs.map((f) => f.postId as string));
+  for (const pid of postIds) {
+    if (favPostIdSet.has(pid)) favoritePostIds.add(pid);
+  }
+
+  // Batch: fetch all upvotes for user, then filter in memory
+  const allUps = await ctx.db
+    .query("forumUpvotes")
+    .withIndex("by_user", (q) => q.eq("userId", uid))
+    .collect();
+  const upPostIdSet = new Set(allUps.map((u) => u.postId as string));
+  for (const pid of postIds) {
+    if (upPostIdSet.has(pid)) upvotePostIds.add(pid);
+  }
+
   return { favoritePostIds, upvotePostIds };
 }
 
@@ -46,34 +53,25 @@ export async function loadCommentPreviewsForPostIds(
   postIds: Id<"forumPosts">[],
   limitPerPost: number,
 ) {
-  const out: {
-    id: string;
-    postId: string;
-    authorId: string;
-    body: string;
-    createdAt: string;
-    upvotes: number;
-  }[] = [];
-
-  for (const postId of postIds) {
-    const docs = await ctx.db
-      .query("forumPostComments")
-      .withIndex("by_post_createdAt", (q) => q.eq("postId", postId))
-      .order("desc")
-      .take(limitPerPost);
-    const chronological = [...docs].reverse();
-    for (const c of chronological) {
-      out.push({
+  const results = await Promise.all(
+    postIds.map(async (postId) => {
+      const docs = await ctx.db
+        .query("forumPostComments")
+        .withIndex("by_post_createdAt", (q) => q.eq("postId", postId))
+        .order("desc")
+        .take(limitPerPost);
+      const chronological = [...docs].reverse();
+      return chronological.map((c) => ({
         id: c._id as string,
         postId: c.postId as string,
         authorId: c.authorProfileId as string,
         body: c.body,
         createdAt: new Date(c.createdAt).toISOString(),
         upvotes: c.upvotes,
-      });
-    }
-  }
-  return out;
+      }));
+    }),
+  );
+  return results.flat();
 }
 
 export async function resolveUsersForFeed(

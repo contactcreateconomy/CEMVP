@@ -125,9 +125,7 @@ function FeedRouteWithConvex({
     return null;
   }
 
-  if (page === undefined && !feedPageReady) {
-    return null;
-  }
+  const isFeedLoading = page === undefined && !feedPageReady;
 
   return (
     <section className="space-y-4">
@@ -137,25 +135,33 @@ function FeedRouteWithConvex({
         </Suspense>
       </header>
 
-      <FeedClient
-        initialPosts={initialPosts}
-        allComments={comments}
-        users={users}
-        selectedSort={selectedSort}
-        categories={categories as Category[]}
-      />
-
-      {canLoadMore ? (
-        <div className="flex justify-center pt-2">
-          <button
-            type="button"
-            className="rounded-full border border-(--border-subtle) px-4 py-2 text-sm font-medium text-(--text-secondary) transition-colors hover:border-(--border-active) hover:text-(--text-primary)"
-            onClick={() => loadMore()}
-          >
-            Load more
-          </button>
+      {isFeedLoading ? (
+        <div className="flex min-h-[50vh] items-center justify-center p-8 text-(--text-muted)">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-current border-t-transparent" />
         </div>
-      ) : null}
+      ) : (
+        <>
+          <FeedClient
+            initialPosts={initialPosts}
+            allComments={comments}
+            users={users}
+            selectedSort={selectedSort}
+            categories={categories as Category[]}
+          />
+
+          {canLoadMore && (
+            <div className="flex justify-center pt-2">
+              <button
+                type="button"
+                className="rounded-full border border-(--border-subtle) px-4 py-2 text-sm font-medium text-(--text-secondary) transition-colors hover:border-(--border-active) hover:text-(--text-primary)"
+                onClick={() => loadMore()}
+              >
+                Load more
+              </button>
+            </div>
+          )}
+        </>
+      )}
     </section>
   );
 }

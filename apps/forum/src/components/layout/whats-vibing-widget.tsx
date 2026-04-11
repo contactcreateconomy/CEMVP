@@ -31,6 +31,19 @@ function WhatsVibingWidgetInner() {
     return () => window.clearInterval(timer);
   }, [isPaused, items.length]);
 
+  if (fetched === undefined) {
+    return (
+      <Card className="animate-soft-float h-[250px]" style={{ animationDelay: "160ms" }}>
+        <CardHeader className="pb-3">
+          <div className="h-4 w-32 animate-pulse rounded bg-(--bg-overlay)" />
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <div className="h-[140px] w-full animate-pulse rounded-[24px] bg-(--bg-overlay)/50" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (items.length === 0) {
     return null;
   }

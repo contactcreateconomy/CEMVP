@@ -14,10 +14,24 @@ import {
 } from "./feedQueries";
 import { postDocToPost, profileToUser } from "./helpers";
 import { SEARCH_MAX_RESULTS_EACH } from "./limits";
+import {
+  campaignValidator,
+  categoryValidator,
+  commentValidator,
+  feedPageValidator,
+  heroSlideValidator,
+  leaderboardEntryValidator,
+  notificationValidator,
+  postValidator,
+  searchResultsValidator,
+  userSettingsValidator,
+  userValidator,
+  vibingItemValidator,
+} from "./validators";
 
 export const listCategories = query({
   args: {},
-  returns: v.array(v.any()),
+  returns: v.array(categoryValidator),
   handler: async (ctx) => {
     const rows = await ctx.db.query("forumCategories").collect();
     return rows.map((r) => ({
@@ -47,13 +61,7 @@ export const listFeedPage = query({
     cursor: v.optional(v.union(v.string(), v.null())),
     limit: v.optional(v.number()),
   },
-  returns: v.object({
-    posts: v.array(v.any()),
-    comments: v.array(v.any()),
-    users: v.array(v.any()),
-    continueCursor: v.union(v.string(), v.null()),
-    isDone: v.boolean(),
-  }),
+  returns: feedPageValidator,
   handler: async (ctx, { sort, category, cursor, limit: lim }) => {
     const userId = await getAuthUserId(ctx);
     const limit = feedPageSize(lim);
@@ -111,8 +119,8 @@ export const listCommentPreviewsWithUsers = query({
     limitPerPost: v.optional(v.number()),
   },
   returns: v.object({
-    comments: v.array(v.any()),
-    users: v.array(v.any()),
+    comments: v.array(commentValidator),
+    users: v.array(userValidator),
   }),
   handler: async (ctx, { postIds, limitPerPost }) => {
     const ids = postIds.slice(0, 80).map((id) => id as Id<"forumPosts">);
@@ -132,7 +140,7 @@ export const listCommentPreviewsWithUsers = query({
 
 export const getPostsByAuthorProfileId = query({
   args: { profileId: v.string() },
-  returns: v.array(v.any()),
+  returns: v.array(postValidator),
   handler: async (ctx, { profileId }) => {
     const userId = await getAuthUserId(ctx);
     const pid = profileId as Id<"forumProfiles">;
@@ -156,7 +164,7 @@ export const getPostsByAuthorProfileId = query({
 
 export const getPostBySlug = query({
   args: { slug: v.string() },
-  returns: v.union(v.null(), v.any()),
+  returns: v.union(v.null(), postValidator),
   handler: async (ctx, { slug }) => {
     const userId = await getAuthUserId(ctx);
     const doc = await ctx.db
@@ -176,7 +184,7 @@ export const getPostBySlug = query({
 
 export const getThreadBySlug = query({
   args: { slug: v.string() },
-  returns: v.union(v.null(), v.any()),
+  returns: v.union(v.null(), v.any()), // Rich thread payload — shape varies, validated at read time
   handler: async (ctx, { slug }) => {
     const row = await ctx.db
       .query("forumRichThreads")
@@ -188,7 +196,7 @@ export const getThreadBySlug = query({
 
 export const getCommentsByPostId = query({
   args: { postId: v.string() },
-  returns: v.array(v.any()),
+  returns: v.array(commentValidator),
   handler: async (ctx, { postId }) => {
     const pid = postId as Id<"forumPosts">;
     const docs = await ctx.db
@@ -209,7 +217,7 @@ export const getCommentsByPostId = query({
 
 export const getProfileByHandle = query({
   args: { handle: v.string() },
-  returns: v.union(v.null(), v.any()),
+  returns: v.union(v.null(), userValidator),
   handler: async (ctx, { handle }) => {
     const h = handle.trim().toLowerCase();
     const doc = await ctx.db
@@ -222,7 +230,7 @@ export const getProfileByHandle = query({
 
 export const getProfileById = query({
   args: { profileId: v.string() },
-  returns: v.union(v.null(), v.any()),
+  returns: v.union(v.null(), userValidator),
   handler: async (ctx, { profileId }) => {
     const doc = await ctx.db.get(profileId as Id<"forumProfiles">);
     return doc ? profileToUser(doc) : null;
@@ -231,7 +239,7 @@ export const getProfileById = query({
 
 export const getProfilesByIds = query({
   args: { profileIds: v.array(v.string()) },
-  returns: v.array(v.any()),
+  returns: v.array(userValidator),
   handler: async (ctx, { profileIds }) => {
     const out = [];
     const seen = new Set<string>();
@@ -251,7 +259,7 @@ export const getProfilesByIds = query({
 
 export const listCampaigns = query({
   args: {},
-  returns: v.array(v.any()),
+  returns: v.array(campaignValidator),
   handler: async (ctx) => {
     const rows = await ctx.db.query("forumCampaigns").take(50);
     return rows.map((r) => ({
@@ -267,7 +275,7 @@ export const listCampaigns = query({
 
 export const getLeaderboardWithUsers = query({
   args: {},
-  returns: v.array(v.any()),
+  returns: v.array(leaderboardEntryValidator),
   handler: async (ctx) => {
     const rows = await ctx.db
       .query("forumLeaderboard")
@@ -291,7 +299,7 @@ export const getLeaderboardWithUsers = query({
 
 export const listVibingItems = query({
   args: { limit: v.optional(v.number()) },
-  returns: v.array(v.any()),
+  returns: v.array(vibingItemValidator),
   handler: async (ctx, { limit = 10 }) => {
     const rows = await ctx.db
       .query("forumVibingItems")
@@ -310,7 +318,7 @@ export const listVibingItems = query({
 
 export const listNotificationsForViewer = query({
   args: {},
-  returns: v.array(v.any()),
+  returns: v.array(notificationValidator),
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) {
@@ -356,12 +364,17 @@ export const getUnreadNotificationCount = query({
     if (!profile) {
       return 0;
     }
+    // Scan recent notifications and count unread. Cap at 99 to bound work.
+    let count = 0;
     const rows = await ctx.db
       .query("forumNotifications")
       .withIndex("by_profile_createdAt", (q) => q.eq("profileId", profile._id))
       .order("desc")
-      .take(50);
-    return rows.filter((r) => !r.read).length;
+      .take(100);
+    for (const r of rows) {
+      if (!r.read) count++;
+    }
+    return count;
   },
 });
 
@@ -381,9 +394,25 @@ export const hasViewerProfile = query({
   },
 });
 
+export const getViewerProfile = query({
+  args: {},
+  returns: v.union(v.null(), userValidator),
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) {
+      return null;
+    }
+    const profile = await ctx.db
+      .query("forumProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .unique();
+    return profile ? profileToUser(profile) : null;
+  },
+});
+
 export const getViewerSettings = query({
   args: {},
-  returns: v.any(),
+  returns: userSettingsValidator,
   handler: async (ctx) => {
     const defaults = {
       theme: "dark" as const,
@@ -413,7 +442,7 @@ export const getViewerSettings = query({
 
 export const listHeroSlides = query({
   args: {},
-  returns: v.array(v.any()),
+  returns: v.array(heroSlideValidator),
   handler: async (ctx) => {
     const slides = await ctx.db
       .query("forumHeroSlides")
@@ -455,12 +484,7 @@ export const listHeroSlides = query({
 
 export const searchPostsAndUsers = query({
   args: { q: v.string() },
-  returns: v.object({
-    posts: v.array(v.any()),
-    users: v.array(v.any()),
-    comments: v.array(v.any()),
-    commentUsers: v.array(v.any()),
-  }),
+  returns: searchResultsValidator,
   handler: async (ctx, { q }) => {
     const needle = q.trim().toLowerCase();
     if (!needle) {

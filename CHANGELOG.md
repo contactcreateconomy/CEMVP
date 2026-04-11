@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-04-11 (audit: Priority 3 — feature completion and polish)
+- **`convex/forum/mutations.ts`**: Added **`updateProfile`** mutation — name, bio, image, handle editing with validation, uniqueness check, and denormalized post author field sync.
+- **`convex/forum/limits.ts`**: Added **`MAX_PROFILE_NAME_LEN`**, **`MAX_PROFILE_BIO_LEN`**, **`MAX_PROFILE_HANDLE_LEN`** constants.
+- **`convex/forum/queries.ts`**: Added **`getViewerProfile`** query for current user's profile data.
+- **`apps/forum/src/app/(app)/settings/settings-page-client.tsx`**: Full rewrite — theme selector (dark/light/system), notification toggles, content filter toggle, all wired to **`updateViewerSettings`** mutation.
+- **`apps/forum/src/app/(app)/profile/profile-page-client.tsx`** (new): Real profile display with avatar, name, handle, bio, stats (points/level/streak), edit mode with inline form.
+- **`apps/forum/src/app/(app)/profile/page.tsx`**: Replaced placeholder with `ProfilePageClient`.
+- **`apps/forum/src/app/(app)/drafts/drafts-page-client.tsx`** (new): Reads localStorage draft, shows real draft with resume/delete actions, or empty state with link to compose.
+- **`apps/forum/src/app/(app)/drafts/page.tsx`**: Replaced hardcoded placeholder with `DraftsPageClient`.
+- **`apps/forum/src/app/not-found.tsx`** (new): Themed 404 page with brand styling and back-to-feed link.
+- **`apps/forum/src/app/(compose)/error.tsx`** (new): Error boundary for compose layout.
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` (pre-existing warning only).
+
+## 2026-04-11 (audit: Priority 1 + 2 fixes from full codebase audit)
+- **`convex/forum/mutations.ts`**: Added **`createComment`** mutation with auth check, rate limiting, body validation, locked-post guard, and `commentsCount` increment.
+- **`convex/forum/limits.ts`**: Added **`MAX_COMMENT_BODY_LEN`** (10,000) and **`createComment`** rate limit (60/hour).
+- **`convex/forum/validators.ts`**: New file — shared Convex return-type validators matching frontend TypeScript types (post, user, comment, category, notification, campaign, leaderboard, vibing-item, hero-slide, settings, feed-page, search-results).
+- **`convex/forum/queries.ts`**: Replaced **13 `v.any()` return types** with explicit validators. Only `getThreadBySlug` and `discussionRoute` queries retain `v.any()` (dynamic payload shapes, validated at read time).
+- **`convex/forum/feedQueries.ts`**: **`viewerFlagsForPostIds`** batched from N+2 queries per post to 2 total queries (fetch all favorites + all upvotes for user, filter in memory). **`loadCommentPreviewsForPostIds`** parallelized with `Promise.all` instead of sequential loop.
+- **`convex/schema.ts`**: Added documentation comment on `forumRichThreads.payload` clarifying it's seed-only data validated at read time.
+- **`apps/forum/src/providers/shared-data-context.tsx`**: Changed `useLayoutEffect` → `useEffect` for non-critical category auto-ensure.
+- **`apps/forum/src/app/(app)/*/loading.tsx`**: Added **9 missing loading skeletons** (profile, settings, drafts, campaigns, leaderboard, discover, saved, notifications, users/[handle]).
+- **Apps affected**: `apps/forum` (primary), `convex/` (backend).
+
 ## 2026-04-05 (forum: new-post — no mandatory fields, TipTap category UX)
 - **`category-composer-fields.ts`**: Removed required-field validation and HTML meta merging; exports **`categoryWritingHints`**, **`categoryEditorPlaceholders`**, **`categoryScaffoldHtml`**, **`isEditorDocumentBare`**, and draft payload **without** `extraFields`.
 - **`new-post-composer.tsx`**: Dropped per-category input panel and publish validation for extra fields; **`body`** is TipTap HTML only; category row uses **`flex-wrap`** (all chips visible); hint line above editor; dynamic TipTap placeholder; optional **empty-doc scaffold** when switching category; drafts ignore legacy `extraFields` in JSON.

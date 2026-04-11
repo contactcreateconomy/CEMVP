@@ -23,14 +23,24 @@ export const SEARCH_MAX_RESULTS_EACH = 40;
 export const DISCUSSION_RELATED_CAP = 8;
 export const DISCUSSION_TRENDING_CAP = 8;
 
+/** Max body length for a comment (characters). */
+export const MAX_COMMENT_BODY_LEN = 10_000;
+
+/** Profile field limits. */
+export const MAX_PROFILE_NAME_LEN = 80;
+export const MAX_PROFILE_BIO_LEN = 1_000;
+export const MAX_PROFILE_HANDLE_LEN = 40;
+
 export const RATE_WINDOWS_MS = {
   createPost: 60 * 60 * 1000,
+  createComment: 60 * 60 * 1000,
   toggleUpvote: 60 * 1000,
   toggleFavorite: 60 * 1000,
 } as const;
 
 export const RATE_MAX_PER_WINDOW = {
   createPost: 30,
+  createComment: 60,
   toggleUpvote: 200,
   toggleFavorite: 200,
 } as const;

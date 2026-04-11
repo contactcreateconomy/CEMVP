@@ -5,9 +5,13 @@ import { mutation } from "../_generated/server";
 import { insertMissingForumCategories } from "./seed/ensureCategoryRows";
 import { slugify } from "./seed/generatePosts";
 import {
+  MAX_COMMENT_BODY_LEN,
   MAX_POST_BODY_LEN,
   MAX_POST_SUMMARY_LEN,
   MAX_POST_TITLE_LEN,
+  MAX_PROFILE_BIO_LEN,
+  MAX_PROFILE_HANDLE_LEN,
+  MAX_PROFILE_NAME_LEN,
 } from "./limits";
 import { consumeWriteBucket } from "./rateLimit";
 
@@ -285,4 +289,166 @@ export const ensureForumCategories = mutation({
   args: {},
   returns: v.object({ inserted: v.number(), skipped: v.number() }),
   handler: async (ctx) => insertMissingForumCategories(ctx),
+});
+
+export const createComment = mutation({
+  args: {
+    postId: v.id("forumPosts"),
+    body: v.string(),
+  },
+  returns: v.id("forumPostComments"),
+  handler: async (ctx, { postId, body }) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) {
+      throw new Error("Sign in to comment.");
+    }
+    await consumeWriteBucket(ctx, userId, "createComment");
+
+    const b = body.trim();
+    if (!b.length) {
+      throw new Error("Comment body is required.");
+    }
+    if (b.length > MAX_COMMENT_BODY_LEN) {
+      throw new Error(`Comment must be at most ${MAX_COMMENT_BODY_LEN} characters.`);
+    }
+
+    const post = await ctx.db.get(postId);
+    if (!post) {
+      throw new Error("Post not found.");
+    }
+    if (post.locked) {
+      throw new Error("This discussion is locked.");
+    }
+
+    let profile = await ctx.db
+      .query("forumProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .unique();
+    if (!profile) {
+      const user = await ctx.db.get(userId);
+      if (!user) {
+        throw new Error("User record missing.");
+      }
+      const handle = (user.handle ?? `user-${userId.slice(-6)}`).toLowerCase();
+      const pid = await ctx.db.insert("forumProfiles", {
+        userId,
+        handle,
+        name: user.name?.trim() || handle,
+        image: typeof user.image === "string" ? user.image : "",
+        bio: "",
+        level: 1,
+        points: 0,
+        streakDays: 0,
+        role: "member",
+      });
+      profile = await ctx.db.get(pid);
+      if (!profile) {
+        throw new Error("Could not create forum profile.");
+      }
+    }
+
+    const commentId = await ctx.db.insert("forumPostComments", {
+      postId,
+      authorProfileId: profile._id,
+      body: b,
+      createdAt: Date.now(),
+      upvotes: 0,
+    });
+
+    await ctx.db.patch(postId, { commentsCount: post.commentsCount + 1 });
+
+    return commentId;
+  },
+});
+
+export const updateProfile = mutation({
+  args: {
+    name: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    image: v.optional(v.string()),
+    handle: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) {
+      throw new Error("Sign in to update your profile.");
+    }
+
+    const profile = await ctx.db
+      .query("forumProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .unique();
+    if (!profile) {
+      throw new Error("Profile not found.");
+    }
+
+    const patch: Record<string, unknown> = {};
+
+    if (args.name !== undefined) {
+      const n = args.name.trim();
+      if (!n.length) {
+        throw new Error("Name cannot be empty.");
+      }
+      if (n.length > MAX_PROFILE_NAME_LEN) {
+        throw new Error(`Name must be at most ${MAX_PROFILE_NAME_LEN} characters.`);
+      }
+      patch.name = n;
+    }
+
+    if (args.bio !== undefined) {
+      const b = args.bio.trim();
+      if (b.length > MAX_PROFILE_BIO_LEN) {
+        throw new Error(`Bio must be at most ${MAX_PROFILE_BIO_LEN} characters.`);
+      }
+      patch.bio = b;
+    }
+
+    if (args.image !== undefined) {
+      patch.image = args.image.trim();
+    }
+
+    if (args.handle !== undefined) {
+      const h = args.handle.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "-").replace(/^-|-$/g, "");
+      if (!h.length) {
+        throw new Error("Handle cannot be empty.");
+      }
+      if (h.length > MAX_PROFILE_HANDLE_LEN) {
+        throw new Error(`Handle must be at most ${MAX_PROFILE_HANDLE_LEN} characters.`);
+      }
+      if (h !== profile.handle) {
+        const taken = await ctx.db
+          .query("forumProfiles")
+          .withIndex("by_handle", (q) => q.eq("handle", h))
+          .unique();
+        if (taken && taken._id !== profile._id) {
+          throw new Error("Handle is already taken.");
+        }
+        patch.handle = h;
+      }
+    }
+
+    if (Object.keys(patch).length === 0) {
+      return null;
+    }
+
+    await ctx.db.patch(profile._id, patch);
+
+    // Sync denormalized author fields on existing posts if name/image changed
+    if (patch.name || patch.image || patch.handle) {
+      const posts = await ctx.db
+        .query("forumPosts")
+        .withIndex("by_author", (q) => q.eq("authorProfileId", profile._id))
+        .collect();
+      const authorPatch: Record<string, string> = {};
+      if (patch.name) authorPatch.authorName = patch.name as string;
+      if (patch.handle) authorPatch.authorHandle = patch.handle as string;
+      if (patch.image !== undefined) authorPatch.authorImage = patch.image as string;
+      if (Object.keys(authorPatch).length > 0) {
+        await Promise.all(posts.map((p) => ctx.db.patch(p._id, authorPatch)));
+      }
+    }
+
+    return null;
+  },
 });

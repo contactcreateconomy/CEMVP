@@ -98,6 +98,7 @@ export default defineSchema({
     .searchIndex("search_title", { searchField: "title", filterFields: ["category"] })
     .searchIndex("search_body", { searchField: "body", filterFields: ["category"] }),
 
+  /** Rich threads written only by seed scripts — payload shape is validated at read time by `coalesceRichThreadPayloadForClient`. */
   forumRichThreads: defineTable({
     slug: v.string(),
     payload: v.any(),
@@ -192,6 +193,7 @@ export default defineSchema({
     userId: v.id("users"),
     kind: v.union(
       v.literal("createPost"),
+      v.literal("createComment"),
       v.literal("toggleUpvote"),
       v.literal("toggleFavorite"),
     ),
