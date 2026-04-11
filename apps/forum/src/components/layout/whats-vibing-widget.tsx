@@ -33,11 +33,11 @@ function WhatsVibingWidgetInner() {
 
   if (fetched === undefined) {
     return (
-      <Card className="animate-soft-float h-[250px]" style={{ animationDelay: "160ms" }}>
-        <CardHeader className="pb-3">
+      <Card className="animate-soft-float h-[250px] bg-(--bg-surface) border border-(--border-default) rounded-xl p-4" style={{ animationDelay: "160ms" }}>
+        <CardHeader className="p-0 pb-3">
           <div className="h-4 w-32 animate-pulse rounded bg-(--bg-overlay)" />
         </CardHeader>
-        <CardContent className="p-4 pt-0">
+        <CardContent className="p-0">
           <div className="h-[140px] w-full animate-pulse rounded-[24px] bg-(--bg-overlay)/50" />
         </CardContent>
       </Card>
@@ -50,20 +50,20 @@ function WhatsVibingWidgetInner() {
 
   return (
     <Card
-      className="animate-soft-float h-[250px]"
+      className="animate-soft-float h-[250px] bg-(--bg-surface) border border-(--border-default) rounded-xl p-4"
       style={{ animationDelay: "160ms" }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onFocusCapture={() => setIsPaused(true)}
       onBlurCapture={() => setIsPaused(false)}
     >
-      <CardHeader className="pb-3">
+      <CardHeader className="p-0 pb-3">
         <h2 className="inline-flex items-center gap-2 text-sm font-semibold text-(--text-primary)">
           <TrendingUp className="h-4 w-4 text-(--brand-primary)" /> What&apos;s Vibing
         </h2>
       </CardHeader>
 
-      <CardContent className="flex h-[186px] flex-col justify-between p-4 pt-0">
+      <CardContent className="flex h-[186px] flex-col justify-between p-0">
         <div className="relative h-full min-h-[140px] overflow-hidden rounded-[24px]">
           {items.map((item, index) => {
             const category = item.kind.charAt(0).toUpperCase() + item.kind.slice(1);

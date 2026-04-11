@@ -10,6 +10,7 @@ interface UserAvatarProps {
   user: User | null;
   size?: "sm" | "md" | "lg";
   className?: string;
+  authorName?: string | null;
 }
 
 const sizeClassMap = {
@@ -24,8 +25,9 @@ const imageSizeMap = {
   lg: 44,
 } as const;
 
-export function UserAvatar({ user, size = "md", className }: UserAvatarProps) {
+export function UserAvatar({ user, size = "md", className, authorName }: UserAvatarProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const ringColor = getUserLevelRingColor(user?.level ?? 1);
 
   const ringShadow = useMemo(() => {
@@ -35,8 +37,9 @@ export function UserAvatar({ user, size = "md", className }: UserAvatarProps) {
     return `${emboss}, ${ring}${glow}`;
   }, [isHovered, ringColor]);
 
-  const initials = user?.name
-    ? user.name
+  const targetName = user?.name || authorName;
+  const initials = targetName
+    ? targetName
         .split(" ")
         .map((part) => part[0])
         .join("")
@@ -55,7 +58,7 @@ export function UserAvatar({ user, size = "md", className }: UserAvatarProps) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {user?.avatar ? (
+      {user?.avatar && !imageError ? (
         // Native <img>: profile images may come from Convex storage or any OAuth host;
         // next/image would throw if the hostname is not in remotePatterns (production crash).
         // eslint-disable-next-line @next/next/no-img-element
@@ -67,10 +70,11 @@ export function UserAvatar({ user, size = "md", className }: UserAvatarProps) {
           className={`${sizeClassMap[size]} rounded-full object-cover`}
           loading="lazy"
           referrerPolicy="no-referrer"
+          onError={() => setImageError(true)}
         />
       ) : (
         <span
-          className={`${sizeClassMap[size]} inline-flex items-center justify-center rounded-full bg-(--bg-overlay) text-[10px] font-semibold text-(--text-primary)`}
+          className={`${sizeClassMap[size]} inline-flex items-center justify-center rounded-full bg-(--bg-surface) text-[10px] font-semibold text-(--text-secondary)`}
         >
           {initials}
         </span>

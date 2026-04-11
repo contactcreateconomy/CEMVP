@@ -1,12 +1,14 @@
 "use client";
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Bold, Code, Italic, Link as LinkIcon, MoreHorizontal, X } from "lucide-react";
+import { useMutation } from "convex/react";
+import { Bold, Code, Italic, Link as LinkIcon, Loader2, MoreHorizontal, X } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAuth } from "@cemvp/auth-ui";
+import { api, type Id } from "@/lib/convex";
 import { cn } from "@/lib/utils";
 import type { CategoryKey } from "@/types";
 import type { DiscussionThread } from "@/types/discussion";
@@ -51,19 +53,25 @@ interface ThreadComposerProps {
 
 export function ThreadComposer({
   thread,
-  placeholder = "Join the discussion…",
+  placeholder = "Add to the discussion…",
   onSubmit,
   compact,
   mainValue,
   onMainValueChange,
 }: ThreadComposerProps) {
-  const { user: authUser, authStatus } = useAuth();
+  const { user: authUser, authStatus, openAuthModal } = useAuth();
   const [localText, setLocalText] = useState("");
   const [dismissNudge, setDismissNudge] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const createComment = useMutation(api.forum.mutations.createComment);
 
   const isMainControlled = mainValue !== undefined && onMainValueChange !== undefined;
   const text = isMainControlled ? mainValue : localText;
   const setText = isMainControlled ? onMainValueChange : setLocalText;
+
+  const [submitting, setSubmitting] = useState(false);
 
   const mockUser = mockUserForComposer(authStatus === "authenticated" && authUser ? { ...authUser, id: authUser.id } : null);
   const u =
@@ -90,11 +98,37 @@ export function ThreadComposer({
     [setText],
   );
 
-  const submit = () => {
-    if (!text.trim()) return;
-    setText(() => "");
-    onSubmit?.();
+  const submit = async () => {
+    const body = (typeof text === "string" ? text : "").trim();
+    if (!body) return;
+    setSubmitError(null);
+    setSubmitting(true);
+    try {
+      await createComment({ postId: thread.id as Id<"forumPosts">, body });
+      setText(() => "");
+      onSubmit?.();
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Failed to post reply. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  // Not logged in: show login prompt
+  if (authStatus !== "authenticated") {
+    return (
+      <div className="rounded-xl border border-(--border-default) bg-(--bg-surface) p-4 text-center">
+        <p className="text-sm text-(--text-secondary)">Join the conversation.</p>
+        <Button
+          type="button"
+          className="mt-3 rounded-full"
+          onClick={() => openAuthModal("login")}
+        >
+          Login to reply
+        </Button>
+      </div>
+    );
+  }
 
   const toolbarActions = (
     <>
@@ -121,77 +155,91 @@ export function ThreadComposer({
       id={isMainControlled ? "thread-main-composer" : undefined}
       className={cn(compact ? "space-y-2" : "space-y-3")}
     >
-      <div className="flex items-start gap-3 rounded-[14px] border border-(--border-default) bg-(--bg-surface) p-3">
+      <div className="flex items-start gap-3 rounded-xl border border-(--border-default) bg-(--bg-surface) p-3">
         <UserAvatar user={u} size="md" className="shrink-0" />
         <div className="min-w-0 flex-1 space-y-2">
           <textarea
             id={isMainControlled ? "main-composer-textarea" : undefined}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => { setText(e.target.value); setSubmitError(null); }}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
             placeholder={placeholder}
-            rows={compact ? 3 : 4}
-            className="min-h-[80px] w-full resize-y rounded-lg border border-(--border-subtle) bg-(--bg-inset) px-3 py-2 text-sm text-(--text-primary) placeholder:text-(--text-muted) focus:border-(--border-active) focus:outline-hidden"
+            rows={compact ? 3 : focused ? 5 : 3}
+            className="min-h-[80px] w-full resize-y rounded-lg bg-transparent px-1 py-1 text-sm text-(--text-primary) placeholder:text-(--text-muted) focus:outline-hidden transition-[min-height] duration-200"
           />
-          <div className="flex flex-wrap items-center gap-1 border-t border-(--border-subtle) pt-2">
-            <div className="hidden items-center gap-1 md:flex">{toolbarActions}</div>
-            <div className="flex md:hidden">
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
-                  <button
-                    type="button"
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-(--text-muted) hover:bg-(--bg-overlay)"
-                    aria-label="Formatting"
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </button>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content
-                    align="start"
-                    className="z-50 min-w-[180px] rounded-[12px] border border-(--border-default) bg-(--bg-surface) p-1 shadow-(--shadow-lg)"
-                  >
-                    <DropdownMenu.Item
-                      className="cursor-pointer rounded-[8px] px-2 py-2 text-sm data-highlighted:bg-(--bg-overlay)"
-                      onSelect={() => insert("**bold**")}
+          {focused || text.trim() ? (
+            <div className="flex flex-wrap items-center gap-1 border-t border-(--border-subtle) pt-2">
+              <div className="hidden items-center gap-1 md:flex">{toolbarActions}</div>
+              <div className="flex md:hidden">
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-(--text-muted) hover:bg-(--bg-overlay)"
+                      aria-label="Formatting"
                     >
-                      Bold
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item
-                      className="cursor-pointer rounded-[8px] px-2 py-2 text-sm data-highlighted:bg-(--bg-overlay)"
-                      onSelect={() => insert("_italic_")}
+                      <MoreHorizontal className="h-4 w-4" />
+                    </button>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content
+                      align="start"
+                      className="z-50 min-w-[180px] rounded-[12px] border border-(--border-default) bg-(--bg-surface) p-1 shadow-(--shadow-lg)"
                     >
-                      Italic
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item
-                      className="cursor-pointer rounded-[8px] px-2 py-2 text-sm data-highlighted:bg-(--bg-overlay)"
-                      onSelect={() => insert("`code`")}
-                    >
-                      Inline code
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item
-                      className="cursor-pointer rounded-[8px] px-2 py-2 text-sm data-highlighted:bg-(--bg-overlay)"
-                      onSelect={() => insert("\n```\ncode\n```\n")}
-                    >
-                      Code block
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item
-                      className="cursor-pointer rounded-[8px] px-2 py-2 text-sm data-highlighted:bg-(--bg-overlay)"
-                      onSelect={() => insert("[text](url)")}
-                    >
-                      Link
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
+                      <DropdownMenu.Item
+                        className="cursor-pointer rounded-[8px] px-2 py-2 text-sm outline-hidden data-highlighted:bg-(--bg-overlay)"
+                        onSelect={() => insert("**bold**")}
+                      >
+                        Bold
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        className="cursor-pointer rounded-[8px] px-2 py-2 text-sm outline-hidden data-highlighted:bg-(--bg-overlay)"
+                        onSelect={() => insert("_italic_")}
+                      >
+                        Italic
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        className="cursor-pointer rounded-[8px] px-2 py-2 text-sm outline-hidden data-highlighted:bg-(--bg-overlay)"
+                        onSelect={() => insert("`code`")}
+                      >
+                        Inline code
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        className="cursor-pointer rounded-[8px] px-2 py-2 text-sm outline-hidden data-highlighted:bg-(--bg-overlay)"
+                        onSelect={() => insert("\n```\ncode\n```\n")}
+                      >
+                        Code block
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        className="cursor-pointer rounded-[8px] px-2 py-2 text-sm outline-hidden data-highlighted:bg-(--bg-overlay)"
+                        onSelect={() => insert("[text](url)")}
+                      >
+                        Link
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                className="ml-auto rounded-full"
+                disabled={!text.trim() || submitting}
+                onClick={submit}
+              >
+                {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                Reply
+              </Button>
             </div>
-            <Button type="button" size="sm" className="ml-auto" disabled={!text.trim()} onClick={submit}>
-              Reply
-            </Button>
-          </div>
+          ) : null}
+          {submitError ? (
+            <p className="text-xs text-(--feedback-error)">{submitError}</p>
+          ) : null}
         </div>
       </div>
       {showNudge ? (
-        <div className="flex items-start gap-2 rounded-[12px] border border-(--border-default) bg-(--bg-inset) p-3 text-sm text-(--text-secondary)">
+        <div className="flex items-start gap-2 rounded-xl border border-(--border-default) bg-(--bg-inset) p-3 text-sm text-(--text-secondary)">
           <p className="flex-1">{nudgeText}</p>
           <button type="button" className="text-(--text-muted) hover:text-(--text-primary)" aria-label="Dismiss" onClick={() => setDismissNudge(true)}>
             <X className="h-4 w-4" />

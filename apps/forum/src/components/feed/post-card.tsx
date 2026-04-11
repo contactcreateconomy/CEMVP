@@ -55,12 +55,15 @@ export function PostCard({
 
   const hasCoverImage = Boolean(post.coverImage);
 
+  const fallbackAuthorName = "authorName" in post ? (post.authorName as string) : null;
+  const fallbackAuthorHandle = "authorHandle" in post ? (post.authorHandle as string) : null;
+
   const authorRow = author ? (
     <Link
       href={`/users/${encodeURIComponent(author.handle)}`}
       className="flex min-w-0 max-w-full items-center gap-2.5 rounded-lg outline-offset-2 transition-colors hover:bg-(--bg-overlay)/60 focus-visible:ring-2 focus-visible:ring-(--border-active)"
     >
-      <UserAvatar user={author} size="md" />
+      <UserAvatar user={author} authorName={fallbackAuthorName} size="md" />
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold text-(--text-primary)">{author.name}</p>
         <p className="truncate font-mono text-[11px] font-light text-(--text-muted)">@{author.handle}</p>
@@ -68,10 +71,10 @@ export function PostCard({
     </Link>
   ) : (
     <div className="flex min-w-0 items-center gap-2.5">
-      <UserAvatar user={author} size="md" />
+      <UserAvatar user={author} authorName={fallbackAuthorName} size="md" />
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-(--text-primary)">Unknown author</p>
-        <p className="truncate font-mono text-[11px] font-light text-(--text-muted)">@unknown</p>
+        <p className="truncate text-sm font-semibold text-(--text-primary)">{fallbackAuthorName || "Unknown author"}</p>
+        <p className="truncate font-mono text-[11px] font-light text-(--text-muted)">@{fallbackAuthorHandle || "unknown"}</p>
       </div>
     </div>
   );

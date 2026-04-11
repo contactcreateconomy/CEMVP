@@ -27,6 +27,7 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [isPaused, setIsPaused] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
@@ -108,7 +109,7 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
                         "radial-gradient(circle at 48% 50%, rgba(var(--hero-accent),0.4) 0%, rgba(var(--hero-accent),0.14) 38%, transparent 74%)",
                     }}
                   />
-                  {currentSlide.coverImage ? (
+                  {currentSlide.coverImage && !imageErrors[currentSlide.id] ? (
                     <Image
                       src={currentSlide.coverImage}
                       alt={currentSlide.title}
@@ -116,9 +117,10 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
                       sizes="(max-width: 1023px) 100vw, 42vw"
                       className="object-cover transition-transform duration-700 group-hover/image:scale-[1.03]"
                       priority={activeIndex === 0}
+                      onError={() => setImageErrors((prev) => ({ ...prev, [currentSlide.id]: true }))}
                     />
                   ) : (
-                    <div className="h-full w-full bg-(--bg-overlay)" />
+                    <div className="h-full w-full bg-linear-to-tr from-(--bg-surface) to-(--bg-overlay)" />
                   )}
                   <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-[rgba(2,7,17,0.45)] via-transparent to-transparent" />
                 </Link>
@@ -189,10 +191,19 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
           </motion.article>
         </AnimatePresence>
 
+        <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5">
+          {slides.map((_, i) => (
+            <span
+              key={i}
+              className={cn(
+                "block h-1.5 rounded-full transition-all duration-300 ease-in-out",
+                i === activeIndex ? "w-5 bg-cyan-400" : "w-1.5 bg-white/30",
+              )}
+            />
+          ))}
+        </div>
+
         <div className="absolute right-5 bottom-5 z-20 flex items-center gap-2 md:right-6 md:bottom-6">
-          <span className="rounded-full border border-(--border-default)/80 bg-(--bg-overlay)/75 px-3 py-1 text-[11px] font-semibold text-(--text-secondary) backdrop-blur-xs">
-            {(activeIndex + 1).toString().padStart(2, "0")} / {slides.length.toString().padStart(2, "0")}
-          </span>
           <div className="inline-flex items-center gap-1 rounded-full border border-(--border-default)/80 bg-(--bg-overlay)/75 p-1 backdrop-blur-xs">
             <Button
               type="button"

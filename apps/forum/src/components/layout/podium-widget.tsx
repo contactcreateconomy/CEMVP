@@ -109,7 +109,7 @@ export function PodiumWidget({ rows }: PodiumWidgetProps) {
                 <span className="pointer-events-none absolute inset-y-0 left-[-35%] w-[35%] -skew-x-12 bg-linear-to-r from-transparent via-white/25 to-transparent opacity-0 transition-all duration-700 group-hover:left-[120%] group-hover:opacity-100" />
               ) : null}
 
-              <div className="relative z-10 flex min-w-0 items-center gap-2.5">
+              <div className="relative z-10 flex min-w-0 flex-1 items-center gap-2.5 pr-2">
                 <Icon className="h-4 w-4 shrink-0" style={{ color: colors.icon }} />
 
                 <span
@@ -136,12 +136,12 @@ export function PodiumWidget({ rows }: PodiumWidgetProps) {
                   )}
                 </span>
 
-                <p className="truncate text-sm font-medium text-(--text-primary)">
+                <p className="min-w-0 truncate text-sm font-medium text-(--text-primary)">
                   {row.user?.name ?? "Unknown user"}
                 </p>
               </div>
 
-              <p className="relative z-10 text-xs font-semibold text-(--feedback-warning)">
+              <p className="relative z-10 shrink-0 text-xs font-semibold text-(--feedback-warning)">
                 {formatPoints(row.windowPoints)}
               </p>
             </div>

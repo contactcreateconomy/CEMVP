@@ -175,7 +175,7 @@ export function ThreadComments({
   return (
     <section className="space-y-4" aria-label="Comments">
       {solutionId ? (
-        <div className="rounded-[12px] border border-(--feedback-success)/40 bg-(--feedback-success)/10 px-4 py-3 text-sm text-(--feedback-success)">
+        <div className="rounded-xl border border-(--feedback-success)/40 bg-(--feedback-success)/10 px-4 py-3 text-sm text-(--feedback-success)">
           This thread has an accepted solution.{" "}
           <a href={`#comment-${solutionId}`} className="font-semibold underline">
             Jump to solution →
@@ -183,22 +183,29 @@ export function ThreadComments({
         </div>
       ) : null}
 
+      {/* Sort tabs — TrendSorter pill style */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm font-semibold text-(--text-primary)">{commentList.length} comments</p>
-        <div className="flex flex-wrap gap-1 rounded-full border border-(--border-default) bg-(--bg-inset) p-0.5">
-          {(["best", "new", "top"] as const).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => onSortChange(s)}
-              className={cn(
-                "rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors",
-                sort === s ? "bg-(--bg-surface) text-(--text-primary) shadow-sm" : "text-(--text-muted)",
-              )}
-            >
-              {s}
-            </button>
-          ))}
+        <div className="relative rounded-full border border-(--border-default) bg-(--bg-surface)/70 p-1 backdrop-blur-md">
+          <div
+            className="pointer-events-none absolute bottom-1 left-1 top-1 w-[calc(33.333%-0.33rem)] rounded-full bg-(--brand-primary) shadow-[0_8px_24px_rgba(14,165,233,0.28)] transition-transform duration-300 ease-out"
+            style={{ transform: `translateX(${(["best", "new", "top"] as const).indexOf(sort) * 100}%)` }}
+          />
+          <div className="relative z-10 grid grid-cols-3">
+            {(["best", "new", "top"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => onSortChange(s)}
+                className={cn(
+                  "flex h-7 items-center justify-center rounded-full text-xs font-semibold capitalize transition-colors duration-200",
+                  sort === s ? "text-black" : "text-(--text-secondary) hover:text-(--text-primary)",
+                )}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -252,8 +259,9 @@ export function ThreadComments({
       )}
 
       {commentList.length === 0 ? (
-        <div className="rounded-[14px] border border-dashed border-(--border-default) bg-(--bg-inset) px-4 py-8 text-center text-sm text-(--text-secondary)">
-          Be the first to reply. Share your thoughts.
+        <div className="rounded-xl border border-dashed border-(--border-default) bg-(--bg-surface) px-6 py-12 text-center">
+          <p className="text-sm font-medium text-(--text-secondary)">Be the first to reply</p>
+          <p className="mt-1 text-xs text-(--text-muted)">Share your thoughts and start the conversation.</p>
         </div>
       ) : thread.category === "showcase" && isMax && showcaseGroupByTheme ? (
         renderShowcaseGrouped()
@@ -325,7 +333,7 @@ function CommentBranch({
   const blockReplies = nextDepth >= maxDepth && filteredReplies.length > 0 && !continued;
 
   return (
-    <div className={cn(depth > 0 && "ml-3 border-l border-(--border-subtle) pl-3 sm:ml-4 sm:pl-4")}>
+    <div className={cn(depth > 0 && "ml-6 border-l-2 border-(--border-default) pl-4 sm:ml-8 sm:pl-5")}>
       <CommentCard
         comment={comment}
         authorId={authorId}
@@ -409,24 +417,26 @@ function CommentCard({
     <div
       id={`comment-${comment.id}`}
       className={cn(
-        "rounded-[12px] border border-(--border-default) bg-(--bg-surface) p-3",
+        "rounded-xl border border-(--border-default) bg-(--bg-surface) p-3 sm:p-4",
         isSolution && "border-l-4 border-l-(--feedback-success) border-(--feedback-success)/30",
       )}
     >
-      <div className="flex items-start gap-2">
+      <div className="flex items-start gap-2.5">
         <UserAvatar user={user} size="sm" className="shrink-0" />
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="font-semibold text-(--text-primary)">{user?.name ?? "Unknown"}</span>
-            <span className="text-(--text-muted)">@{user?.handle}</span>
-            {user ? <span className="text-(--text-muted)">{reputationLabel(user.points)}</span> : null}
-            {isOp ? <span className="rounded bg-(--brand-primary)/15 px-1.5 py-0.5 text-[10px] font-semibold text-(--brand-primary)">OP</span> : null}
-            {isSolution ? (
-              <span className="rounded bg-(--feedback-success)/15 px-1.5 py-0.5 text-[10px] font-semibold text-(--feedback-success)">Solution</span>
-            ) : null}
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-semibold text-(--text-primary)">{user?.name ?? "Unknown"}</span>
+              <span className="text-(--text-muted)">@{user?.handle}</span>
+              {user ? <span className="text-(--text-muted)">{reputationLabel(user.points)}</span> : null}
+              {isOp ? <span className="rounded bg-(--brand-primary)/15 px-1.5 py-0.5 text-[10px] font-semibold text-(--brand-primary)">OP</span> : null}
+              {isSolution ? (
+                <span className="rounded bg-(--feedback-success)/15 px-1.5 py-0.5 text-[10px] font-semibold text-(--feedback-success)">Solution</span>
+              ) : null}
+            </div>
             <span className="text-(--text-muted)">{formatRelativeDate(comment.createdAt)}</span>
           </div>
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-(--text-secondary)">{comment.body}</p>
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-(--text-primary)">{comment.body}</p>
           {thread.category === "showcase" && isMax && comment.mediaPin ? (
             <button
               type="button"
@@ -462,10 +472,13 @@ function CommentCard({
               ))}
             </div>
           ) : null}
-          <div className="mt-2 flex flex-wrap items-center gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-(--border-subtle) pt-2">
             <button
               type="button"
-              className={cn("inline-flex items-center gap-0.5 text-(--text-muted) hover:text-(--text-primary)", v.up && "text-(--brand-primary)")}
+              className={cn(
+                "inline-flex items-center gap-1 text-xs font-medium transition-colors",
+                v.up ? "text-(--brand-primary)" : "text-(--text-secondary) hover:text-(--text-primary)",
+              )}
               onClick={() => onVote(comment.id, "up")}
             >
               <ArrowBigUp className={cn("h-4 w-4", v.up && "fill-current")} />
@@ -473,7 +486,10 @@ function CommentCard({
             </button>
             <button
               type="button"
-              className={cn("inline-flex items-center gap-0.5 text-(--text-muted) hover:text-(--text-primary)", v.down && "text-(--feedback-error)")}
+              className={cn(
+                "inline-flex items-center gap-0.5 text-xs transition-colors",
+                v.down ? "text-(--feedback-error)" : "text-(--text-secondary) hover:text-(--text-primary)",
+              )}
               onClick={() => onVote(comment.id, "down")}
             >
               <ArrowBigDown className={cn("h-4 w-4", v.down && "fill-current")} />
@@ -491,8 +507,8 @@ function CommentCard({
             </button>
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <button type="button" className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-(--bg-overlay)" aria-label="Comment actions">
-                  <MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
+                <button type="button" className="ml-auto inline-flex h-7 w-7 items-center justify-center rounded-full text-(--text-muted) hover:bg-(--bg-overlay) hover:text-(--text-primary)" aria-label="Comment actions">
+                  <MoreHorizontal className="h-3.5 w-3.5" />
                 </button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
@@ -500,8 +516,8 @@ function CommentCard({
                   className="z-50 min-w-[140px] rounded-[12px] border border-(--border-default) bg-(--bg-surface) p-1 shadow-(--shadow-lg)"
                   align="end"
                 >
-                  <DropdownMenu.Item className="cursor-pointer rounded-[8px] px-2 py-2 text-sm data-highlighted:bg-(--bg-overlay)">Report</DropdownMenu.Item>
-                  <DropdownMenu.Item className="cursor-pointer rounded-[8px] px-2 py-2 text-sm data-highlighted:bg-(--bg-overlay)">Copy link</DropdownMenu.Item>
+                  <DropdownMenu.Item className="cursor-pointer rounded-[8px] px-2 py-2 text-sm outline-hidden data-highlighted:bg-(--bg-overlay)">Report</DropdownMenu.Item>
+                  <DropdownMenu.Item className="cursor-pointer rounded-[8px] px-2 py-2 text-sm outline-hidden data-highlighted:bg-(--bg-overlay)">Copy link</DropdownMenu.Item>
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
             </DropdownMenu.Root>

@@ -118,11 +118,11 @@ function DiscussionPageInner({
 
   return (
     <>
-      <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:gap-8">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
         <motion.div
           layout
           transition={{ type: "spring", stiffness: 380, damping: 32 }}
-          className="min-w-0 flex-1 space-y-6 animate-route-emerge"
+          className="min-w-0 flex-1 max-w-[720px] space-y-6 animate-route-emerge"
         >
           <ThreadHeader
             thread={effectiveThread}

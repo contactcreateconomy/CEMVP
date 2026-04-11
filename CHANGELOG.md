@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-04-12 (thread page polish: layout, header, composer, comments, sidebar)
+- **`discussion-page-client.tsx`**: 3-column layout at `lg` (was `xl`); main thread body capped at `max-w-[720px]`.
+- **`thread-header.tsx`**: Restructured header — category badge, bold title, subtitle line, author row with relative time, stats row (reads/comments/upvotes), `--border-default` divider, action bar with cyan glow on active upvote/bookmark, Share/More right-aligned.
+- **`thread-composer.tsx`**: Wired to `createComment` Convex mutation with loading spinner and inline error; expand-on-focus textarea; toolbar shows only on focus; "Login to reply" for unauthenticated users.
+- **`thread-comments.tsx`**: Sort tabs match TrendSorter pill style (sliding cyan indicator); comment cards use `rounded-xl` with author/time row and action divider; nested replies use `border-l-2` thread line at `ml-6/8`; polished empty state.
+- **`thread-sidebar.tsx`**: Three card-wrapped sections — Author (bio, points badge, Follow), Related (max 5), Trending (max 5); breakpoint `xl` → `lg`; Insight sheet button matches.
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` (1 pre-existing warning only).
+
 ## 2026-04-11 (audit: Priority 3 — feature completion and polish)
 - **`convex/forum/mutations.ts`**: Added **`updateProfile`** mutation — name, bio, image, handle editing with validation, uniqueness check, and denormalized post author field sync.
 - **`convex/forum/limits.ts`**: Added **`MAX_PROFILE_NAME_LEN`**, **`MAX_PROFILE_BIO_LEN`**, **`MAX_PROFILE_HANDLE_LEN`** constants.
