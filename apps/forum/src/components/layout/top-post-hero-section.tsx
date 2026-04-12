@@ -14,7 +14,7 @@ function TopPostHeroSectionWithConvex() {
     return null;
   }
 
-  return <TopPostHeroCarousel slides={slides as TopPostHeroSlide[]} className="h-[380px] xl:h-[420px]" />;
+  return <TopPostHeroCarousel slides={slides as TopPostHeroSlide[]} className="h-[440px] xl:h-[520px]" />;
 }
 
 /** Avoid `useQuery` when Convex is not configured (e.g. Vercel build without `NEXT_PUBLIC_CONVEX_URL`) — `useQuery` still requires a provider even with `"skip"`. */

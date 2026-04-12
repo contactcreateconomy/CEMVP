@@ -1,235 +1,396 @@
 "use client";
 
-import type { CSSProperties } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { BarChart3, ChevronLeft, ChevronRight, MessageSquare, Share2, ArrowRight } from "lucide-react";
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+  type PanInfo,
+} from "motion/react";
+import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 
 import type { TopPostHeroSlide } from "@/types/hero";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-const SLIDE_INTERVAL_MS = 5200;
+// ─── Physics ──────────────────────────────────────────────────────────────────
+const BASE_SPRING = { type: "spring", stiffness: 300, damping: 30, mass: 1 } as const;
+const TAP_SPRING  = { type: "spring", stiffness: 450, damping: 18, mass: 1 } as const;
+
+// ─── Swipe ────────────────────────────────────────────────────────────────────
+const SWIPE_CONFIDENCE = 8000;
+
+function swipePower(offset: number, velocity: number) {
+  return Math.abs(offset) * velocity;
+}
+
+// ─── Wheel debounce ───────────────────────────────────────────────────────────
+const WHEEL_LOCKOUT_MS = 400;
+const WHEEL_THRESHOLD  = 20;
+
+// ─── Card geometry ────────────────────────────────────────────────────────────
+const X_STRIDE     = 440;   // spacing between card centres
+const Z_STRIDE     = 160;   // depth per step
+const ROTATE_Y_DEG = 12;    // tilt per step
+const SIDE_COUNT   = 2;     // ghost cards on each side
+const TOP_PAD      = 16;
+const BOTTOM_PAD   = 20;
+const RIGHT_PAD    = 28;    // nav/explore right edge inset
+
+// ─── Layout (measured dynamically to match sorter width) ──────────────────────
+interface Layout {
+  cardW:  number;
+  cardH:  number;  // 2:1 of cardW — slightly shorter than 16:9
+  focusX: number;  // sorter centre − hero centre → aligns card to feed column
+}
+
+function defaultLayout(): Layout {
+  const cardW = 549;
+  return { cardW, cardH: Math.round(cardW * 0.5 * 0.95), focusX: -40 };
+}
+
+// ─── Per-card transform — symmetric cascade, focusX shifts stack to match sorter
+function cardTransform(offset: number, focusX: number) {
+  const dist       = Math.abs(offset);
+  const scale      = dist === 0 ? 1    : dist === 1 ? 0.5  : 0.35;
+  const opacity    = dist === 0 ? 1    : dist === 1 ? 0.55 : 0.14;
+  const blur       = dist === 0 ? 0    : dist === 1 ? 8    : 16;
+  const brightness = dist === 0 ? 1    : dist === 1 ? 0.45 : 0.2;
+  return {
+    x:       focusX - offset * X_STRIDE,
+    z:       -dist  * Z_STRIDE,
+    rotateY:  offset * ROTATE_Y_DEG,
+    scale,
+    opacity,
+    blur,
+    brightness,
+  };
+}
 
 interface TopPostHeroCarouselProps {
   slides: TopPostHeroSlide[];
   className?: string;
 }
 
-function formatMetric(value: number) {
-  return value.toLocaleString();
-}
-
 export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [direction, setDirection] = useState<1 | -1>(1);
-  const [isPaused, setIsPaused] = useState(false);
+  const [isPaused, setIsPaused]       = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-  const prefersReducedMotion = useReducedMotion();
+  const [layout, setLayout]           = useState<Layout>(defaultLayout);
+  const heroRef                       = useRef<HTMLDivElement>(null);
+  const wheelLocked                   = useRef(false);
+  const prefersReducedMotion          = useReducedMotion();
+  const count = slides.length;
 
+  // ── Measure sorter width → derive cardW and cardH ───────────────────────────
   useEffect(() => {
-    if (slides.length <= 1 || isPaused) {
-      return;
+    function measure() {
+      const sorterEl = document.querySelector<HTMLElement>('.grid.grid-cols-4');
+      if (!sorterEl) return;
+      const heroRect   = heroRef.current!.getBoundingClientRect();
+      const sorterRect = sorterEl.getBoundingClientRect();
+      const cardW   = sorterRect.width;
+      const cardH   = Math.round(cardW * 0.5 * 0.95);   // 2:1 × 0.95 — 5% reduction
+      const focusX  = (sorterRect.left + cardW / 2) - (heroRect.left + heroRect.width / 2);
+      setLayout({ cardW, cardH, focusX });
     }
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
 
-    const timer = window.setInterval(() => {
-      setDirection(1);
-      setActiveIndex((current) => (current + 1) % slides.length);
-    }, SLIDE_INTERVAL_MS);
+  // ── Auto-advance ────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (count <= 1 || isPaused) return;
+    const id = window.setInterval(() => {
+      setActiveIndex((i) => (i + 1) % count);
+    }, 5200);
+    return () => window.clearInterval(id);
+  }, [isPaused, count]);
 
-    return () => window.clearInterval(timer);
-  }, [isPaused, slides.length]);
+  const goNext = useCallback(() => setActiveIndex((i) => (i + 1) % count), [count]);
+  const goPrev = useCallback(() => setActiveIndex((i) => (i - 1 + count) % count), [count]);
 
-  if (slides.length === 0) {
-    return null;
-  }
+  // ── Mouse wheel ─────────────────────────────────────────────────────────────
+  const handleWheel = useCallback(
+    (e: React.WheelEvent) => {
+      if (wheelLocked.current) return;
+      if (Math.abs(e.deltaX) < WHEEL_THRESHOLD && Math.abs(e.deltaY) < WHEEL_THRESHOLD) return;
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (delta > 0) goNext(); else goPrev();
+      wheelLocked.current = true;
+      setTimeout(() => { wheelLocked.current = false; }, WHEEL_LOCKOUT_MS);
+    },
+    [goNext, goPrev],
+  );
 
-  const currentSlide = slides[activeIndex];
+  // ── Drag / swipe ────────────────────────────────────────────────────────────
+  const handleDragEnd = useCallback(
+    (_: unknown, info: PanInfo) => {
+      const power = swipePower(info.offset.x, info.velocity.x);
+      if (power < -SWIPE_CONFIDENCE) goNext();
+      else if (power > SWIPE_CONFIDENCE) goPrev();
+    },
+    [goNext, goPrev],
+  );
 
-  const handleNext = () => {
-    setDirection(1);
-    setActiveIndex((current) => (current + 1) % slides.length);
-  };
+  if (count === 0) return null;
 
-  const handlePrevious = () => {
-    setDirection(-1);
-    setActiveIndex((current) => (current - 1 + slides.length) % slides.length);
-  };
+  const active = slides[activeIndex];
+  const { cardW, cardH, focusX } = layout;
 
-
-  const accentStyle = {
-    "--hero-accent": currentSlide.accentRgb,
-  } as CSSProperties;
+  // Symmetric: [-2, -1, 0, 1, 2]
+  const visibleOffsets = Array.from(
+    { length: SIDE_COUNT * 2 + 1 },
+    (_, i) => i - SIDE_COUNT,
+  );
 
   return (
-    <Card
+    <div
+      ref={heroRef}
       className={cn(
-        "group/hero relative overflow-hidden rounded-[28px]",
+        "group/hero relative overflow-hidden rounded-[28px] bg-(--bg-surface) select-none",
         className,
       )}
-      style={accentStyle}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onFocusCapture={() => setIsPaused(true)}
       onBlurCapture={() => setIsPaused(false)}
+      onWheel={handleWheel}
       aria-roledescription="carousel"
       aria-label="Featured posts carousel"
     >
-      <CardContent className="relative h-full p-0">
-        <div className="pointer-events-none absolute inset-0 bg-transparent" />
-
-        <AnimatePresence initial={false} mode="wait">
-          <motion.article
-            key={currentSlide.id}
-            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: direction > 0 ? 24 : -24, filter: "blur(6px)" }}
-            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, x: 0, filter: "blur(0px)" }}
-            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: direction > 0 ? -24 : 24, filter: "blur(4px)" }}
-            transition={{ duration: prefersReducedMotion ? 0.2 : 0.42, ease: "easeOut" }}
+      {/* ── AMBIENT BACKGROUND ── */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <AnimatePresence mode="popLayout">
+          <motion.div
+            key={activeIndex}
             className="absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: prefersReducedMotion ? 0.15 : 0.6 }}
           >
-            <div className="grid h-full gap-6 p-5 md:p-6 lg:grid-cols-[minmax(0,44%)_minmax(0,56%)] lg:gap-7 lg:p-7">
+            {active.coverImage && !imageErrors[active.id] ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={active.coverImage}
+                alt=""
+                aria-hidden
+                className="h-full w-full object-cover scale-110"
+                style={{ filter: "blur(72px) saturate(1.5)", opacity: 0.55 }}
+              />
+            ) : (
+              <div
+                className="h-full w-full"
+                style={{
+                  background: `radial-gradient(ellipse 120% 75% at 50% 35%,
+                    rgba(${active.accentRgb}, 0.38) 0%,
+                    rgba(${active.accentRgb}, 0.14) 45%,
+                    transparent 72%)`,
+                }}
+              />
+            )}
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(to top, var(--bg-surface) 0%, color-mix(in srgb, var(--bg-surface) 50%, transparent) 28%, transparent 58%), " +
+                  "radial-gradient(ellipse 100% 100% at 50% 50%, transparent 38%, color-mix(in srgb, var(--bg-surface) 80%, transparent) 100%)",
+              }}
+            />
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* ── 3D STAGE — symmetric cascade, edge-fades both sides ── */}
+      <div
+        className="absolute inset-x-0 z-10 flex items-center justify-center"
+        style={{
+          top:               TOP_PAD,
+          bottom:            BOTTOM_PAD,
+          perspective:       "1200px",
+          perspectiveOrigin: "50% 50%",
+          // fade both edges so ghost cards dissolve naturally
+          maskImage:         "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+          WebkitMaskImage:   "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+        }}
+      >
+        {/* Drag layer */}
+        <motion.div
+          className="absolute inset-0 cursor-grab active:cursor-grabbing"
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.12}
+          onDragEnd={handleDragEnd}
+        />
+
+        {visibleOffsets.map((offset) => {
+          const dist       = Math.abs(offset);
+          const slideIndex = (activeIndex + offset + count) % count;
+          const slide      = slides[slideIndex];
+          const t          = cardTransform(offset, focusX);
+          const isCenter   = offset === 0;
+
+          return (
+            <motion.div
+              key={slide.id}
+              className="absolute"
+              style={{
+                transformStyle: "preserve-3d",
+                zIndex: isCenter ? 20 : 10 - dist,
+              }}
+              initial={{ opacity: 0 }}
+              animate={prefersReducedMotion
+                ? { x: t.x, opacity: t.opacity }
+                : { x: t.x, z: t.z, rotateY: t.rotateY, scale: t.scale, opacity: t.opacity }}
+              transition={BASE_SPRING}
+              whileTap={isCenter ? { scale: 0.97, transition: TAP_SPRING } : undefined}
+            >
               <motion.div
-                initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 10, scale: 0.99 }}
-                animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: prefersReducedMotion ? 0.2 : 0.35, delay: 0.04, ease: "easeOut" }}
-                className="relative min-h-[220px] lg:min-h-0"
+                animate={{
+                  filter: prefersReducedMotion
+                    ? "none"
+                    : `blur(${t.blur}px) brightness(${t.brightness})`,
+                }}
+                transition={BASE_SPRING}
+                style={{
+                  width:        cardW,
+                  height:       cardH,
+                  borderRadius: 20,
+                  overflow:     "hidden",
+                  position:     "relative",
+                  boxShadow:    isCenter
+                    ? `0 32px 80px rgba(${active.accentRgb}, 0.55), 0 12px 36px rgba(0,0,0,0.8)`
+                    : "0 8px 24px rgba(0,0,0,0.4)",
+                  border: "1px solid transparent",
+                  pointerEvents: isCenter ? "auto" : "none",
+                }}
               >
-                <Link
-                  href={currentSlide.discussionHref}
-                  aria-label={`Open featured post ${currentSlide.title}`}
-                  className="group/image relative block h-full overflow-hidden rounded-[24px] border border-(--border-default)/70 bg-(--bg-overlay)/45 shadow-[0_10px_24px_rgba(9,9,11,0.12)] transition-transform duration-300"
-                >
+                {/* Cover image */}
+                {slide.coverImage && !imageErrors[slide.id] ? (
+                  <Image
+                    src={slide.coverImage}
+                    alt={isCenter ? slide.title : ""}
+                    fill
+                    sizes="(min-width: 1280px) 549px, 90vw"
+                    className="object-cover"
+                    priority={isCenter && activeIndex === 0}
+                    onError={() => setImageErrors((prev) => ({ ...prev, [slide.id]: true }))}
+                  />
+                ) : (
                   <div
-                    className="pointer-events-none absolute -inset-12 opacity-75 blur-3xl transition-transform duration-700 group-hover/image:-translate-y-1 group-hover/image:translate-x-2"
+                    className="h-full w-full"
+                    style={{ background: "linear-gradient(135deg, var(--bg-surface), var(--bg-overlay))" }}
+                  />
+                )}
+
+                {/* Cinematic lower-third — covers bottom ~45% of card.
+                    Strong enough for bright/white images (office, daylight, product shots).
+                    Multi-stop gradient so it never looks like a hard bar — it blends upward.
+                    Edge cases covered: white image → still 90% opacity at bottom;
+                    dark image → looks even better (additive darkening). */}
+                {isCenter && (
+                  <div
+                    className="absolute inset-0 pointer-events-none"
                     style={{
                       background:
-                        "radial-gradient(circle at 48% 50%, rgba(var(--hero-accent),0.4) 0%, rgba(var(--hero-accent),0.14) 38%, transparent 74%)",
+                        "linear-gradient(to top, " +
+                        "rgba(0,0,0,0.90) 0%, " +
+                        "rgba(0,0,0,0.80) 15%, " +
+                        "rgba(0,0,0,0.62) 28%, " +
+                        "rgba(0,0,0,0.32) 42%, " +
+                        "rgba(0,0,0,0.08) 56%, " +
+                        "transparent 68%)",
                     }}
                   />
-                  {currentSlide.coverImage && !imageErrors[currentSlide.id] ? (
-                    <Image
-                      src={currentSlide.coverImage}
-                      alt={currentSlide.title}
-                      fill
-                      sizes="(max-width: 1023px) 100vw, 42vw"
-                      className="object-cover transition-transform duration-700 group-hover/image:scale-[1.03]"
-                      priority={activeIndex === 0}
-                      onError={() => setImageErrors((prev) => ({ ...prev, [currentSlide.id]: true }))}
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-linear-to-tr from-(--bg-surface) to-(--bg-overlay)" />
-                  )}
-                  <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-[rgba(2,7,17,0.45)] via-transparent to-transparent" />
-                </Link>
-              </motion.div>
+                )}
 
-              <motion.div
-                initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 14 }}
-                animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-                transition={{ duration: prefersReducedMotion ? 0.2 : 0.35, delay: 0.1, ease: "easeOut" }}
-                className="flex min-w-0 flex-col justify-center"
-              >
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-(--text-muted)">{currentSlide.eyebrow}</p>
+                {/* Text overlay — eyebrow + title, inside the card at the bottom */}
+                {isCenter && (
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={`overlay-${activeIndex}`}
+                      className="absolute bottom-0 left-0 right-0 z-10 px-5 pb-5 pt-10"
+                      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+                      animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                      exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+                      transition={{ duration: 0.28, ease: "easeOut" }}
+                    >
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-(--brand-primary) mb-1">
+                        {active.eyebrow}
+                      </p>
+                      <h2 className="text-xl font-bold leading-snug text-white line-clamp-2 drop-shadow-sm">
+                        {active.title}
+                      </h2>
+                    </motion.div>
+                  </AnimatePresence>
+                )}
 
-                <Link href={currentSlide.discussionHref} className="group/title block">
-                  <h2 className="line-clamp-2 text-3xl font-semibold leading-[1.12] text-(--text-primary) drop-shadow-[0_3px_10px_rgba(9,9,11,0.16)] transition-colors duration-200 group-hover/title:text-(--brand-primary) lg:text-5xl">
-                    {currentSlide.title}
-                  </h2>
-                </Link>
-
-                <p className="mt-3 line-clamp-3 max-w-[66ch] text-base leading-relaxed text-(--text-secondary) lg:text-lg">
-                  {currentSlide.summary}
-                </p>
-
-                <div className="mt-5 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-(--border-default)/80 bg-(--bg-overlay)/65 px-3 py-1.5 text-xs font-semibold text-(--text-secondary)">
-                    <BarChart3 className="h-3.5 w-3.5 text-(--brand-primary)" />
-                    {formatMetric(currentSlide.reads)} reads
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-(--border-default)/80 bg-(--bg-overlay)/65 px-3 py-1.5 text-xs font-semibold text-(--text-secondary)">
-                    <MessageSquare className="h-3.5 w-3.5 text-(--brand-primary)" />
-                    {formatMetric(currentSlide.comments)} comments
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-(--border-default)/80 bg-(--bg-overlay)/65 px-3 py-1.5 text-xs font-semibold text-(--text-secondary)">
-                    <Share2 className="h-3.5 w-3.5 text-(--brand-primary)" />
-                    {formatMetric(currentSlide.shares)} shares
-                  </span>
-                </div>
-
-                <motion.div
-                  initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
-                  animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-                  transition={{ duration: prefersReducedMotion ? 0.2 : 0.32, delay: 0.18, ease: "easeOut" }}
-                  className="mt-6"
-                >
+                {/* Click target */}
+                {isCenter && (
                   <Link
-                    href={currentSlide.discussionHref}
-                    className={cn(
-                      buttonVariants({ variant: "primary", size: "md" }),
-                      "group/cta relative h-10 rounded-full px-6 text-sm font-semibold shadow-none transition-[box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgba(14,165,233,0.34)]",
-                    )}
-                    aria-label={`Read featured post ${currentSlide.title}`}
-                  >
-                    <span
-                      className="pointer-events-none absolute inset-0 rounded-full opacity-0 blur-xl transition-all duration-500 group-hover/cta:translate-x-1 group-hover/cta:opacity-90"
-                      style={{
-                        background:
-                          "radial-gradient(circle at 35% 50%, rgba(var(--hero-accent),0.4) 0%, rgba(var(--hero-accent),0.06) 62%, transparent 100%)",
-                      }}
-                    />
-                    <span className="relative z-10 inline-flex items-center gap-2">
-                      <span>{currentSlide.ctaLabel}</span>
-                      <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/cta:translate-x-1" />
-                    </span>
-                  </Link>
-                </motion.div>
+                    href={slide.discussionHref}
+                    aria-label={`Open: ${slide.title}`}
+                    className="absolute inset-0 z-20"
+                    tabIndex={0}
+                  />
+                )}
               </motion.div>
-            </div>
-          </motion.article>
-        </AnimatePresence>
+            </motion.div>
+          );
+        })}
+      </div>
 
-        <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5">
-          {slides.map((_, i) => (
-            <span
-              key={i}
-              className={cn(
-                "block h-1.5 rounded-full transition-all duration-300 ease-in-out",
-                i === activeIndex ? "w-5 bg-cyan-400" : "w-1.5 bg-white/30",
-              )}
-            />
-          ))}
+      {/* ── NAV + EXPLORE — static, no animation tied to slide index ── */}
+      <div
+        className="absolute z-30 flex items-center gap-2.5"
+        style={{ right: RIGHT_PAD, bottom: BOTTOM_PAD + 4 }}
+      >
+        {/* Nav pill — glassmorphic */}
+        <div
+          className="flex items-center gap-0.5 rounded-full border border-white/10 px-1 py-1"
+          style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(16px)" }}
+        >
+          <button
+            type="button"
+            onClick={goPrev}
+            aria-label="Previous"
+            className="flex h-7 w-7 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="min-w-[4ch] text-center text-xs tabular-nums text-white/70">
+            {activeIndex + 1} / {count}
+          </span>
+          <button
+            type="button"
+            onClick={goNext}
+            aria-label="Next"
+            className="flex h-7 w-7 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
 
-        <div className="absolute right-5 bottom-5 z-20 flex items-center gap-2 md:right-6 md:bottom-6">
-          <div className="inline-flex items-center gap-1 rounded-full border border-(--border-default)/80 bg-(--bg-overlay)/75 p-1 backdrop-blur-xs">
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              className="h-8 w-8 rounded-full p-0 text-(--text-primary) hover:bg-(--bg-overlay)/80"
-              onClick={handlePrevious}
-              aria-label="Show previous featured post"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              className="h-8 w-8 rounded-full p-0 text-(--text-primary) hover:bg-(--bg-overlay)/80"
-              onClick={handleNext}
-              aria-label="Show next featured post"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-
-      </CardContent>
-    </Card>
+        {/* Explore pill — glassmorphic, cyan glow on card hover, arrow pulses on card hover */}
+        <Link
+          href={active.discussionHref}
+          aria-label={`Explore: ${active.title}`}
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold",
+            "border border-white/20 transition-all duration-300",
+            "text-(--text-primary)",
+            "shadow-[0_4px_14px_rgba(0,0,0,0.35)]",
+            "group-hover/hero:border-[hsl(199_89%_48%)] group-hover/hero:shadow-[0_0_18px_2px_hsl(199_89%_48%_/_0.45)]",
+          )}
+          style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(16px)" }}
+        >
+          Explore
+          <ArrowUpRight className="h-3.5 w-3.5 text-(--text-primary) group-hover/hero:animate-[pulse_1s_ease-in-out_infinite] group-hover/hero:text-(--brand-primary)" />
+        </Link>
+      </div>
+    </div>
   );
 }
