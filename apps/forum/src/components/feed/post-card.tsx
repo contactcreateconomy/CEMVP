@@ -81,7 +81,7 @@ export function PostCard({
 
   return (
     <article
-      className="card-surface feed-post-card group relative overflow-hidden p-4"
+      className="card-surface feed-post-card group relative p-4"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onFocus={() => setIsHovered(true)}
@@ -135,7 +135,7 @@ export function PostCard({
         </div>
       )}
 
-      <div className="mt-4">
+      <div className="relative z-20 mt-4">
         <PostInteractionRow
           upvotes={post.upvotes}
           commentsCount={post.commentsCount}
@@ -146,6 +146,48 @@ export function PostCard({
           onToggleFavorite={onToggleFavorite}
           onToggleUpvote={onToggleUpvote}
         />
+      </div>
+    </article>
+  );
+}
+
+export function PostCardSkeleton() {
+  return (
+    <article className="card-surface feed-post-card group relative p-4">
+      <div>
+        <div className="mb-3 flex items-start gap-3 pr-10">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-(--bg-overlay)" />
+            <div className="space-y-1.5">
+              <div className="h-3.5 w-24 animate-pulse rounded bg-(--bg-overlay)" />
+              <div className="h-2.5 w-16 animate-pulse rounded bg-(--bg-overlay)/50" />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_208px] md:items-end">
+          <div>
+            <div className="h-6 w-3/4 animate-pulse rounded bg-(--bg-overlay)" />
+            <div className="mt-3 space-y-2">
+              <div className="h-3 w-full animate-pulse rounded bg-(--bg-overlay)/50" />
+              <div className="h-3 w-5/6 animate-pulse rounded bg-(--bg-overlay)/50" />
+            </div>
+
+            <div className="mt-6 flex flex-col gap-1.5">
+              <div className="h-3 w-32 animate-pulse rounded bg-(--bg-overlay)/40" />
+            </div>
+          </div>
+
+          <div className="relative block h-[132px] w-full max-w-full overflow-hidden rounded-[14px] bg-(--bg-overlay)/40 animate-pulse md:h-[140px]" />
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center gap-4 border-t border-(--border-subtle) pt-4">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-16 animate-pulse rounded-full bg-(--bg-overlay)/50" />
+          <div className="h-8 w-16 animate-pulse rounded-full bg-(--bg-overlay)/50" />
+        </div>
+        <div className="h-4 w-4 animate-pulse rounded-full bg-(--bg-overlay)/50 ml-auto" />
       </div>
     </article>
   );
