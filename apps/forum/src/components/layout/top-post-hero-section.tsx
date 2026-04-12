@@ -2,7 +2,11 @@
 
 import { useQuery } from "convex/react";
 
-import { TopPostHeroCarousel } from "@/components/feed/top-post-hero-carousel";
+import {
+  TopPostHeroCarousel,
+  TopPostHeroCarouselEmpty,
+  TopPostHeroCarouselSkeleton,
+} from "@/components/feed/top-post-hero-carousel";
 import { api } from "@/lib/convex";
 import type { TopPostHeroSlide } from "@/types/hero";
 import { isConvexConfigured } from "@cemvp/convex-client";
@@ -10,8 +14,12 @@ import { isConvexConfigured } from "@cemvp/convex-client";
 function TopPostHeroSectionWithConvex() {
   const slides = useQuery(api.forum.queries.listHeroSlides, {});
 
-  if (slides === undefined || slides.length === 0) {
-    return null;
+  if (slides === undefined) {
+    return <TopPostHeroCarouselSkeleton className="h-[440px] xl:h-[520px]" />;
+  }
+
+  if (slides.length === 0) {
+    return <TopPostHeroCarouselEmpty className="h-[440px] xl:h-[520px]" />;
   }
 
   return <TopPostHeroCarousel slides={slides as TopPostHeroSlide[]} className="h-[440px] xl:h-[520px]" />;

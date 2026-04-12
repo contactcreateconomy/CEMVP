@@ -48,7 +48,7 @@ const socialProviders: SocialProviderMeta[] = [
 
 export function SocialLoginButtons({ isSubmitting, onSocialLogin }: SocialLoginButtonsProps) {
   return (
-    <div className="flex flex-col items-center gap-2.5">
+    <div className="mx-auto flex w-3/4 flex-col gap-2.5">
       {socialProviders.map(({ provider, label, Icon, colorClass, buttonClass }) => (
         <Button
           key={provider}
@@ -57,7 +57,7 @@ export function SocialLoginButtons({ isSubmitting, onSocialLogin }: SocialLoginB
           size="md"
           disabled={isSubmitting}
           className={cn(
-            "group inline-flex w-auto min-w-[286px] items-center justify-center gap-2.5 px-8 transition-[color,border-color,box-shadow,transform] duration-200 hover:-translate-y-px",
+            "group inline-flex w-full items-center justify-center gap-2.5 border-border-default bg-bg-overlay/50 px-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-[color,border-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-border-active",
             buttonClass,
           )}
           onClick={() => onSocialLogin(provider)}

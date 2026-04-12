@@ -5,6 +5,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { useSearchParams } from "next/navigation";
 
 import { FeedClient } from "@/components/feed/feed-client";
+import { PostCardSkeleton } from "@/components/feed/post-card";
 import { TrendSorter } from "@/components/feed/trend-sorter";
 import { api } from "@/lib/convex";
 import { isConvexConfigured } from "@cemvp/convex-client";
@@ -121,11 +122,7 @@ function FeedRouteWithConvex({
 
   const initialPosts = useMemo(() => posts, [posts]);
 
-  if (categoriesLoading) {
-    return null;
-  }
-
-  const isFeedLoading = page === undefined && !feedPageReady;
+  const isFeedLoading = (page === undefined && !feedPageReady) || categoriesLoading;
 
   return (
     <section className="space-y-4">
@@ -136,8 +133,10 @@ function FeedRouteWithConvex({
       </header>
 
       {isFeedLoading ? (
-        <div className="flex min-h-[50vh] items-center justify-center p-8 text-(--text-muted)">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        <div className="space-y-4 pt-2">
+          {[1, 2, 3].map((i) => (
+            <PostCardSkeleton key={i} />
+          ))}
         </div>
       ) : (
         <>

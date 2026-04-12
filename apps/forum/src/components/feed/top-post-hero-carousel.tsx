@@ -10,6 +10,7 @@ import {
   type PanInfo,
 } from "motion/react";
 import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
+import { useTheme } from "next-themes";
 
 import type { TopPostHeroSlide } from "@/types/hero";
 import { cn } from "@/lib/utils";
@@ -47,7 +48,7 @@ interface Layout {
 
 function defaultLayout(): Layout {
   const cardW = 549;
-  return { cardW, cardH: Math.round(cardW * 0.5 * 0.95), focusX: -40 };
+  return { cardW, cardH: Math.round(cardW * 0.5), focusX: -40 };
 }
 
 // ─── Per-card transform — symmetric cascade, focusX shifts stack to match sorter
@@ -78,9 +79,12 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
   const [isPaused, setIsPaused]       = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [layout, setLayout]           = useState<Layout>(defaultLayout);
+  const [mounted, setMounted]         = useState(false);
   const heroRef                       = useRef<HTMLDivElement>(null);
   const wheelLocked                   = useRef(false);
   const prefersReducedMotion          = useReducedMotion();
+  const { resolvedTheme }             = useTheme();
+  const isDark                        = mounted ? resolvedTheme === "dark" : true;
   const count = slides.length;
 
   // ── Measure sorter width → derive cardW and cardH ───────────────────────────
@@ -91,13 +95,17 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
       const heroRect   = heroRef.current!.getBoundingClientRect();
       const sorterRect = sorterEl.getBoundingClientRect();
       const cardW   = sorterRect.width;
-      const cardH   = Math.round(cardW * 0.5 * 0.95);   // 2:1 × 0.95 — 5% reduction
+      const cardH   = Math.round(cardW * 0.5);   // restore full 2:1 height
       const focusX  = (sorterRect.left + cardW / 2) - (heroRect.left + heroRect.width / 2);
       setLayout({ cardW, cardH, focusX });
     }
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
+  }, []);
+
+  useEffect(() => {
+    setMounted(true);
   }, []);
 
   // ── Auto-advance ────────────────────────────────────────────────────────────
@@ -287,22 +295,15 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
                 )}
 
                 {/* Cinematic lower-third — covers bottom ~45% of card.
-                    Strong enough for bright/white images (office, daylight, product shots).
-                    Multi-stop gradient so it never looks like a hard bar — it blends upward.
-                    Edge cases covered: white image → still 90% opacity at bottom;
-                    dark image → looks even better (additive darkening). */}
+                    Dark: strong black gradient. Light: white gradient.
+                    Multi-stop so it blends naturally, never a hard bar. */}
                 {isCenter && (
                   <div
                     className="absolute inset-0 pointer-events-none"
                     style={{
-                      background:
-                        "linear-gradient(to top, " +
-                        "rgba(0,0,0,0.90) 0%, " +
-                        "rgba(0,0,0,0.80) 15%, " +
-                        "rgba(0,0,0,0.62) 28%, " +
-                        "rgba(0,0,0,0.32) 42%, " +
-                        "rgba(0,0,0,0.08) 56%, " +
-                        "transparent 68%)",
+                      background: isDark
+                        ? "linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.80) 15%, rgba(0,0,0,0.62) 28%, rgba(0,0,0,0.32) 42%, rgba(0,0,0,0.08) 56%, transparent 68%)"
+                        : "linear-gradient(to top, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.78) 15%, rgba(255,255,255,0.52) 28%, rgba(255,255,255,0.22) 42%, rgba(255,255,255,0.05) 56%, transparent 68%)",
                     }}
                   />
                 )}
@@ -321,7 +322,7 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
                       <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-(--brand-primary) mb-1">
                         {active.eyebrow}
                       </p>
-                      <h2 className="text-xl font-bold leading-snug text-white line-clamp-2 drop-shadow-sm">
+                      <h2 className="text-xl font-bold leading-snug text-(--text-primary) line-clamp-2 drop-shadow-sm">
                         {active.title}
                       </h2>
                     </motion.div>
@@ -350,25 +351,25 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
       >
         {/* Nav pill — glassmorphic */}
         <div
-          className="flex items-center gap-0.5 rounded-full border border-white/10 px-1 py-1"
-          style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(16px)" }}
+          className="flex items-center gap-0.5 rounded-full border border-(--border-default) px-1 py-1"
+          style={{ background: isDark ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.72)", backdropFilter: "blur(16px)" }}
         >
           <button
             type="button"
             onClick={goPrev}
             aria-label="Previous"
-            className="flex h-7 w-7 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+            className="flex h-7 w-7 items-center justify-center rounded-full text-(--text-secondary) transition-colors hover:bg-(--bg-overlay) hover:text-(--text-primary)"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="min-w-[4ch] text-center text-xs tabular-nums text-white/70">
+          <span className="min-w-[4ch] text-center text-xs tabular-nums text-(--text-secondary)">
             {activeIndex + 1} / {count}
           </span>
           <button
             type="button"
             onClick={goNext}
             aria-label="Next"
-            className="flex h-7 w-7 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+            className="flex h-7 w-7 items-center justify-center rounded-full text-(--text-secondary) transition-colors hover:bg-(--bg-overlay) hover:text-(--text-primary)"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -380,16 +381,65 @@ export function TopPostHeroCarousel({ slides, className }: TopPostHeroCarouselPr
           aria-label={`Explore: ${active.title}`}
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold",
-            "border border-white/20 transition-all duration-300",
+            "border border-(--border-default) transition-all duration-300",
             "text-(--text-primary)",
-            "shadow-[0_4px_14px_rgba(0,0,0,0.35)]",
-            "group-hover/hero:border-[hsl(199_89%_48%)] group-hover/hero:shadow-[0_0_18px_2px_hsl(199_89%_48%_/_0.45)]",
+            "shadow-(--shadow-md)",
+            "group-hover/hero:border-(--brand-primary) group-hover/hero:shadow-[0_0_18px_2px_hsl(199_89%_48%_/_0.35)]",
           )}
-          style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(16px)" }}
+          style={{ background: isDark ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.82)", backdropFilter: "blur(16px)" }}
         >
           Explore
           <ArrowUpRight className="h-3.5 w-3.5 text-(--text-primary) group-hover/hero:animate-[pulse_1s_ease-in-out_infinite] group-hover/hero:text-(--brand-primary)" />
         </Link>
+      </div>
+    </div>
+  );
+}
+
+export function TopPostHeroCarouselSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-[28px] border border-(--border-subtle) bg-(--bg-surface)",
+        className,
+      )}
+    >
+      <div className="absolute inset-0 z-0 bg-(--bg-overlay)/10 animate-pulse" />
+      <div className="absolute inset-0 z-10 flex items-center justify-center">
+        <div className="relative h-[275px] w-full max-w-[549px] overflow-hidden rounded-[20px] bg-(--bg-overlay)/40 animate-pulse shadow-sm">
+          <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 pt-10">
+            <div className="mb-2.5 h-2 w-16 rounded bg-(--bg-overlay)/60" />
+            <div className="mb-1.5 h-4 w-3/4 rounded bg-(--bg-overlay)/60" />
+            <div className="h-4 w-1/2 rounded bg-(--bg-overlay)/60" />
+          </div>
+        </div>
+      </div>
+      <div className="absolute bottom-6 right-7 z-30 flex items-center gap-2.5">
+        <div className="h-[36px] w-[88px] animate-pulse rounded-full bg-(--bg-overlay)/60" />
+        <div className="h-[36px] w-[96px] animate-pulse rounded-full bg-(--bg-overlay)/60" />
+      </div>
+    </div>
+  );
+}
+
+export function TopPostHeroCarouselEmpty({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-[28px] border border-(--border-subtle) bg-(--bg-surface)",
+        className,
+      )}
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.08),transparent_52%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.02),transparent_40%)] dark:bg-[linear-gradient(to_top,rgba(255,255,255,0.02),transparent_40%)]" />
+      <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-(--brand-primary)">Featured</p>
+        <h2 className="mt-2 max-w-lg text-2xl font-bold leading-tight text-(--text-primary)">
+          No featured discussions yet
+        </h2>
+        <p className="mt-3 max-w-md text-sm text-(--text-secondary)">
+          Add a few high-signal creator posts here to make the discussion stage feel alive.
+        </p>
       </div>
     </div>
   );

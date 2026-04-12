@@ -183,6 +183,7 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
           id="auth-signup-name"
           autoComplete="name"
           placeholder="Enter your full name"
+          className="border-border-default bg-bg-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
           value={name}
           onChange={(event) => setName(event.target.value)}
           aria-invalid={Boolean(nameError)}
@@ -205,6 +206,7 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
           type="email"
           autoComplete="email"
           placeholder="Enter your email"
+          className="border-border-default bg-bg-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           aria-invalid={Boolean(emailError)}
@@ -231,7 +233,7 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             className={cn(
-              "pr-[126px]",
+              "border-border-default bg-bg-surface pr-[126px] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]",
               !passwordError && password.length > 0 ? passwordStrength.inputClass : undefined,
               passwordError ? "border-feedback-error/70 focus:border-feedback-error" : undefined,
             )}
@@ -285,7 +287,7 @@ export function SignupForm({ isSubmitting, authError, onSubmit, onSwitchToLogin 
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
             className={cn(
-              "pr-[132px]",
+              "border-border-default bg-bg-surface pr-[132px] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]",
               confirmPassword.length > 0 && passwordsMatch
                 ? "border-feedback-success/70 focus:border-feedback-success"
                 : undefined,

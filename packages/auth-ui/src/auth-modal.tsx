@@ -37,121 +37,121 @@ export function AuthModal() {
 
           <Dialog.Content
             className={cn(
-              "auth-modal-content relative z-10 w-[min(520px,94vw)] overflow-hidden rounded-[20px] border border-border-default bg-bg-surface shadow-lg outline-hidden",
+              "auth-modal-content relative z-10 w-[min(560px,94vw)] overflow-hidden rounded-[20px] border border-white/10 bg-(--bg-surface)/92 backdrop-blur-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_32px_80px_rgba(0,0,0,0.55)] outline-hidden",
               "origin-center",
             )}
           >
-          <div className="relative p-5 sm:p-6">
-            <Dialog.Close asChild>
-              <button
-                type="button"
-                className="absolute right-5 top-5 rounded-full p-1.5 text-text-muted transition-colors hover:bg-bg-overlay hover:text-text-primary"
-                aria-label="Close authentication dialog"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </Dialog.Close>
-
-            {authEnvironmentNote ? (
-              <div
-                role="status"
-                className="mb-4 rounded-[12px] border border-feedback-warning/40 bg-feedback-warning/10 px-3 py-2.5 text-left text-sm text-text-primary"
-              >
-                {authEnvironmentNote}
-              </div>
-            ) : null}
-
-            <div className="mb-5 text-center">
-              <Dialog.Title className="text-[28px] font-semibold leading-tight text-text-primary sm:text-3xl">
-                {authMode === "login" ? "Welcome back" : "Create your account"}
-              </Dialog.Title>
-              <Dialog.Description className="mt-2 text-sm text-text-secondary">
-                {authMode === "login"
-                  ? "Log in to continue building your creator momentum."
-                  : "Join Createconomy and launch your creator stack."}
-              </Dialog.Description>
-            </div>
-
-            <div className="relative rounded-[12px] bg-bg-overlay p-1">
-              <div
-                className="pointer-events-none absolute bottom-1 top-1 w-[calc(50%-0.25rem)] rounded-[10px] bg-brand-primary shadow-[0_8px_24px_rgba(14,165,233,0.24)] transition-transform duration-300 ease-out"
-                style={{ transform: `translateX(${authMode === "signup" ? "100%" : "0%"})` }}
-              />
-
-              <div className="relative z-10 grid grid-cols-2 gap-1">
+            <div className="relative px-7 sm:px-8 pt-6 pb-7">
+              <Dialog.Close asChild>
                 <button
                   type="button"
-                  className={cn(
-                    "rounded-[10px] px-3 py-2 text-xs font-semibold transition-colors duration-200",
-                    authMode === "login" ? "text-white" : "text-text-secondary hover:text-text-primary",
-                  )}
-                  onClick={() => {
-                    clearAuthError();
-                    openAuthModal("login");
-                  }}
-                  disabled={isSubmitting}
+                  className="absolute right-5 top-5 rounded-full p-1.5 text-text-muted transition-colors hover:bg-bg-overlay hover:text-text-primary"
+                  aria-label="Close authentication dialog"
                 >
-                  Login
+                  <X className="h-4 w-4" />
                 </button>
-                <button
-                  type="button"
-                  className={cn(
-                    "rounded-[10px] px-3 py-2 text-xs font-semibold transition-colors duration-200",
-                    authMode === "signup" ? "text-white" : "text-text-secondary hover:text-text-primary",
-                  )}
-                  onClick={() => {
-                    clearAuthError();
-                    openAuthModal("signup");
-                  }}
-                  disabled={isSubmitting}
+              </Dialog.Close>
+
+              {authEnvironmentNote ? (
+                <div
+                  role="status"
+                  className="mb-4 rounded-[12px] border border-feedback-warning/40 bg-feedback-warning/10 px-3 py-2.5 text-left text-sm text-text-primary"
                 >
-                  Sign up
-                </button>
+                  {authEnvironmentNote}
+                </div>
+              ) : null}
+
+              <div className="mb-5 text-center">
+                <Dialog.Title className="text-[28px] font-semibold leading-tight text-text-primary sm:text-3xl">
+                  {authMode === "login" ? "Welcome back" : "Create your account"}
+                </Dialog.Title>
+                <Dialog.Description className="mt-2 text-sm text-text-secondary">
+                  {authMode === "login"
+                    ? "Log in to continue building your creator momentum."
+                    : "Join Createconomy and launch your creator stack."}
+                </Dialog.Description>
+              </div>
+
+              <div className="relative mx-auto w-full rounded-[14px] border border-border-default/80 bg-bg-overlay/70 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                <div
+                  className="pointer-events-none absolute bottom-1.5 top-1.5 w-[calc(50%-0.375rem)] rounded-[11px] bg-brand-primary shadow-[0_8px_24px_rgba(14,165,233,0.24)] transition-transform duration-300 ease-out"
+                  style={{ transform: `translateX(${authMode === "signup" ? "100%" : "0%"})` }}
+                />
+
+                <div className="relative z-10 grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    className={cn(
+                      "rounded-[11px] px-3.5 py-2.5 text-sm font-semibold transition-colors duration-200",
+                      authMode === "login" ? "text-white" : "text-text-secondary hover:text-text-primary",
+                    )}
+                    onClick={() => {
+                      clearAuthError();
+                      openAuthModal("login");
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    Login
+                  </button>
+                  <button
+                    type="button"
+                    className={cn(
+                      "rounded-[11px] px-3.5 py-2.5 text-sm font-semibold transition-colors duration-200",
+                      authMode === "signup" ? "text-white" : "text-text-secondary hover:text-text-primary",
+                    )}
+                    onClick={() => {
+                      clearAuthError();
+                      openAuthModal("signup");
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    Sign up
+                  </button>
+                </div>
+              </div>
+
+              <div
+                className={cn(
+                  "mx-auto mt-4 w-3/4 px-1 pb-1 transition-transform duration-300 ease-out",
+                  authMode === "signup" ? "scale-[1.02]" : "scale-100",
+                )}
+              >
+                {authMode === "login" ? (
+                  <LoginForm
+                    isSubmitting={isSubmitting}
+                    authError={authError}
+                    onSubmit={login}
+                    onSwitchToSignup={() => {
+                      clearAuthError();
+                      openAuthModal("signup");
+                    }}
+                  />
+                ) : (
+                  <SignupForm
+                    isSubmitting={isSubmitting}
+                    authError={authError}
+                    onSubmit={signup}
+                    onSwitchToLogin={() => {
+                      clearAuthError();
+                      openAuthModal("login");
+                    }}
+                  />
+                )}
+              </div>
+
+              <div className="mx-auto my-4 flex w-3/4 items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-text-muted">
+                <span className="h-px flex-1 bg-border-subtle" />
+                <span>or continue with</span>
+                <span className="h-px flex-1 bg-border-subtle" />
+              </div>
+
+              <SocialLoginButtons isSubmitting={isSubmitting} onSocialLogin={socialLogin} />
+
+              <div className="sr-only" aria-live="polite">
+                {isSubmitting ? "Processing authentication request" : authError ? authError : "Authentication form ready"}
               </div>
             </div>
-
-            <div
-              className={cn(
-                "mt-4 px-2 pb-1 transition-transform duration-300 ease-out",
-                authMode === "signup" ? "scale-[1.02]" : "scale-100",
-              )}
-            >
-              {authMode === "login" ? (
-                <LoginForm
-                  isSubmitting={isSubmitting}
-                  authError={authError}
-                  onSubmit={login}
-                  onSwitchToSignup={() => {
-                    clearAuthError();
-                    openAuthModal("signup");
-                  }}
-                />
-              ) : (
-                <SignupForm
-                  isSubmitting={isSubmitting}
-                  authError={authError}
-                  onSubmit={signup}
-                  onSwitchToLogin={() => {
-                    clearAuthError();
-                    openAuthModal("login");
-                  }}
-                />
-              )}
-            </div>
-
-            <div className="my-4 flex items-center gap-3 text-[11px] uppercase tracking-[0.12em] text-text-muted">
-              <span className="h-px flex-1 bg-border-subtle" />
-              <span>or continue with</span>
-              <span className="h-px flex-1 bg-border-subtle" />
-            </div>
-
-            <SocialLoginButtons isSubmitting={isSubmitting} onSocialLogin={socialLogin} />
-
-            <div className="sr-only" aria-live="polite">
-              {isSubmitting ? "Processing authentication request" : authError ? authError : "Authentication form ready"}
-            </div>
-          </div>
-        </Dialog.Content>
+          </Dialog.Content>
         </div>
       </Dialog.Portal>
     </Dialog.Root>
