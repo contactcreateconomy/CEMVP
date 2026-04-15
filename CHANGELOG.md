@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-04-15 (auth-ui: inline email verification flow in signup)
+- **`packages/auth-ui/src/signup-form.tsx`**: Added inline email verification — "Verify" button inside email input, crossfades to 6-digit OTP input with auto-advance, paste support, shake animation on error, verified badge. Frontend-only with placeholder functions for backend wiring. Form submission now requires verified email.
+- **`packages/auth-ui/src/ui/input.tsx`**: Added subtle primary blue outline on focus (`border-brand-primary/50`, `ring-2 ring-brand-primary/20`).
+- **`apps/forum/src/app/globals.css`**: Added `@keyframes auth-otp-shake` for OTP error animation.
+- **`apps/forum/src/components/layout/top-nav.tsx`**: Fixed NavTooltip blur — replaced spring `y` animation with CSS-positioned opacity+scale transition; fixed dark mode border.
+
+## 2026-04-15 (forum: top nav — crisp Create hover)
+- **`top-nav.tsx`**: Removed hover `translate-y` on the Create (new post) control so the icon stays sharp over the glass header; `NavTooltip` no longer animates with `filter: blur()` so the “Create” label stays crisp.
+
 ## 2026-04-12 (thread page polish: layout, header, composer, comments, sidebar)
 - **`discussion-page-client.tsx`**: 3-column layout at `lg` (was `xl`); main thread body capped at `max-w-[720px]`.
 - **`thread-header.tsx`**: Restructured header — category badge, bold title, subtitle line, author row with relative time, stats row (reads/comments/upvotes), `--border-default` divider, action bar with cyan glow on active upvote/bookmark, Share/More right-aligned.

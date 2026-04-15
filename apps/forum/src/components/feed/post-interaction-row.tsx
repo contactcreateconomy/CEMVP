@@ -91,7 +91,7 @@ export function PostInteractionRow({
           name={category?.name ?? "General"}
           direction="top"
           size="sm"
-          icon={<CategoryIcon className="h-5 w-5 text-(--text-primary) stroke-(--text-primary) transition-colors duration-200 group-hover/cat:text-cyan-400 group-hover/cat:stroke-cyan-400" />}
+          icon={<CategoryIcon className="h-5 w-5 text-(--text-primary) stroke-(--text-primary) transition-colors duration-200" />}
           className="relative z-30 group/cat"
           motionClassName="[&>span]:h-8 [&>span]:w-8 sm:[&>span]:h-9 sm:[&>span]:w-9"
           avatarClassName={cn(

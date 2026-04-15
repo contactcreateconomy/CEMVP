@@ -137,7 +137,7 @@ function TopNavInner({
             "relative w-full border transition-[transform,background-color,border-color,box-shadow,border-radius] duration-300 ease-out will-change-transform",
             scrolled
               ? "translate-y-2 rounded-xl border-white/40 [.dark_&]:border-white/[0.12] bg-white/45 [.dark_&]:bg-[rgba(20,20,20,0.55)] shadow-[0_8px_32px_rgba(0,0,0,0.08)] [.dark_&]:shadow-[0_8px_32px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-2xl"
-              : "translate-y-0 rounded-xl border-white/30 [.dark_&]:border-(--border-subtle) bg-white/25 [.dark_&]:bg-[rgba(20,20,20,0.35)] backdrop-blur-2xl shadow-[0_1px_0_rgba(0,0,0,0.04)] [.dark_&]:shadow-[0_1px_0_rgba(255,255,255,0.04)]",
+              : "translate-y-1.5 rounded-xl border-white/30 [.dark_&]:border-(--border-subtle) bg-white/25 [.dark_&]:bg-[rgba(20,20,20,0.35)] backdrop-blur-2xl shadow-[0_1px_0_rgba(0,0,0,0.04)] [.dark_&]:shadow-[0_1px_0_rgba(255,255,255,0.04)]",
           )}
         >
           <GlowingEffect
@@ -171,7 +171,7 @@ function TopNavInner({
                   name="q"
                   type="search"
                   placeholder="Search"
-                  className="h-9 w-full appearance-none rounded-full border border-(--border-default) bg-(--bg-surface) pl-9 pr-3 text-sm text-text-primary outline-hidden transition-[border-color,box-shadow] duration-200 placeholder:text-text-muted hover:shadow-[0_0_8px_rgba(14,165,233,0.08)] focus:border-(--brand-primary)/50 focus:ring-1 focus:ring-(--brand-primary)/25 focus:shadow-none focus:-outline-offset-1 focus:outline-hidden"
+                  className="search-input h-9 w-full appearance-none rounded-full border border-(--border-default) bg-(--bg-surface) pl-9 pr-3 text-sm text-text-primary outline-hidden transition-[border-color,box-shadow] duration-200 placeholder:text-text-muted hover:shadow-[0_0_8px_rgba(14,165,233,0.08)] focus:outline-hidden"
                 />
               </label>
             </form>
@@ -182,11 +182,12 @@ function TopNavInner({
                   href="/new-post"
                   aria-label="Create"
                   className={cn(
-                    "inline-flex rounded-full p-2 text-text-secondary transition-[transform,colors,box-shadow] duration-200 hover:-translate-y-px hover:bg-(--bg-overlay) hover:text-text-primary hover:shadow-[0_0_10px_rgba(14,165,233,0.3)]",
+                    // Avoid hover translate inside backdrop-blur (subpixel layer = fuzzy SVG/icons)
+                    "inline-flex rounded-full p-2 text-text-secondary transition-[colors,box-shadow] duration-200 hover:bg-(--bg-overlay) hover:text-text-primary hover:shadow-[0_0_10px_rgba(14,165,233,0.3)]",
                     pathname === "/new-post" && "text-brand-primary",
                   )}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-4 w-4 shrink-0" />
                 </Link>
               </NavTooltip>
 
@@ -422,17 +423,11 @@ function NavTooltip({ label, children }: { label: string; children: React.ReactN
       <AnimatePresence>
         {hovered && (
           <motion.div
-            initial={{ y: -20, opacity: 0, filter: "blur(4px)" }}
-            animate={{ y: 8, opacity: 1, filter: "blur(0px)" }}
-            exit={{ y: -20, opacity: 0, filter: "blur(4px)" }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 25,
-              opacity: { duration: 0.2 },
-              filter: { duration: 0.2 },
-            }}
-            className="pointer-events-none absolute top-full left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-md border border-gray-200 bg-popover px-2 py-1 text-xs shadow-lg"
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="pointer-events-none absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-(--border-default) bg-popover px-2 py-1 text-xs shadow-lg"
           >
             <span className="font-medium text-popover-foreground">{label}</span>
           </motion.div>
