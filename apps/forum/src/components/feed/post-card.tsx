@@ -6,10 +6,12 @@ import { useState } from "react";
 
 import type { Category, Comment, Post, User } from "@/types";
 import { getDiscussionHrefForPost } from "@/lib/discussion/feed-post-discussion-slug";
+import { getCategoryTemplate } from "@/components/discussion/categories/registry";
 import { CommentsPreviewCycler } from "@/components/feed/comments-preview-cycler";
 import { PostActionsMenu } from "@/components/feed/post-actions-menu";
 import { PostInteractionRow } from "@/components/feed/post-interaction-row";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { useCoverImageUrl } from "@/hooks/use-cover-image-url";
 
 interface PostCardProps {
   post: Post;
@@ -24,6 +26,7 @@ interface PostCardProps {
   onHide: () => void;
   onReport: () => void;
   onShare: () => void;
+  onPostClick?: () => void;
 }
 
 export function PostCard({
@@ -38,11 +41,13 @@ export function PostCard({
   onHide,
   onReport,
   onShare,
+  onPostClick,
   categories,
 }: PostCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const category = categories.find((item) => item.key === post.category) ?? null;
   const discussionHref = getDiscussionHrefForPost(post);
+  const coverImageUrl = useCoverImageUrl(post.coverImage);
 
   const previewComments = comments.slice(0, 4).map((comment) => {
     const commentAuthor = commenters.find((user) => user.id === comment.authorId);
@@ -54,6 +59,9 @@ export function PostCard({
   });
 
   const hasCoverImage = Boolean(post.coverImage);
+
+  const cardExtrasTpl = getCategoryTemplate(post.category);
+  const CardExtrasComponent = cardExtrasTpl?.CardExtras;
 
   const fallbackAuthorName = "authorName" in post ? (post.authorName as string) : null;
   const fallbackAuthorHandle = "authorHandle" in post ? (post.authorHandle as string) : null;
@@ -96,9 +104,11 @@ export function PostCard({
           <div className="mb-3 flex items-start justify-between gap-3 pr-10">{authorRow}</div>
 
           <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_208px] md:items-end">
-            <Link href={discussionHref} className="min-w-0 block outline-offset-2 focus-visible:rounded-lg">
+            <Link href={discussionHref} onClick={onPostClick} className="min-w-0 block outline-offset-2 focus-visible:rounded-lg">
               <h3 className="text-xl font-bold leading-snug text-(--text-primary)">{post.title}</h3>
               <p className="mt-2 wrap-break-word text-sm text-(--text-secondary)">{post.summary}</p>
+
+              {CardExtrasComponent && <CardExtrasComponent post={post} />}
 
               <div className="mt-4">
                 <CommentsPreviewCycler comments={previewComments} isActive={isHovered} />
@@ -111,7 +121,7 @@ export function PostCard({
               aria-label={`Open discussion: ${post.title}`}
             >
               <Image
-                src={post.coverImage!}
+                src={coverImageUrl!}
                 alt={post.title}
                 fill
                 sizes="(max-width: 768px) 100vw, 208px"
@@ -124,9 +134,11 @@ export function PostCard({
         <div className="pr-10">
           <div className="mb-3 flex items-start justify-between gap-3">{authorRow}</div>
 
-          <Link href={discussionHref} className="block outline-offset-2 focus-visible:rounded-lg">
+          <Link href={discussionHref} onClick={onPostClick} className="block outline-offset-2 focus-visible:rounded-lg">
             <h3 className="text-xl font-bold leading-snug text-(--text-primary)">{post.title}</h3>
             <p className="mt-2 text-sm text-(--text-secondary)">{post.summary}</p>
+
+            {CardExtrasComponent && <CardExtrasComponent post={post} />}
 
             <div className="mt-4">
               <CommentsPreviewCycler comments={previewComments} isActive={isHovered} />

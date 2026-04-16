@@ -2,7 +2,8 @@
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ArrowBigDown, ArrowBigUp, MessageSquareReply, MoreHorizontal } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { formatRelativeDate } from "@/lib/format";
@@ -115,8 +116,8 @@ export function ThreadComments({
     thread.category === "help" &&
     thread.categoryBody &&
     "solved" in thread.categoryBody &&
-    thread.categoryBody.solved
-      ? thread.categoryBody.solutionCommentId
+    (thread.categoryBody as Record<string, unknown>).solved
+      ? (thread.categoryBody as Record<string, unknown>).solutionCommentId as string | undefined
       : undefined;
 
   const roots = useMemo(() => {
@@ -136,6 +137,17 @@ export function ThreadComments({
   };
 
   const maxDepth = isMax ? 5 : 3;
+
+  // Virtual scrolling for long comment threads (> 100 comments)
+  const shouldVirtualize = roots.length > 100;
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: roots.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => 120,
+    overscan: 5,
+    enabled: shouldVirtualize,
+  });
 
   const renderShowcaseGrouped = () => {
     const themes = ["ux", "visual", "technical", "other"] as const;
@@ -265,6 +277,46 @@ export function ThreadComments({
         </div>
       ) : thread.category === "showcase" && isMax && showcaseGroupByTheme ? (
         renderShowcaseGrouped()
+      ) : shouldVirtualize ? (
+        <div ref={scrollContainerRef} className="max-h-[800px] overflow-y-auto">
+          <div
+            style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: "relative" }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const c = roots[virtualRow.index];
+              return (
+                <div
+                  key={c.id}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  <CommentBranch
+                    comment={c}
+                    depth={0}
+                    maxDepth={maxDepth}
+                    isMax={isMax}
+                    authorId={authorId}
+                    usersById={usersById}
+                    votes={votes}
+                    onVote={toggleVote}
+                    replyTo={replyTo}
+                    setReplyTo={setReplyTo}
+                    thread={thread}
+                    ensureAuthenticated={ensureAuthenticated}
+                    solutionId={solutionId}
+                    childrenMap={mapToUse}
+                    activeFilters={activeFilters}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
       ) : (
         <div className="space-y-1">
           {roots.map((c) => (
@@ -412,6 +464,8 @@ function CommentCard({
   const up = comment.upvotes + (v.up ? 1 : 0) - (v.down ? 0 : 0);
   const isOp = comment.authorId === authorId;
   const isSolution = solutionId === comment.id || comment.isSolution;
+  // For real posts (thread.postId exists), hide Reply on replies to enforce two-tier depth
+  const canReply = !thread.postId || !comment.parentId;
 
   return (
     <div
@@ -494,17 +548,19 @@ function CommentCard({
             >
               <ArrowBigDown className={cn("h-4 w-4", v.down && "fill-current")} />
             </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 text-xs font-medium text-(--text-secondary) hover:text-(--text-primary)"
-              onClick={() => {
-                if (!ensureAuthenticated()) return;
-                setReplyTo(replyTo === comment.id ? null : comment.id);
-              }}
-            >
-              <MessageSquareReply className="h-3.5 w-3.5" />
-              Reply
-            </button>
+            {canReply ? (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 text-xs font-medium text-(--text-secondary) hover:text-(--text-primary)"
+                onClick={() => {
+                  if (!ensureAuthenticated()) return;
+                  setReplyTo(replyTo === comment.id ? null : comment.id);
+                }}
+              >
+                <MessageSquareReply className="h-3.5 w-3.5" />
+                Reply
+              </button>
+            ) : null}
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <button type="button" className="ml-auto inline-flex h-7 w-7 items-center justify-center rounded-full text-(--text-muted) hover:bg-(--bg-overlay) hover:text-(--text-primary)" aria-label="Comment actions">
@@ -529,6 +585,7 @@ function CommentCard({
                 placeholder={`Reply to @${user?.handle ?? "user"}…`}
                 onSubmit={() => setReplyTo(null)}
                 compact
+                parentId={comment.id}
               />
             </div>
           ) : null}

@@ -25,24 +25,32 @@ export async function viewerFlagsForPostIds(
   }
   const uid = userId as Id<"users">;
 
-  // Batch: fetch all favorites for user, then filter in memory
-  const allFavs = await ctx.db
-    .query("forumFavorites")
-    .withIndex("by_user", (q) => q.eq("userId", uid))
-    .collect();
-  const favPostIdSet = new Set(allFavs.map((f) => f.postId as string));
-  for (const pid of postIds) {
-    if (favPostIdSet.has(pid)) favoritePostIds.add(pid);
+  // Bounded per-postId lookups instead of collecting all user favorites/upvotes.
+  // Feed pages have at most 48 posts → at most 96 targeted reads.
+  const favFlags = await Promise.all(
+    postIds.map((pid) =>
+      ctx.db
+        .query("forumFavorites")
+        .withIndex("by_user_post", (q) => q.eq("userId", uid).eq("postId", pid))
+        .unique()
+        .then((doc) => doc !== null),
+    ),
+  );
+  for (let i = 0; i < postIds.length; i++) {
+    if (favFlags[i]) favoritePostIds.add(postIds[i]);
   }
 
-  // Batch: fetch all upvotes for user, then filter in memory
-  const allUps = await ctx.db
-    .query("forumUpvotes")
-    .withIndex("by_user", (q) => q.eq("userId", uid))
-    .collect();
-  const upPostIdSet = new Set(allUps.map((u) => u.postId as string));
-  for (const pid of postIds) {
-    if (upPostIdSet.has(pid)) upvotePostIds.add(pid);
+  const upvoteFlags = await Promise.all(
+    postIds.map((pid) =>
+      ctx.db
+        .query("forumUpvotes")
+        .withIndex("by_user_post", (q) => q.eq("userId", uid).eq("postId", pid))
+        .unique()
+        .then((doc) => doc !== null),
+    ),
+  );
+  for (let i = 0; i < postIds.length; i++) {
+    if (upvoteFlags[i]) upvotePostIds.add(postIds[i]);
   }
 
   return { favoritePostIds, upvotePostIds };
@@ -110,20 +118,43 @@ export async function buildFeedBundleFromPosts(
   postDocs: Doc<"forumPosts">[],
   userId: string | null,
 ) {
+  // Filter out removed / shadow-removed posts
+  const visible = postDocs.filter(
+    (p) => p.moderationStatus !== "removed" && p.moderationStatus !== "shadow_removed",
+  );
+  const postIds = visible.map((p) => p._id);
   const { favoritePostIds, upvotePostIds } = await viewerFlagsForPostIds(
     ctx,
     userId,
-    postDocs.map((p) => p._id),
+    postIds,
   );
-  const posts = postDocs.map((p) =>
+
+  // Load per-category payloads for feed card extras
+  const payloadDocs = await Promise.all(
+    postIds.map((pid) =>
+      ctx.db
+        .query("forumCategoryPayloads")
+        .withIndex("by_post", (q) => q.eq("postId", pid))
+        .unique(),
+    ),
+  );
+  const payloadByPostId = new Map<string, Record<string, unknown>>();
+  for (const pd of payloadDocs) {
+    if (pd) {
+      payloadByPostId.set(pd.postId as string, pd.payload as Record<string, unknown>);
+    }
+  }
+
+  const posts = visible.map((p) =>
     postDocToPost(p, {
       isFavorited: favoritePostIds.has(p._id),
       viewerHasUpvote: upvotePostIds.has(p._id),
+      categoryBody: payloadByPostId.get(p._id as string),
     }),
   );
   const comments = await loadCommentPreviewsForPostIds(
     ctx,
-    postDocs.map((p) => p._id),
+    postIds,
     FEED_COMMENTS_PREVIEW_PER_POST,
   );
   const users = await resolveUsersForFeed(ctx, postDocs, comments);
@@ -145,7 +176,9 @@ export async function loadHotRankedPosts(
     rows = rows.filter((p) => p.category === category);
   }
   rows.sort((a, b) => viralityScoreDoc(b) - viralityScoreDoc(a));
-  return rows.slice(0, limit);
+  return rows
+    .filter((p) => p.moderationStatus !== "removed" && p.moderationStatus !== "shadow_removed")
+    .slice(0, limit);
 }
 
 export function feedPageSize(limit?: number) {

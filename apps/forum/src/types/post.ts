@@ -20,4 +20,6 @@ export interface Post {
   isRichThread?: boolean;
   /** Viewer has upvoted (auth); used for button state */
   viewerHasUpvote?: boolean;
+  /** Structured category-specific fields (from forumCategoryPayloads) */
+  categoryBody?: Record<string, unknown>;
 }

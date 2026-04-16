@@ -35,6 +35,8 @@ import {
 import { COMPOSE_PUBLISH_BTN_ID } from "@/components/compose/compose-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ImageUploader } from "@/components/ui/image-uploader";
+import { getCategoryTemplate } from "@/components/discussion/categories/registry";
 import { api } from "@/lib/convex";
 import {
   NEW_POST_DRAFT_STORAGE_KEY,
@@ -124,6 +126,8 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
   const [categoryKey, setCategoryKey] = useState<CategoryKey>(defaultCategory);
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
+  const [categoryFields, setCategoryFields] = useState<Record<string, unknown>>({});
+  const [coverImage, setCoverImage] = useState<string | undefined>(undefined);
   const [toast, setToast] = useState<string | null>(null);
   const draftRestoredRef = useRef(false);
   const publishingRef = useRef(false);
@@ -210,7 +214,7 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
     try {
       const raw = localStorage.getItem(NEW_POST_DRAFT_STORAGE_KEY);
       if (!raw) return;
-      const parsed = JSON.parse(raw) as NewPostDraftPayload & { extraFields?: unknown };
+      const parsed = JSON.parse(raw) as NewPostDraftPayload & { categoryFields?: Record<string, unknown>; coverImage?: string };
       if (!parsed || typeof parsed.editorHtml !== "string") return;
       if (titleRef.current.trim() !== "" || editor.getText().trim() !== "") return;
       draftRestoredRef.current = true;
@@ -219,6 +223,10 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
       }
       setTitle(typeof parsed.title === "string" ? parsed.title : "");
       setSummary(typeof parsed.summary === "string" ? parsed.summary : "");
+      if (parsed.coverImage) setCoverImage(parsed.coverImage);
+      if (parsed.categoryFields && typeof parsed.categoryFields === "object") {
+        setCategoryFields(parsed.categoryFields);
+      }
       editor.commands.setContent(parsed.editorHtml || "<p></p>");
       showToast("Draft restored");
     } catch {
@@ -260,12 +268,14 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
 
   const saveDraft = useCallback(() => {
     if (!editor) return;
-    const payload: NewPostDraftPayload = {
+    const payload = {
       categoryKey,
       title,
       summary,
       editorHtml: editor.getHTML(),
       updatedAt: Date.now(),
+      categoryFields,
+      coverImage,
     };
     try {
       localStorage.setItem(NEW_POST_DRAFT_STORAGE_KEY, JSON.stringify(payload));
@@ -273,7 +283,7 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
     } catch {
       showToast("Could not save draft.");
     }
-  }, [categoryKey, editor, showToast, summary, title]);
+  }, [categoryKey, categoryFields, coverImage, editor, showToast, summary, title]);
 
   const handlePublish = useCallback(async () => {
     if (publishingRef.current) return;
@@ -303,6 +313,8 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
         summary: summary.trim() || title.trim().slice(0, 160),
         body,
         category: categoryKey,
+        categoryFields,
+        coverImage,
       });
       try {
         localStorage.removeItem(NEW_POST_DRAFT_STORAGE_KEY);
@@ -318,8 +330,10 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
     }
   }, [
     authStatus,
+    categoryFields,
     categoryKey,
     createPost,
+    coverImage,
     editor,
     openAuthModal,
     router,
@@ -382,7 +396,12 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
                             ? `Unlock at ${cat.pointsToUnlock} reputation points`
                             : cat.description
                         }
-                        onClick={() => !locked && setCategoryKey(cat.key)}
+                        onClick={() => {
+                          if (!locked) {
+                            setCategoryKey(cat.key);
+                            setCategoryFields({});
+                          }
+                        }}
                         className={cn(
                           "relative z-10 inline-flex h-10 shrink-0 items-center gap-2.5 rounded-full px-3 text-sm font-semibold transition-colors duration-200 outline-offset-2 focus-visible:ring-2 focus-visible:ring-(--border-active) focus-visible:ring-offset-2 focus-visible:ring-offset-(--bg-surface)",
                           locked && "cursor-not-allowed opacity-40",
@@ -422,6 +441,26 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
             onChange={(e) => setSummary(e.target.value)}
             className="mb-6 w-full border-0 bg-transparent text-xl font-normal leading-snug text-(--text-secondary) outline-hidden placeholder:text-(--text-muted)/65 md:text-2xl"
           />
+
+          <div className="mb-6">
+            <ImageUploader
+              onUploadComplete={setCoverImage}
+              onClear={() => setCoverImage(undefined)}
+              value={coverImage}
+              aspectRatio="16/9"
+              className="mb-2"
+            />
+            <details className="text-xs text-(--text-muted)">
+              <summary className="cursor-pointer hover:text-(--text-secondary)">Or paste a URL</summary>
+              <input
+                type="url"
+                placeholder="https://example.com/image.png"
+                value={coverImage ?? ""}
+                onChange={(e) => setCoverImage(e.target.value || undefined)}
+                className="mt-1.5 w-full rounded-lg border border-(--border-default) bg-(--bg-surface) px-3 py-1.5 text-sm text-(--text-primary) outline-hidden focus:border-(--border-active)"
+              />
+            </details>
+          </div>
 
           <div className="mb-8 border-b border-(--border-subtle)" />
 
@@ -481,6 +520,16 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
             </BubbleMenu>
             <EditorContent editor={editor} />
           </div>
+
+          {(() => {
+            const template = getCategoryTemplate(categoryKey);
+            if (!template?.ComposeForm) return null;
+            return (
+              <div className="mt-4 border-t border-(--border) pt-4">
+                <template.ComposeForm value={categoryFields} onChange={setCategoryFields} />
+              </div>
+            );
+          })()}
         </div>
       )}
 

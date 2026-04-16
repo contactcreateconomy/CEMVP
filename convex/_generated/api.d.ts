@@ -16,6 +16,7 @@ import type * as forum_discussionRouteHelpers from "../forum/discussionRouteHelp
 import type * as forum_feedCache from "../forum/feedCache.js";
 import type * as forum_feedQueries from "../forum/feedQueries.js";
 import type * as forum_helpers from "../forum/helpers.js";
+import type * as forum_jobs from "../forum/jobs.js";
 import type * as forum_limits from "../forum/limits.js";
 import type * as forum_mutations from "../forum/mutations.js";
 import type * as forum_queries from "../forum/queries.js";
@@ -44,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   "forum/feedCache": typeof forum_feedCache;
   "forum/feedQueries": typeof forum_feedQueries;
   "forum/helpers": typeof forum_helpers;
+  "forum/jobs": typeof forum_jobs;
   "forum/limits": typeof forum_limits;
   "forum/mutations": typeof forum_mutations;
   "forum/queries": typeof forum_queries;

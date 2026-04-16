@@ -1,6 +1,7 @@
 /**
  * Route: /discussions/[slug]
  * Data: Convex forum.discussionRoute.getDiscussionRouteState
+ * Both rich threads and regular posts render through the unified DiscussionPageClient.
  */
 import { notFound } from "next/navigation";
 
@@ -10,22 +11,14 @@ interface DiscussionPageProps {
   params: Promise<{
     slug: string;
   }>;
-  searchParams: Promise<{ post?: string }>;
 }
 
-function firstSearchParam(value: string | string[] | undefined): string | undefined {
-  if (value === undefined) return undefined;
-  return Array.isArray(value) ? value[0] : value;
-}
-
-export default async function DiscussionPage({ params, searchParams }: DiscussionPageProps) {
+export default async function DiscussionPage({ params }: DiscussionPageProps) {
   const { slug } = await params;
-  const resolvedSearch = await searchParams;
-  const feedPostSlug = firstSearchParam(resolvedSearch?.post);
 
   if (!slug) {
     notFound();
   }
 
-  return <DiscussionPageLoader pathSlug={slug} feedPostSlug={feedPostSlug} />;
+  return <DiscussionPageLoader pathSlug={slug} />;
 }

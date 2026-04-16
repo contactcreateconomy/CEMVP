@@ -1,5 +1,5 @@
 /**
- * Route: /search?q=
+ * Route: /search?q=&category=
  */
 import { SearchPageClient } from "./search-page-client";
 
@@ -9,13 +9,14 @@ function firstSearchParam(value: string | string[] | undefined): string | undefi
 }
 
 interface SearchPageProps {
-  searchParams?: Promise<{ q?: string | string[] }>;
+  searchParams?: Promise<{ q?: string | string[]; category?: string | string[] }>;
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const resolved = await searchParams;
   const qRaw = firstSearchParam(resolved?.q) ?? "";
   const q = qRaw.trim();
+  const category = firstSearchParam(resolved?.category);
 
-  return <SearchPageClient q={q} />;
+  return <SearchPageClient q={q} category={category} />;
 }

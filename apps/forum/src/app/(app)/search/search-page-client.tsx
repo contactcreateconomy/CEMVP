@@ -13,6 +13,7 @@ import type { Category, Comment, Post, User } from "@/types";
 
 interface SearchPageClientProps {
   q: string;
+  category?: string;
 }
 
 function mergeUsers(a: User[], b: User[]): User[] {
@@ -25,8 +26,8 @@ function mergeUsers(a: User[], b: User[]): User[] {
   return [...byId.values()];
 }
 
-function SearchPageWithConvex({ q }: SearchPageClientProps) {
-  const searchResult = useQuery(api.forum.queries.searchPostsAndUsers, q ? { q } : "skip");
+function SearchPageWithConvex({ q, category }: SearchPageClientProps) {
+  const searchResult = useQuery(api.forum.queries.searchPostsAndUsers, q ? { q, categoryFilter: category } : "skip");
   const { categories, categoriesLoading } = useSharedData();
 
   if (!q) {
@@ -97,7 +98,7 @@ function SearchPageWithConvex({ q }: SearchPageClientProps) {
   );
 }
 
-export function SearchPageClient({ q }: SearchPageClientProps) {
+export function SearchPageClient({ q, category }: SearchPageClientProps) {
   if (!isConvexConfigured()) {
     return (
       <p className="text-sm text-(--text-muted)">
@@ -106,5 +107,5 @@ export function SearchPageClient({ q }: SearchPageClientProps) {
     );
   }
 
-  return <SearchPageWithConvex q={q} />;
+  return <SearchPageWithConvex q={q} category={category} />;
 }

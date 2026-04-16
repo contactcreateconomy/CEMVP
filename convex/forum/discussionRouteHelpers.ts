@@ -30,7 +30,7 @@ export async function hydrateRelatedThreads(
       .withIndex("by_slug", (q) => q.eq("slug", s))
       .unique();
     if (rrow?.payload && typeof rrow.payload === "object") {
-      const p = rrow.payload as {
+      const p = rrow.payload as unknown as {
         slug: string;
         title: string;
         authorId: string;

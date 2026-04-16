@@ -36,6 +36,7 @@ export const RATE_WINDOWS_MS = {
   createComment: 60 * 60 * 1000,
   toggleUpvote: 60 * 1000,
   toggleFavorite: 60 * 1000,
+  createReport: 60 * 60 * 1000,
 } as const;
 
 export const RATE_MAX_PER_WINDOW = {
@@ -43,6 +44,7 @@ export const RATE_MAX_PER_WINDOW = {
   createComment: 60,
   toggleUpvote: 200,
   toggleFavorite: 200,
+  createReport: 10,
 } as const;
 
 export type RateKind = keyof typeof RATE_WINDOWS_MS;

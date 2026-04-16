@@ -1,4 +1,5 @@
 import type { CategoryKey } from "./category";
+import type { ContentReference } from "./platform";
 
 export type ContributionTag = "evidence" | "counterpoint" | "question" | "resource" | "solution";
 
@@ -203,6 +204,12 @@ export interface DiscussionThreadBase {
   insightRail: InsightRailContent;
   relatedSlugs: string[];
   trendingSlugs: string[];
+  /** The forumPosts._id — present for real posts and rich threads with a matching post row */
+  postId?: string;
+  viewerHasUpvoted?: boolean;
+  viewerHasBookmarked?: boolean;
+  /** Cross-app content references (e.g. marketplace listings, seller products). */
+  contentReferences?: ContentReference[];
 }
 
 export type DiscussionThread =
@@ -214,18 +221,5 @@ export type DiscussionThread =
   | (DiscussionThreadBase & { category: "help"; categoryBody: HelpBody })
   | (DiscussionThreadBase & { category: "list"; categoryBody: ListBody })
   | (DiscussionThreadBase & { category: "showcase"; categoryBody: ShowcaseBody })
-  | (DiscussionThreadBase & { category: "gigs"; categoryBody: GigsBody });
-
-export const DISCUSSION_MVP_SLUGS = [
-  "news-001",
-  "review-001",
-  "compare-001",
-  "launchpad-001",
-  "debate-001",
-  "help-001",
-  "list-001",
-  "showcase-001",
-  "gigs-001",
-] as const;
-
-export type DiscussionMvpSlug = (typeof DISCUSSION_MVP_SLUGS)[number];
+  | (DiscussionThreadBase & { category: "gigs"; categoryBody: GigsBody })
+  | (DiscussionThreadBase & { categoryBody?: Record<string, unknown> });

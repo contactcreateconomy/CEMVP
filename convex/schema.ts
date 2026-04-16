@@ -2,6 +2,29 @@ import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+/** Shared validator fields for all rich thread payload variants. Deeply nested
+ *  structures (comments, insightRail, categoryBody) remain `v.any()` since they
+ *  vary widely and are only written by seed scripts. */
+const richThreadBase = {
+  id: v.string(),
+  slug: v.string(),
+  title: v.string(),
+  body: v.string(),
+  authorId: v.string(),
+  createdAt: v.string(),
+  updatedAt: v.optional(v.string()),
+  views: v.number(),
+  upvotes: v.number(),
+  bookmarks: v.number(),
+  tags: v.array(v.string()),
+  aiSummary: v.string(),
+  comments: v.array(v.any()),
+  insightRail: v.any(),
+  relatedSlugs: v.array(v.string()),
+  trendingSlugs: v.array(v.string()),
+  categoryBody: v.any(),
+};
+
 const appId = v.union(
   v.literal("forum"),
   v.literal("seller"),
@@ -88,6 +111,14 @@ export default defineSchema({
     isRichThread: v.boolean(),
     /** Matches old mock id (p1, …) for hero carousel join */
     legacyKey: v.optional(v.string()),
+    moderationStatus: v.optional(v.union(
+      v.literal("visible"),
+      v.literal("flagged"),
+      v.literal("removed"),
+      v.literal("shadow_removed"),
+    )),
+    /** Denormalized searchable tags from category payloads (e.g. gigs skills, review product names). */
+    searchTags: v.optional(v.array(v.string())),
   })
     .index("by_slug", ["slug"])
     .index("by_category", ["category"])
@@ -98,10 +129,20 @@ export default defineSchema({
     .searchIndex("search_title", { searchField: "title", filterFields: ["category"] })
     .searchIndex("search_body", { searchField: "body", filterFields: ["category"] }),
 
-  /** Rich threads written only by seed scripts — payload shape is validated at read time by `coalesceRichThreadPayloadForClient`. */
+  /** Rich threads written only by seed scripts — payload shape validated by discriminated union on `category`. */
   forumRichThreads: defineTable({
     slug: v.string(),
-    payload: v.any(),
+    payload: v.union(
+      v.object({ ...richThreadBase, category: v.literal("news") }),
+      v.object({ ...richThreadBase, category: v.literal("review") }),
+      v.object({ ...richThreadBase, category: v.literal("compare") }),
+      v.object({ ...richThreadBase, category: v.literal("launch-pad") }),
+      v.object({ ...richThreadBase, category: v.literal("debate") }),
+      v.object({ ...richThreadBase, category: v.literal("help") }),
+      v.object({ ...richThreadBase, category: v.literal("list") }),
+      v.object({ ...richThreadBase, category: v.literal("showcase") }),
+      v.object({ ...richThreadBase, category: v.literal("gigs") }),
+    ),
   }).index("by_slug", ["slug"]),
 
   forumPostComments: defineTable({
@@ -110,9 +151,11 @@ export default defineSchema({
     body: v.string(),
     createdAt: v.number(),
     upvotes: v.number(),
+    parentId: v.optional(v.id("forumPostComments")),
   })
     .index("by_post", ["postId"])
-    .index("by_post_createdAt", ["postId", "createdAt"]),
+    .index("by_post_createdAt", ["postId", "createdAt"])
+    .index("by_parent", ["parentId"]),
 
   forumFavorites: defineTable({
     userId: v.id("users"),
@@ -196,6 +239,7 @@ export default defineSchema({
       v.literal("createComment"),
       v.literal("toggleUpvote"),
       v.literal("toggleFavorite"),
+      v.literal("createReport"),
     ),
     count: v.number(),
     windowStartMs: v.number(),
@@ -206,4 +250,118 @@ export default defineSchema({
     postIds: v.array(v.string()),
     computedAt: v.number(),
   }).index("by_key", ["cacheKey"]),
+
+  forumReports: defineTable({
+    reporterId: v.id("forumProfiles"),
+    contentType: v.union(v.literal("post"), v.literal("comment")),
+    contentId: v.string(),
+    reason: v.union(
+      v.literal("spam"),
+      v.literal("harassment"),
+      v.literal("misinformation"),
+      v.literal("off_topic"),
+      v.literal("other"),
+    ),
+    details: v.optional(v.string()),
+    status: v.union(v.literal("pending"), v.literal("reviewed"), v.literal("dismissed")),
+    createdAt: v.number(),
+  })
+    .index("by_reporter", ["reporterId"])
+    .index("by_content", ["contentType", "contentId"])
+    .index("by_status_createdAt", ["status", "createdAt"]),
+
+  forumModActions: defineTable({
+    moderatorId: v.id("forumProfiles"),
+    action: v.union(
+      v.literal("remove_post"),
+      v.literal("restore_post"),
+      v.literal("remove_comment"),
+      v.literal("flag_post"),
+      v.literal("dismiss_report"),
+    ),
+    contentId: v.string(),
+    reason: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_moderator", ["moderatorId"])
+    .index("by_content", ["contentId"]),
+
+  /** Per-category structured payloads for real user posts. */
+  forumCategoryPayloads: defineTable({
+    postId: v.id("forumPosts"),
+    category: v.string(),
+    payload: v.union(
+      // Gigs payload
+      v.object({
+        roleTitle: v.string(),
+        employment: v.string(),
+        location: v.string(),
+        budget: v.optional(v.string()),
+        duration: v.optional(v.string()),
+        requiredSkills: v.array(v.string()),
+        preferredSkills: v.optional(v.array(v.string())),
+        posterNote: v.optional(v.string()),
+        isOpen: v.optional(v.boolean()),
+        applicantCount: v.optional(v.number()),
+        processStage: v.optional(v.string()),
+        stages: v.optional(v.array(v.string())),
+      }),
+      // Review payload
+      v.object({
+        productName: v.string(),
+        productUrl: v.optional(v.string()),
+        verdict: v.string(),
+        starRating: v.number(),
+        reviewerContextNote: v.optional(v.string()),
+        verdictRationale: v.optional(v.string()),
+        criteria: v.optional(v.array(v.object({
+          id: v.string(),
+          label: v.string(),
+          score: v.number(),
+          maxScore: v.number(),
+          weightPercent: v.number(),
+        }))),
+        reviewerContextMax: v.optional(v.any()),
+        sentiment: v.optional(v.any()),
+        productLogo: v.optional(v.string()),
+      }),
+      // Fallback for other categories
+      v.any(),
+    ),
+    version: v.number(),
+  }).index("by_post", ["postId"]),
+
+  /** Sharded counters to avoid OCC conflicts on high-churn fields (upvotes, views). */
+  forumCounterShards: defineTable({
+    entityId: v.string(),
+    entityType: v.string(),    // "post"
+    counterType: v.string(),   // "upvotes" or "views"
+    shardKey: v.number(),      // 0–9 for upvotes, 0–4 for views
+    count: v.number(),
+  })
+    .index("by_entity_counter_shard", ["entityId", "counterType", "shardKey"])
+    .index("by_entity_counter", ["entityId", "counterType"]),
+
+  /** Analytics events for tracking user behavior. */
+  forumAnalyticsEvents: defineTable({
+    eventType: v.string(),
+    profileId: v.optional(v.id("forumProfiles")),
+    postId: v.optional(v.id("forumPosts")),
+    category: v.optional(v.string()),
+    metadata: v.optional(v.any()),
+    createdAt: v.number(),
+    sessionId: v.optional(v.string()),
+  })
+    .index("by_eventType_createdAt", ["eventType", "createdAt"])
+    .index("by_post_eventType", ["postId", "eventType"]),
+
+  /** Daily aggregated analytics for admin dashboards. */
+  forumDailyStats: defineTable({
+    date: v.string(),          // YYYY-MM-DD
+    category: v.optional(v.string()),
+    eventType: v.string(),
+    count: v.number(),
+  })
+    .index("by_date_category", ["date", "category"])
+    .index("by_date_eventType", ["date", "eventType"]),
 });

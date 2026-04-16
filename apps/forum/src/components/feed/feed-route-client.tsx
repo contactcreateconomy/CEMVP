@@ -10,17 +10,21 @@ import { TrendSorter } from "@/components/feed/trend-sorter";
 import { api } from "@/lib/convex";
 import { isConvexConfigured } from "@cemvp/convex-client";
 import { useSharedData } from "@/providers/shared-data-context";
+import { useUIPreferences } from "@/stores/ui-preferences-store";
 import type { Comment, Post, User } from "@/types";
 import type { Category } from "@/types";
 
-function parseFeedSearchParams(searchParams: URLSearchParams): {
+function parseFeedSearchParams(
+  searchParams: URLSearchParams,
+  fallbackSort: "top" | "hot" | "new" | "fav",
+): {
   selectedCategory?: string;
   selectedSort: "top" | "hot" | "new" | "fav";
 } {
   const category = searchParams.get("category");
   const rawSort = searchParams.get("sort");
   const selectedSort: "top" | "hot" | "new" | "fav" =
-    rawSort === "hot" || rawSort === "new" || rawSort === "fav" ? rawSort : "top";
+    rawSort === "hot" || rawSort === "new" || rawSort === "top" || rawSort === "fav" ? rawSort : fallbackSort;
   return {
     selectedCategory: category && category.length > 0 ? category : undefined,
     selectedSort,
@@ -168,10 +172,19 @@ function FeedRouteWithConvex({
 function FeedRouteWithSearchParams() {
   const searchParams = useSearchParams();
   const queryKey = searchParams.toString();
+  const { feedSort, setFeedSort } = useUIPreferences();
   const { selectedCategory, selectedSort } = useMemo(
-    () => parseFeedSearchParams(new URLSearchParams(queryKey)),
-    [queryKey],
+    () => parseFeedSearchParams(new URLSearchParams(queryKey), feedSort),
+    [queryKey, feedSort],
   );
+
+  // Persist the selected sort back to the store
+  useEffect(() => {
+    if (selectedSort !== feedSort) {
+      setFeedSort(selectedSort);
+    }
+  }, [selectedSort, feedSort, setFeedSort]);
+
   return <FeedRouteWithConvex selectedCategory={selectedCategory} selectedSort={selectedSort} />;
 }
 

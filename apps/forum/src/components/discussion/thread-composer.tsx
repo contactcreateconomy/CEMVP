@@ -10,21 +10,10 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAuth } from "@cemvp/auth-ui";
 import { api, type Id } from "@/lib/convex";
 import { cn } from "@/lib/utils";
-import type { CategoryKey } from "@/types";
 import type { DiscussionThread } from "@/types/discussion";
 import type { User } from "@/types";
 
-const NUDGES: Record<CategoryKey, string> = {
-  news: "Adding a source link makes your reply 4x more likely to be upvoted.",
-  review: "Mention which version or plan you used — context builds trust.",
-  compare: "Which use case are you optimising for? It makes your comparison actionable.",
-  "launch-pad": "Specific feedback ('the onboarding step 3 is unclear') is more useful than general praise.",
-  debate: "The strongest arguments cite a counter-argument directly before refuting it.",
-  help: "Include your error message and what you've already tried — it cuts reply time in half.",
-  list: "If you're suggesting an addition, explain why it meets the stated criteria.",
-  showcase: "Tell us which aspect you want feedback on — UX, visuals, or technical approach.",
-  gigs: "If you're a candidate, lead with your most relevant work, not your resume.",
-};
+import { getCategoryTemplate } from "./categories/registry";
 
 function mockUserForComposer(authUser: { id: string; name: string; handle: string; avatar?: string } | null): User | null {
   if (!authUser) return null;
@@ -49,6 +38,8 @@ interface ThreadComposerProps {
   /** Top-level composer: controlled by parent (thread discussion context) */
   mainValue?: string;
   onMainValueChange?: (value: string | ((prev: string) => string)) => void;
+  /** For inline replies — the parent comment id to nest under */
+  parentId?: string;
 }
 
 export function ThreadComposer({
@@ -58,6 +49,7 @@ export function ThreadComposer({
   compact,
   mainValue,
   onMainValueChange,
+  parentId,
 }: ThreadComposerProps) {
   const { user: authUser, authStatus, openAuthModal } = useAuth();
   const [localText, setLocalText] = useState("");
@@ -88,7 +80,7 @@ export function ThreadComposer({
       role: "member" as const,
     } satisfies User);
 
-  const nudgeText = NUDGES[thread.category];
+  const nudgeText = getCategoryTemplate(thread.category)?.nudge;
   const showNudge = text.trim().length >= 20 && !dismissNudge && !compact;
 
   const insert = useCallback(
@@ -104,7 +96,11 @@ export function ThreadComposer({
     setSubmitError(null);
     setSubmitting(true);
     try {
-      await createComment({ postId: thread.id as Id<"forumPosts">, body });
+      await createComment({
+        postId: (thread.postId ?? thread.id) as Id<"forumPosts">,
+        body,
+        ...(parentId ? { parentId: parentId as Id<"forumPostComments"> } : {}),
+      });
       setText(() => "");
       onSubmit?.();
     } catch (err) {

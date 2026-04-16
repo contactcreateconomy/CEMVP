@@ -1,7 +1,7 @@
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 import { query } from "../_generated/server";
-import { CATEGORY_TO_MVP_THREAD_SLUG, discussionHrefForPostShape } from "./constants";
 import { DISCUSSION_RELATED_CAP, DISCUSSION_TRENDING_CAP } from "./limits";
 import {
   cappedRelatedSlugs,
@@ -11,19 +11,16 @@ import {
   loadProfilesForIds,
   type RichThreadPayload,
 } from "./discussionRouteHelpers";
+import { viewerFlagsForPostIds } from "./feedQueries";
 import { postDocToPost, profileToUser } from "./helpers";
-
-function expectedDiscussionHref(pathSlug: string, feedPostSlug: string | undefined): string {
-  return `/discussions/${pathSlug}${feedPostSlug ? `?post=${encodeURIComponent(feedPostSlug)}` : ""}`;
-}
 
 export const getDiscussionRouteState = query({
   args: {
     pathSlug: v.string(),
-    feedPostSlug: v.optional(v.string()),
   },
   returns: v.any(),
-  handler: async (ctx, { pathSlug, feedPostSlug }) => {
+  handler: async (ctx, { pathSlug }) => {
+    const userId = await getAuthUserId(ctx);
     const categories = (await ctx.db.query("forumCategories").collect()).map((r) => ({
       key: r.key,
       name: r.name,
@@ -34,6 +31,7 @@ export const getDiscussionRouteState = query({
       pointsToUnlock: r.pointsToUnlock,
     }));
 
+    // 1) Try rich thread first
     const richRow = await ctx.db
       .query("forumRichThreads")
       .withIndex("by_slug", (q) => q.eq("slug", pathSlug))
@@ -41,47 +39,9 @@ export const getDiscussionRouteState = query({
 
     if (richRow?.payload) {
       const thread = coalesceRichThreadPayloadForClient(richRow.payload as RichThreadPayload);
-      const threadSlug = String(thread.slug ?? pathSlug);
-
-      const resolveOverlay = () => {
-        if (!feedPostSlug) {
-          return null;
-        }
-        return { feedPostSlug };
-      };
-      const overlayRef = resolveOverlay();
-      let feedOverlay: Record<string, unknown> | null = null;
-      if (overlayRef) {
-        const postDoc = await ctx.db
-          .query("forumPosts")
-          .withIndex("by_slug", (q) => q.eq("slug", overlayRef.feedPostSlug))
-          .unique();
-        if (postDoc) {
-          const postShape = postDocToPost(postDoc, { isFavorited: false, viewerHasUpvote: false });
-          const canonicalSlug = postShape.isRichThread
-            ? postShape.slug
-            : CATEGORY_TO_MVP_THREAD_SLUG[postShape.category] ?? postShape.slug;
-          const threadCategory = String(thread.category ?? "");
-          if (canonicalSlug === threadSlug && postShape.category === threadCategory) {
-            feedOverlay = {
-              title: postShape.title,
-              summary: postShape.summary,
-              body: postShape.body,
-              authorId: postShape.authorId,
-              views: postShape.views,
-              upvotes: postShape.upvotes,
-              commentsCount: postShape.commentsCount,
-              createdAt: postShape.createdAt,
-            };
-          }
-        }
-      }
 
       const userIds = new Set<string>();
       userIds.add(String(thread.authorId));
-      if (feedOverlay) {
-        userIds.add(String(feedOverlay.authorId));
-      }
       const comments = thread.comments as unknown[] | undefined;
       if (Array.isArray(comments)) {
         for (const c of comments) {
@@ -103,6 +63,115 @@ export const getDiscussionRouteState = query({
       const author = authorDoc ? profileToUser(authorDoc) : null;
       const category = categories.find((c) => c.key === thread.category) ?? null;
 
+      // Look up the corresponding forumPosts row for viewer interaction flags
+      const postRow = await ctx.db
+        .query("forumPosts")
+        .withIndex("by_slug", (q) => q.eq("slug", pathSlug))
+        .first();
+      let viewerHasUpvoted = false;
+      let viewerHasBookmarked = false;
+      let postId: string | undefined;
+      if (postRow) {
+        const { favoritePostIds, upvotePostIds } = await viewerFlagsForPostIds(ctx, userId, [postRow._id]);
+        viewerHasUpvoted = upvotePostIds.has(postRow._id);
+        viewerHasBookmarked = favoritePostIds.has(postRow._id);
+        postId = postRow._id as string;
+      }
+
+      return {
+        kind: "rich" as const,
+        thread: {
+          ...thread,
+          postId,
+          viewerHasUpvoted,
+          viewerHasBookmarked,
+        },
+        author,
+        category,
+        related: [],
+        trending: [],
+        users,
+        categories,
+      };
+    }
+
+    // 2) Try regular post — construct a thread-shaped response
+    const postByPath = await ctx.db
+      .query("forumPosts")
+      .withIndex("by_slug", (q) => q.eq("slug", pathSlug))
+      .first();
+
+    if (postByPath) {
+      if (postByPath.moderationStatus === "removed" || postByPath.moderationStatus === "shadow_removed") {
+        return { kind: "not_found" as const };
+      }
+
+      const { favoritePostIds, upvotePostIds } = await viewerFlagsForPostIds(ctx, userId, [postByPath._id]);
+      const isFavorited = favoritePostIds.has(postByPath._id);
+      const viewerHasUpvote = upvotePostIds.has(postByPath._id);
+      const postShape = postDocToPost(postByPath, { isFavorited, viewerHasUpvote });
+      const authorDoc = await ctx.db.get(postByPath.authorProfileId);
+      const author = authorDoc ? profileToUser(authorDoc) : null;
+      const category = categories.find((c) => c.key === postShape.category) ?? null;
+
+      const commentDocs = await ctx.db
+        .query("forumPostComments")
+        .withIndex("by_post_createdAt", (q) => q.eq("postId", postByPath._id))
+        .order("desc")
+        .take(200);
+      const comments = [...commentDocs].reverse().map((c) => ({
+        id: c._id as string,
+        threadId: postByPath._id as string,
+        parentId: (c.parentId as string | undefined) ?? null,
+        authorId: c.authorProfileId as string,
+        body: c.body,
+        createdAt: new Date(c.createdAt).toISOString(),
+        upvotes: c.upvotes,
+        downvotes: 0,
+      }));
+
+      const userIds = new Set<string>();
+      userIds.add(postShape.authorId);
+      for (const c of comments) {
+        userIds.add(c.authorId);
+      }
+      const users = await loadProfilesForIds(ctx, userIds);
+
+      // Load per-category structured payload for real user posts
+      const categoryPayload = await ctx.db
+        .query("forumCategoryPayloads")
+        .withIndex("by_post", (q) => q.eq("postId", postByPath._id))
+        .unique();
+
+      // Construct a thread-shaped object so DiscussionPageClient can render it
+      const thread = {
+        id: postByPath._id as string,
+        slug: postShape.slug,
+        category: postShape.category,
+        title: postShape.title,
+        body: postShape.body,
+        authorId: postShape.authorId,
+        createdAt: postShape.createdAt,
+        views: postShape.views,
+        upvotes: postShape.upvotes,
+        bookmarks: 0,
+        tags: [] as string[],
+        aiSummary: "",
+        comments,
+        insightRail: {
+          summary: "",
+          keyAgreements: [] as string[],
+          openQuestions: [] as { text: string; anchorId: string }[],
+          topContributor: { userId: "", excerpt: "" },
+        },
+        relatedSlugs: [] as string[],
+        trendingSlugs: [] as string[],
+        categoryBody: (categoryPayload?.payload ?? {}) as Record<string, unknown>,
+        postId: postByPath._id as string,
+        viewerHasUpvoted: viewerHasUpvote,
+        viewerHasBookmarked: isFavorited,
+      };
+
       return {
         kind: "rich" as const,
         thread,
@@ -111,73 +180,106 @@ export const getDiscussionRouteState = query({
         related: [],
         trending: [],
         users,
-        feedOverlay,
         categories,
       };
     }
 
-    const postByPath = await ctx.db
+    return { kind: "not_found" as const };
+  },
+});
+
+export const getRepresentativeThreadByCategory = query({
+  args: { categoryKey: v.string() },
+  returns: v.any(),
+  handler: async (ctx, { categoryKey }) => {
+    const userId = await getAuthUserId(ctx);
+    const categories = (await ctx.db.query("forumCategories").collect()).map((r) => ({
+      key: r.key,
+      name: r.name,
+      icon: r.icon,
+      description: r.description,
+      primaryColor: r.primaryColor,
+      lockedByDefault: r.lockedByDefault,
+      pointsToUnlock: r.pointsToUnlock,
+    }));
+
+    const post = await ctx.db
       .query("forumPosts")
-      .withIndex("by_slug", (q) => q.eq("slug", pathSlug))
+      .withIndex("by_category_createdAt", (q) => q.eq("category", categoryKey))
+      .order("desc")
+      .filter((q) =>
+        q.and(
+          q.neq(q.field("moderationStatus"), "removed"),
+          q.neq(q.field("moderationStatus"), "shadow_removed"),
+        ),
+      )
+      .first();
+
+    if (!post) return null;
+
+    const { favoritePostIds, upvotePostIds } = await viewerFlagsForPostIds(ctx, userId, [post._id]);
+    const isFavorited = favoritePostIds.has(post._id);
+    const viewerHasUpvote = upvotePostIds.has(post._id);
+    const postShape = postDocToPost(post, { isFavorited, viewerHasUpvote });
+    const authorDoc = await ctx.db.get(post.authorProfileId);
+    const author = authorDoc ? profileToUser(authorDoc) : null;
+    const category = categories.find((c) => c.key === postShape.category) ?? null;
+
+    const commentDocs = await ctx.db
+      .query("forumPostComments")
+      .withIndex("by_post_createdAt", (q) => q.eq("postId", post._id))
+      .order("desc")
+      .take(200);
+    const comments = [...commentDocs].reverse().map((c) => ({
+      id: c._id as string,
+      threadId: post._id as string,
+      parentId: (c.parentId as string | undefined) ?? null,
+      authorId: c.authorProfileId as string,
+      body: c.body,
+      createdAt: new Date(c.createdAt).toISOString(),
+      upvotes: c.upvotes,
+      downvotes: 0,
+    }));
+
+    const userIds = new Set<string>();
+    userIds.add(postShape.authorId);
+    for (const c of comments) userIds.add(c.authorId);
+    const users = await loadProfilesForIds(ctx, userIds);
+
+    const categoryPayload = await ctx.db
+      .query("forumCategoryPayloads")
+      .withIndex("by_post", (q) => q.eq("postId", post._id))
       .unique();
 
-    if (postByPath) {
-      const postShape = postDocToPost(postByPath, { isFavorited: false, viewerHasUpvote: false });
-      if (!postShape.isRichThread) {
-        const canonicalSlug = CATEGORY_TO_MVP_THREAD_SLUG[postShape.category] ?? postShape.slug;
-        const canonicalRich = await ctx.db
-          .query("forumRichThreads")
-          .withIndex("by_slug", (q) => q.eq("slug", canonicalSlug))
-          .unique();
-        if (canonicalRich) {
-          const target = discussionHrefForPostShape({
-            slug: postShape.slug,
-            category: postShape.category,
-            isRichThread: false,
-          });
-          const current = expectedDiscussionHref(pathSlug, feedPostSlug);
-          if (target !== current) {
-            return { kind: "redirect" as const, href: target };
-          }
-        }
-      }
-    }
+    const thread = {
+      id: post._id as string,
+      slug: postShape.slug,
+      category: postShape.category,
+      title: postShape.title,
+      body: postShape.body,
+      authorId: postShape.authorId,
+      createdAt: postShape.createdAt,
+      views: postShape.views,
+      upvotes: postShape.upvotes,
+      bookmarks: 0,
+      tags: [] as string[],
+      aiSummary: "",
+      comments,
+      insightRail: {
+        summary: "",
+        keyAgreements: [] as string[],
+        openQuestions: [] as { text: string; anchorId: string }[],
+        topContributor: { userId: "", excerpt: "" },
+      },
+      relatedSlugs: [] as string[],
+      trendingSlugs: [] as string[],
+      categoryBody: (categoryPayload?.payload ?? {}) as Record<string, unknown>,
+      postId: post._id as string,
+      viewerHasUpvoted: viewerHasUpvote,
+      viewerHasBookmarked: isFavorited,
+    };
 
-    if (postByPath) {
-      const postShape = postDocToPost(postByPath, { isFavorited: false, viewerHasUpvote: false });
-      const authorDoc = await ctx.db.get(postByPath.authorProfileId);
-      const author = authorDoc ? profileToUser(authorDoc) : null;
-      const commentDocs = await ctx.db
-        .query("forumPostComments")
-        .withIndex("by_post_createdAt", (q) => q.eq("postId", postByPath._id))
-        .order("desc")
-        .take(12);
-      const comments = [...commentDocs].reverse().map((c) => ({
-        id: c._id as string,
-        postId: c.postId as string,
-        authorId: c.authorProfileId as string,
-        body: c.body,
-        createdAt: new Date(c.createdAt).toISOString(),
-        upvotes: c.upvotes,
-      }));
-      const commentAuthorIds = [...new Set(comments.map((c) => c.authorId))];
-      const commentAuthors = [];
-      for (const id of commentAuthorIds) {
-        const d = await ctx.db.get(id as import("../_generated/dataModel").Id<"forumProfiles">);
-        if (d) {
-          commentAuthors.push(profileToUser(d));
-        }
-      }
-      return {
-        kind: "simple" as const,
-        post: postShape,
-        author,
-        comments,
-        commentAuthors,
-      };
-    }
-
-    return { kind: "not_found" as const };
+    return { kind: "rich" as const, thread, author, category, related: [], trending: [], users, categories };
   },
 });
 

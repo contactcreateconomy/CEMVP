@@ -3,15 +3,15 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bell, LogOut, Moon, Plus, Search, Settings, Sun, UserCircle2 } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CreateconomyLogoMark } from "@/components/ui/createconomy-logo-mark";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 
 import { api } from "@/lib/convex";
 import { isConvexConfigured } from "@cemvp/convex-client";
@@ -64,6 +64,7 @@ type NotificationRow = {
   message: string;
   createdAt: string;
   read: boolean;
+  postSlug?: string;
 };
 
 function TopNavWithConvexNotifications() {
@@ -73,11 +74,25 @@ function TopNavWithConvexNotifications() {
     api.forum.queries.listNotificationsForViewer,
     authStatus === "authenticated" ? {} : "skip",
   );
+  const markRead = useMutation(api.forum.mutations.markNotificationRead);
+
+  const handleMarkRead = useCallback(
+    async (notificationId: string) => {
+      try {
+        await markRead({ notificationId: notificationId as import("@/lib/convex").Id<"forumNotifications"> });
+      } catch {
+        /* ignore */
+      }
+    },
+    [markRead],
+  );
+
   return (
     <TopNavInner
       convexNotificationsEnabled
       notificationList={notificationList}
       unreadCountOverride={unreadNotificationCount}
+      onMarkRead={handleMarkRead}
     />
   );
 }
@@ -90,12 +105,17 @@ function TopNavInner({
   convexNotificationsEnabled,
   notificationList,
   unreadCountOverride,
+  onMarkRead,
 }: {
   convexNotificationsEnabled: boolean;
   notificationList?: NotificationRow[] | undefined;
   unreadCountOverride?: number;
+  onMarkRead?: (notificationId: string) => void;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentCategory = searchParams.get("category");
   const { resolvedTheme, setTheme } = useTheme();
   const { authStatus, user, openAuthModal, logout } = useAuth();
   const [mounted, setMounted] = useState(false);
@@ -165,12 +185,13 @@ function TopNavInner({
               className="hidden flex-1 justify-center px-2 md:flex"
               role="search"
             >
+              {currentCategory ? <input type="hidden" name="category" value={currentCategory} /> : null}
               <label className="group relative w-full max-w-[480px]" aria-label="Search">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
                 <input
                   name="q"
                   type="search"
-                  placeholder="Search"
+                  placeholder={currentCategory ? `Search in ${currentCategory}…` : "Search"}
                   className="search-input h-9 w-full appearance-none rounded-full border border-(--border-default) bg-(--bg-surface) pl-9 pr-3 text-sm text-text-primary outline-hidden transition-[border-color,box-shadow] duration-200 placeholder:text-text-muted hover:shadow-[0_0_8px_rgba(14,165,233,0.08)] focus:outline-hidden"
                 />
               </label>
@@ -248,6 +269,14 @@ function TopNavInner({
                               <DropdownMenu.Item
                                 key={notification.id}
                                 className="group relative cursor-pointer rounded-[10px] px-3 py-2.5 outline-hidden transition-[background-color,transform] duration-200 data-highlighted:bg-(--bg-overlay) data-highlighted:translate-x-[2px]"
+                                onSelect={() => {
+                                  if (!notification.read && onMarkRead) {
+                                    onMarkRead(notification.id);
+                                  }
+                                  if (notification.postSlug) {
+                                    router.push(`/discussions/${notification.postSlug}`);
+                                  }
+                                }}
                               >
                                 <div className="pr-12">
                                   <div className="flex items-start gap-2">
