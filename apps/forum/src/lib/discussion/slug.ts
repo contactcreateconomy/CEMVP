@@ -7,6 +7,7 @@ const PREFIX_TO_CATEGORY: Record<string, CategoryKey> = {
   launchpad: "launch-pad",
   debate: "debate",
   help: "help",
+  qa: "qa",
   list: "list",
   showcase: "showcase",
   gigs: "gigs",

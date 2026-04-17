@@ -8,7 +8,7 @@ import { reviewTemplate } from "./review/index";
 import { compareTemplate } from "./compare/index";
 import { launchpadTemplate } from "./launch-pad/index";
 import { debateTemplate } from "./debate/index";
-import { helpTemplate } from "./help/index";
+import { qaTemplate } from "./qa/index";
 import { listTemplate } from "./list/index";
 import { showcaseTemplate } from "./showcase/index";
 import { gigsTemplate } from "./gigs/index";
@@ -19,7 +19,8 @@ const registry = new Map<string, CategoryTemplate>([
   [compareTemplate.key, compareTemplate],
   [launchpadTemplate.key, launchpadTemplate],
   [debateTemplate.key, debateTemplate],
-  [helpTemplate.key, helpTemplate],
+  ["help", qaTemplate],
+  [qaTemplate.key, qaTemplate],
   [listTemplate.key, listTemplate],
   [showcaseTemplate.key, showcaseTemplate],
   [gigsTemplate.key, gigsTemplate],

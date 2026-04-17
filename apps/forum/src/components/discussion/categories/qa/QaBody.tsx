@@ -9,7 +9,7 @@ import type { DiscussionThread } from "@/types/discussion";
 
 import { FormattedBody } from "../../formatted-body";
 
-export function HelpBody({ thread, isMax }: { thread: Extract<DiscussionThread, { category: "help" }>; isMax: boolean }) {
+export function QaBody({ thread, isMax }: { thread: Extract<DiscussionThread, { category: "qa" }>; isMax: boolean }) {
   const b = thread.categoryBody;
   const [repro, setRepro] = useState(b.reproducibilityCount);
 

@@ -288,6 +288,6 @@ export const runForumSeed = internalMutation({
  */
 export const ensureForumCategories = internalMutation({
   args: {},
-  returns: v.object({ inserted: v.number(), skipped: v.number() }),
+  returns: v.object({ inserted: v.number(), skipped: v.number(), updated: v.number() }),
   handler: async (ctx) => insertMissingForumCategories(ctx),
 });

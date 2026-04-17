@@ -31,6 +31,7 @@ const categoryIconMap: Record<CategoryKey, LucideIcon> = {
   "launch-pad": Rocket,
   debate: Swords,
   help: HelpCircle,
+  qa: HelpCircle,
   list: LayoutList,
   showcase: Sparkles,
   gigs: Briefcase,

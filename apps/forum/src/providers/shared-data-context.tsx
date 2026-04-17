@@ -18,10 +18,10 @@ const FALLBACK_CATEGORIES: Category[] = [
   { key: "compare", name: "Compare", icon: "git-compare", description: "", primaryColor: "#22C55E" },
   { key: "launch-pad", name: "Launch Pad", icon: "rocket", description: "", primaryColor: "#F59E0B" },
   { key: "debate", name: "Debate", icon: "swords", description: "", primaryColor: "#EF4444" },
-  { key: "help", name: "Help", icon: "help-circle", description: "", primaryColor: "#14B8A6" },
   { key: "list", name: "List", icon: "layout-list", description: "", primaryColor: "#F97316" },
   { key: "showcase", name: "Showcase", icon: "sparkles", description: "", primaryColor: "#EC4899" },
   { key: "gigs", name: "Gigs", icon: "briefcase", description: "", primaryColor: "#EAB308" },
+  { key: "qa", name: "Q&A", icon: "help-circle", description: "", primaryColor: "#14B8A6" },
 ] as Category[];
 
 const SharedDataContext = createContext<SharedData>({

@@ -84,7 +84,7 @@ export function ThreadComments({
   const commentList = thread.comments ?? [];
 
   const filterChipOptions = useMemo(() => {
-    if (thread.category === "help") return FILTER_OPTIONS;
+    if (thread.category === "help" || thread.category === "qa") return FILTER_OPTIONS;
     return FILTER_OPTIONS.filter((t) => t !== "solution");
   }, [thread.category]);
 
@@ -113,7 +113,7 @@ export function ThreadComments({
   const mapToUse = thread.category === "gigs" && isMax && gigsCommentMode !== "all" ? childrenMapGigs : childrenMap;
 
   const solutionId =
-    thread.category === "help" &&
+    (thread.category === "help" || thread.category === "qa") &&
     thread.categoryBody &&
     "solved" in thread.categoryBody &&
     (thread.categoryBody as Record<string, unknown>).solved

@@ -58,6 +58,7 @@ const categoryIconMap: Record<CategoryKey, ComponentType<{ className?: string; s
   "launch-pad": Rocket,
   debate: Swords,
   help: HelpCircle,
+  qa: HelpCircle,
   list: LayoutList,
   showcase: Sparkles,
   gigs: Briefcase,

@@ -13,7 +13,7 @@ export const categoryKey = v.union(
   v.literal("compare"),
   v.literal("launch-pad"),
   v.literal("debate"),
-  v.literal("help"),
+  v.literal("qa"),
   v.literal("list"),
   v.literal("showcase"),
   v.literal("gigs"),

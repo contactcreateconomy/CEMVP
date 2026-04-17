@@ -7,7 +7,7 @@ const categoryKeys = [
   "compare",
   "launch-pad",
   "debate",
-  "help",
+  "qa",
   "list",
   "showcase",
   "gigs",
@@ -64,7 +64,7 @@ const categoryPromptMap = {
     "Do open models beat closed models for businesses?",
     "Will prompt engineering remain a durable skill?",
   ],
-  help: [
+  qa: [
     "Need help fixing hallucinations in sales copy",
     "How to stop repetitive outputs in content agents",
     "Best way to structure reusable prompt libraries",

@@ -10,6 +10,7 @@ describe("Category Registry", () => {
       "launch-pad",
       "debate",
       "help",
+      "qa",
       "list",
       "showcase",
       "gigs",
@@ -17,7 +18,7 @@ describe("Category Registry", () => {
     keys.forEach((key) => {
       const template = getCategoryTemplate(key);
       expect(template).not.toBeNull();
-      expect(template?.key).toBe(key);
+      expect(template?.key).toBe(key === "help" ? "qa" : key);
       expect(template?.Body).toBeDefined();
     });
   });

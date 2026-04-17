@@ -96,6 +96,86 @@ export const reconcileUpvoteCounts = internalMutation({
   },
 });
 
+const HELP_TO_QA_BATCH_SIZE = 100;
+
+/**
+ * Batches the help -> qa migration so it can finish on larger datasets without
+ * exhausting a single mutation's document read/write budget.
+ */
+export const migrateHelpToQaBatch = internalMutation({
+  args: {
+    postCursor: v.union(v.string(), v.null()),
+    richThreadCursor: v.union(v.string(), v.null()),
+    categoryPayloadCursor: v.union(v.string(), v.null()),
+  },
+  returns: v.object({
+    postsPatched: v.number(),
+    richThreadsPatched: v.number(),
+    categoryPayloadsPatched: v.number(),
+    hasMore: v.boolean(),
+  }),
+  handler: async (ctx, { postCursor, richThreadCursor, categoryPayloadCursor }) => {
+    let postsPatched = 0;
+    let richThreadsPatched = 0;
+    let categoryPayloadsPatched = 0;
+
+    const postPage = await ctx.db
+      .query("forumPosts")
+      .withIndex("by_category", (q) => q.eq("category", "help"))
+      .paginate({ numItems: HELP_TO_QA_BATCH_SIZE, cursor: postCursor });
+    for (const post of postPage.page) {
+      await ctx.db.patch(post._id, { category: "qa" });
+      postsPatched++;
+    }
+
+    const richThreadPage = await ctx.db
+      .query("forumRichThreads")
+      .paginate({ numItems: HELP_TO_QA_BATCH_SIZE, cursor: richThreadCursor });
+    for (const richThread of richThreadPage.page) {
+      const payload = richThread.payload as Record<string, unknown>;
+      if (payload.category === "help") {
+        const nextPayload = { ...richThread.payload, category: "qa" } as typeof richThread.payload;
+        await ctx.db.patch(richThread._id, { payload: nextPayload });
+        richThreadsPatched++;
+      }
+    }
+
+    const categoryPayloadPage = await ctx.db
+      .query("forumCategoryPayloads")
+      .paginate({ numItems: HELP_TO_QA_BATCH_SIZE, cursor: categoryPayloadCursor });
+    for (const categoryPayload of categoryPayloadPage.page) {
+      if (categoryPayload.category === "help") {
+        await ctx.db.patch(categoryPayload._id, { category: "qa" });
+        categoryPayloadsPatched++;
+      }
+    }
+
+    const hasMore = !postPage.isDone || !richThreadPage.isDone || !categoryPayloadPage.isDone;
+    if (hasMore) {
+      await ctx.scheduler.runAfter(0, internal.forum.jobs.migrateHelpToQaBatch, {
+        postCursor: postPage.isDone ? null : postPage.continueCursor,
+        richThreadCursor: richThreadPage.isDone ? null : richThreadPage.continueCursor,
+        categoryPayloadCursor: categoryPayloadPage.isDone ? null : categoryPayloadPage.continueCursor,
+      });
+    } else {
+      const oldCategory = await ctx.db
+        .query("forumCategories")
+        .withIndex("by_key", (q) => q.eq("key", "help"))
+        .unique();
+      if (oldCategory) {
+        await ctx.db.delete(oldCategory._id);
+      }
+    }
+
+    return {
+      postsPatched,
+      richThreadsPatched,
+      categoryPayloadsPatched,
+      hasMore,
+    };
+  },
+});
+
 /**
  * Aggregate the previous day's analytics events into daily stats.
  * Powers future admin dashboards without expensive real-time aggregations.

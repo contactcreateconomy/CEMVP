@@ -15,14 +15,14 @@ function TopPostHeroSectionWithConvex() {
   const slides = useQuery(api.forum.queries.listHeroSlides, {});
 
   if (slides === undefined) {
-    return <TopPostHeroCarouselSkeleton />;
+    return <TopPostHeroCarouselSkeleton className="h-[440px] xl:h-[520px]" />;
   }
 
   if (slides.length === 0) {
-    return <TopPostHeroCarouselEmpty />;
+    return <TopPostHeroCarouselEmpty className="h-[440px] xl:h-[520px]" />;
   }
 
-  return <TopPostHeroCarousel slides={slides as TopPostHeroSlide[]} />;
+  return <TopPostHeroCarousel slides={slides as TopPostHeroSlide[]} className="h-[440px] xl:h-[520px]" />;
 }
 
 /** Avoid `useQuery` when Convex is not configured (e.g. Vercel build without `NEXT_PUBLIC_CONVEX_URL`) — `useQuery` still requires a provider even with `"skip"`. */

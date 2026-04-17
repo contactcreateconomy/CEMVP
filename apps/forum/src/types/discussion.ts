@@ -127,7 +127,7 @@ export interface DebateBody {
   commonGround: string[];
 }
 
-export interface HelpBody {
+export interface QaBody {
   goal: string;
   tried: string[];
   stuck: string;
@@ -218,7 +218,8 @@ export type DiscussionThread =
   | (DiscussionThreadBase & { category: "compare"; categoryBody: CompareBody })
   | (DiscussionThreadBase & { category: "launch-pad"; categoryBody: LaunchpadBody })
   | (DiscussionThreadBase & { category: "debate"; categoryBody: DebateBody })
-  | (DiscussionThreadBase & { category: "help"; categoryBody: HelpBody })
+  | (DiscussionThreadBase & { category: "help"; categoryBody: QaBody })
+  | (DiscussionThreadBase & { category: "qa"; categoryBody: QaBody })
   | (DiscussionThreadBase & { category: "list"; categoryBody: ListBody })
   | (DiscussionThreadBase & { category: "showcase"; categoryBody: ShowcaseBody })
   | (DiscussionThreadBase & { category: "gigs"; categoryBody: GigsBody })

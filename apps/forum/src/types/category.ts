@@ -5,6 +5,7 @@ export type CategoryKey =
   | "launch-pad"
   | "debate"
   | "help"
+  | "qa"
   | "list"
   | "showcase"
   | "gigs";

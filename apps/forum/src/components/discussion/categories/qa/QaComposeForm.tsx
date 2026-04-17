@@ -5,20 +5,20 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-interface HelpFields {
+interface QaFields {
   goal: string;
   environment: string[];
   tried: string;
 }
 
-export function HelpComposeForm({
+export function QaComposeForm({
   value,
   onChange,
 }: {
   value: Record<string, unknown>;
   onChange: (fields: Record<string, unknown>) => void;
 }) {
-  const fields: HelpFields = useMemo(() => ({
+  const fields: QaFields = useMemo(() => ({
     goal: (value.goal as string) ?? "",
     environment: (value.environment as string[]) ?? [],
     tried: (value.tried as string) ?? "",
@@ -28,7 +28,7 @@ export function HelpComposeForm({
   const [envInput, setEnvInput] = useState("");
 
   const emit = useCallback(
-    (patch: Partial<HelpFields>) => {
+    (patch: Partial<QaFields>) => {
       onChange({ ...fields, ...patch });
     },
     [fields, onChange],

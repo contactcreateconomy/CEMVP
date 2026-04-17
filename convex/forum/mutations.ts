@@ -5,6 +5,7 @@ import type { Id } from "../_generated/dataModel";
 import { mutation, internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { insertMissingForumCategories } from "./seed/ensureCategoryRows";
+import { categoryRows } from "./seed/catalog";
 import { slugify } from "./seed/generatePosts";
 import {
   MAX_COMMENT_BODY_LEN,
@@ -86,7 +87,8 @@ export const createPost = mutation({
       throw new Error(`Body must be at most ${MAX_POST_BODY_LEN} characters.`);
     }
 
-    const catKey = category.trim();
+    const requestedCategory = category.trim();
+    const catKey = requestedCategory === "help" ? "qa" : requestedCategory;
     let categoryRow = await ctx.db
       .query("forumCategories")
       .withIndex("by_key", (q) => q.eq("key", catKey))
@@ -366,8 +368,89 @@ export const markNotificationRead = mutation({
  */
 export const ensureForumCategories = mutation({
   args: {},
-  returns: v.object({ inserted: v.number(), skipped: v.number() }),
+  returns: v.object({ inserted: v.number(), skipped: v.number(), updated: v.number() }),
   handler: async (ctx) => insertMissingForumCategories(ctx),
+});
+
+/**
+ * One-shot migration: renames the "help" category key to "qa" across all tables.
+ * Patches forumCategories, forumPosts, forumRichThreads, and forumCategoryPayloads.
+ * Idempotent — safe to run multiple times.
+ */
+export const migrateHelpToQa = mutation({
+  args: {},
+  returns: v.object({
+    categoriesDeleted: v.number(),
+    categoriesInserted: v.number(),
+    postsPatched: v.number(),
+    richThreadsPatched: v.number(),
+    categoryPayloadsPatched: v.number(),
+    hasMore: v.boolean(),
+  }),
+  handler: async (ctx): Promise<{
+    categoriesDeleted: number;
+    categoriesInserted: number;
+    postsPatched: number;
+    richThreadsPatched: number;
+    categoryPayloadsPatched: number;
+    hasMore: boolean;
+  }> => {
+    let categoriesDeleted = 0;
+    let categoriesInserted = 0;
+    let postsPatched = 0;
+    let richThreadsPatched = 0;
+    let categoryPayloadsPatched = 0;
+
+    const oldCatBefore = await ctx.db
+      .query("forumCategories")
+      .withIndex("by_key", (q) => q.eq("key", "help"))
+      .unique();
+
+    // 1. Insert new "qa" category row (from catalog) before removing the old key.
+    const newCat = await ctx.db
+      .query("forumCategories")
+      .withIndex("by_key", (q) => q.eq("key", "qa"))
+      .unique();
+    if (!newCat) {
+      const qaEntry = categoryRows.find((c) => c.key === "qa");
+      if (qaEntry) {
+        await ctx.db.insert("forumCategories", { ...qaEntry });
+        categoriesInserted = 1;
+      }
+    }
+
+    // 2. Run the first bounded batch synchronously and self-schedule the rest.
+    const batchResult: {
+      postsPatched: number;
+      richThreadsPatched: number;
+      categoryPayloadsPatched: number;
+      hasMore: boolean;
+    } = await ctx.runMutation(internal.forum.jobs.migrateHelpToQaBatch, {
+      postCursor: null,
+      richThreadCursor: null,
+      categoryPayloadCursor: null,
+    });
+    postsPatched = batchResult.postsPatched;
+    richThreadsPatched = batchResult.richThreadsPatched;
+    categoryPayloadsPatched = batchResult.categoryPayloadsPatched;
+
+    if (oldCatBefore) {
+      const oldCatAfter = await ctx.db
+        .query("forumCategories")
+        .withIndex("by_key", (q) => q.eq("key", "help"))
+        .unique();
+      categoriesDeleted = oldCatAfter ? 0 : 1;
+    }
+
+    return {
+      categoriesDeleted,
+      categoriesInserted,
+      postsPatched,
+      richThreadsPatched,
+      categoryPayloadsPatched,
+      hasMore: batchResult.hasMore,
+    };
+  },
 });
 
 export const createComment = mutation({

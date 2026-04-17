@@ -138,7 +138,9 @@ export default defineSchema({
       v.object({ ...richThreadBase, category: v.literal("compare") }),
       v.object({ ...richThreadBase, category: v.literal("launch-pad") }),
       v.object({ ...richThreadBase, category: v.literal("debate") }),
+      // Temporary widen for the help -> qa migration. Remove after all old rows are migrated.
       v.object({ ...richThreadBase, category: v.literal("help") }),
+      v.object({ ...richThreadBase, category: v.literal("qa") }),
       v.object({ ...richThreadBase, category: v.literal("list") }),
       v.object({ ...richThreadBase, category: v.literal("showcase") }),
       v.object({ ...richThreadBase, category: v.literal("gigs") }),

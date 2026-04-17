@@ -432,7 +432,13 @@ function TopNavInner({
 }
 
 export function TopNav() {
-  if (!isConvexConfigured()) {
+  const [convexReady, setConvexReady] = useState(false);
+
+  useEffect(() => {
+    setConvexReady(isConvexConfigured());
+  }, []);
+
+  if (!convexReady) {
     return <TopNavInner convexNotificationsEnabled={false} />;
   }
   return <TopNavWithConvexNotifications />;

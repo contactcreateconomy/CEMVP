@@ -15,6 +15,7 @@ const KNOWN_CATEGORIES = new Set([
   "launch-pad",
   "debate",
   "help",
+  "qa",
   "list",
   "showcase",
   "gigs",

@@ -1,10 +1,10 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import type { DiscussionThread, HelpBody } from "@/types/discussion";
+import type { DiscussionThread, QaBody } from "@/types/discussion";
 
-export function HelpInsights({ thread }: { thread: DiscussionThread }) {
-  const b = thread.categoryBody as HelpBody;
+export function QaInsights({ thread }: { thread: DiscussionThread }) {
+  const b = thread.categoryBody as QaBody;
   const steps = b.diagnosticSteps ?? [];
   if (steps.length === 0) return null;
   return (

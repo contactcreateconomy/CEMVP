@@ -1,20 +1,5 @@
 # Changelog
 
-## 2026-04-17 (forum: two-state hero carousel — Default + Compact expanding cards)
-
-**Hero carousel — Default ↔ Compact toggle (CSS flex expanding cards):**
-- Two-state carousel: Default (3D cinematic cascade, 440–520px) ↔ Compact (CSS-flex expanding cards, 268px).
-- Compact state inspired by 21st.dev / Sacha Jerrems Dribbble design: all slides in a `flex` row; active card `flex: 7`, inactive `flex: 1` (narrow slivers).
-- Pure CSS `transition: all 700ms ease-in-out` on flex — no JS width animation; silky smooth expansion on card click.
-- Each inactive card shows full-bleed background image + 3-char eyebrow badge at bottom; active card adds shadow overlay, title + eyebrow text (slides in from right), and nav pill + Explore button (top-right).
-- Active card: brand-cyan 70% border, accent-rgb shadow, `auto 100%` background size. Inactive: dark border, `auto 120%` background size (slight zoom).
-- Wheel navigation disabled in compact (cards expand by direct click); drag/swipe still active in default state.
-- Toggle handles: "Compact" (default state, bottom-centre, appears on hover with brand glow) / "Expand" (compact state, always softly visible).
-- Height spring-animated (`COLLAPSE_SPRING`); `AnimatePresence mode="wait" initial={false}` swaps branches with 60ms delay on compact entry.
-- Responsive default height (440/520px at xl) via lazy `useState` initializer + `matchMedia` listener.
-- Skeleton and Empty self-contain heights; section wrapper no longer passes `className`.
-- `pnpm typecheck`: zero new errors in carousel files.
-
 ## 2026-04-17 (forum: rename Help category to Q&A)
 
 **Category rename — full key + display name change:**
