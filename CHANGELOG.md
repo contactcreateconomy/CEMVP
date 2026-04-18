@@ -1,5 +1,89 @@
 # Changelog
 
+## 2026-04-18 (forum: hero carousel bug fixes — compact image fallback, direction wrap, null guard)
+
+**Bug fixes from code review:**
+- Compact cascade `<Image>` now has `onError` handler — broken images fall back to accent gradient instead of blank.
+- Fixed cascade direction wrap: clicking back cards near the end of the carousel no longer plays animations in the wrong direction.
+- Added null guard for `heroRef.current` in the measure effect (was using non-null assertion).
+- Removed stale JSDoc on `discussionHref` that referenced a `?post=` param the implementation never uses.
+
+**Apps affected:** `apps/forum`.
+
+## 2026-04-18 (forum: hero carousel compact — fluid directional animation)
+
+**Compact state — animation direction alignment (Apple macOS-style):**
+- Fixed the core clash: old front card now exits **LEFT** on "next" (sinks into the cascade stack depth), instead of wrongly exiting right while text exited left.
+- Cascade enter/exit is now fully symmetric: "next" and "prev" are exact direction mirrors.
+- `enterFrom`/`exitTo` values tuned for depth-coherent 3D transition (new back card materialises from deep behind the stack; old front sinks into it on next, and the reverse for prev).
+- Text `AnimatePresence` switched from `mode="wait"` (sequential) to `mode="sync"` (parallel exit+enter) — old text slides out as new text slides in simultaneously, matching macOS page-turn behaviour.
+- Text transition replaced with a spring (`stiffness: 280, damping: 28, mass: 0.9`) matching the CASCADE_SPRING feel.
+- Text x-offset increased from ±40 to ±56 for more visible, purposeful motion.
+
+**Apps affected:** `apps/forum`.
+
+## 2026-04-18 (forum: hero carousel — sizing revert + icon-only toggle buttons)
+
+**Default state — sizing reverted to pre-enlargement values:**
+- `cardW` fallback reverted to 549 (was 640); dynamic measure reverted to `sorterRect.width` (no ×1.18 factor).
+- `focusX` reverted to original formula (no −80 offset).
+- `X_STRIDE` reverted to 440 (was 360).
+- Side-card `scale`/`opacity`/`blur`/`brightness` reverted to original dimmer values (0.5/0.35, 0.55/0.14, 8/16, 0.45/0.2).
+
+**Toggle buttons — text removed, icon-only, top-right corner:**
+- "Compact" button replaced with `Minimize2` icon-only circle at top-right of default state.
+- "Expand" button replaced with `Maximize2` icon-only circle at top-right of compact state.
+- Removed `ChevronDown`/`ChevronUp` imports; added `Minimize2`/`Maximize2`.
+
+**Apps affected:** `apps/forum`.
+
+## 2026-04-18 (forum: hero carousel compact-state design fixes)
+
+**Compact state — navigator, Explore button, hover glow:**
+- Removed inline "Read/Explore" link from the animated text block.
+- Added a static **Explore** button next to the navigator (same pill + Explore row as default state); it remains fixed regardless of slide changes.
+- Navigator replaced with the same symmetric pill-container design from default state — both Prev/Next buttons use `ChevronLeft`/`ChevronRight` inside a shared frosted-glass pill with equal hover states.
+- Explore button inherits the same `group-hover/hero` glow and arrow pulse animation as default state.
+- Removed unused `ArrowLeft` and `ArrowRight` imports.
+
+**Apps affected:** `apps/forum`.
+
+## 2026-04-18 (forum: hero carousel default-state positioning tweaks)
+
+**Default state — positioning & visibility:**
+- Focus card is ~18% wider (dynamically derived from sorter width × 1.18) and shifted ~80px left for better left-justification.
+- Side cards now cascade closer together (`X_STRIDE` 440 → 360) with more visibility: larger scale (0.6/0.48), higher opacity (0.65/0.3), less blur and more brightness.
+- Edge mask widened from 10%/90% to 2%/98% so side cards peek out more.
+- Perspective origin adjusted to 42% to match shifted focus.
+
+**Apps affected:** `apps/forum`.
+
+## 2026-04-18 (forum: compact state — 3D cascade animation for image area)
+
+**Compact state — 3D cascade:**
+- Replaced the static left thumbnails + center vertical-slide image with a unified **3D cascade stage** (`col-span-7`).
+- Active slide is the front card; next 2 upcoming slides cascade behind it with `z`, `rotateY`, `scale`, `opacity`, and `blur/brightness` depth transforms.
+- Direction-aware entrance/exit: forward slides enter from back-left and exit right; backward reverses.
+- Premium spring physics (`CASCADE_SPRING`: stiffness 180, damping 25, mass 0.9) for smooth macOS-style motion.
+- Removed `thumbnailSlides` and `imgVariants` — replaced by `cascadeSlides` array and inline animate/initial/exit props.
+- Card dimensions derived from `compactH` (82% usable height, landscape 4:3 ratio).
+
+**Apps affected:** `apps/forum`.
+
+## 2026-04-18 (forum: hero carousel compact state redesign)
+
+**New feature — two-state hero carousel (compact mode):**
+- Hero carousel now has two states: **Default** (existing 3D cinematic cascade, unchanged) and **Compact** (new 3-column portrait layout, ~50% height).
+- Compact dimensions: 220px (mobile/tablet) | 260px (xl ≥ 1280px) — exactly 50% of default heights. Height springs between states via Framer Motion (`stiffness:200, damping:28`).
+- Compact layout — left column: mono slide counter + vertical `eyebrow` category label + 3 thumbnail buttons; center column: portrait-cropped cover image with vertical slide animation per direction; right column: eyebrow, title, summary (line-clamped), Explore link, + circular ArrowLeft/ArrowRight nav buttons. Accent colour drives the "next" button background and shadow.
+- Direction-aware animations: image slides in/out vertically (100% y), text slides in/out horizontally (40px x), both 0.5s cubic-bezier.
+- Toggle: "Compact" pill at bottom-centre of default state (appears on hero hover, cyan glow on direct hover). "Expand" pill at top-right of compact state.
+- Auto-advance (5.2s) and hover-pause work identically in both states. Wheel/drag navigation disabled in compact. `prefers-reduced-motion` collapses all transitions to instant.
+- Ambient background (blurred cover image) shared between states for seamless visual continuity.
+- `top-post-hero-section.tsx`: removed external `h-[440px] xl:h-[520px]` class from `TopPostHeroCarousel` — the component now manages its own height internally.
+
+**Apps affected:** `apps/forum`.
+
 ## 2026-04-17 (forum: rename Help category to Q&A)
 
 **Category rename — full key + display name change:**
