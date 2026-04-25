@@ -1,5 +1,41 @@
 # Changelog
 
+## 2026-04-25 (forum: content page foundation — ContentShell, persistent Min/Max, YouTube-style comments)
+
+**New architecture:**
+- Separated content page from feed shell: created `(app)/(shell)/` route group for feed/discover/users routes with `AppShell`, while discussions get their own `ContentShell` (no left sidebar, no hero carousel, no global widgets — just TopNav + content + right panel + MobileTabBar).
+- Created `apps/forum/src/components/layout/content-shell.tsx` and `apps/forum/src/app/(app)/discussions/layout.tsx`.
+- `(app)/layout.tsx` stripped to a bare passthrough; `(app)/(shell)/layout.tsx` now owns `AppShell`.
+
+**Min/Max persistence:**
+- Added `contentViewMode: "min" | "max"` to `useUIPreferences` Zustand persist store (localStorage). Default: `"min"`.
+- `DiscussionPageClient` now reads/writes from the store instead of local state — mode persists across navigation and page reloads.
+
+**ThreadSidebar redesign:**
+- Minimal: author card (avatar, name, handle, bio, points, Follow button) + 3 related posts.
+- Max adds: Thread Intelligence stats (Reads/Replies/Upvotes), Key Insights (insightRail summary + key agreements), 5 related posts.
+- Mobile: sidebar renders below content instead of hidden.
+
+**ThreadComments YouTube-style redesign:**
+- Flat root comments, replies collapsed behind "N replies" toggle by default.
+- Replies expand in-place with `border-l-2` left rail (no cards).
+- ContributionTag badges hidden in minimal, shown as colored chips in max mode.
+- Sort/filter controls hidden in minimal, shown in max mode.
+- Removed downvote button.
+
+**Pre-existing category Body crash fixes:**
+- `QaBody`: guarded `b.tried ?? []` and `b.environment ?? []`.
+- `GigsBody`: guarded `b.requiredSkills` reference in fit checker.
+- `DebateBody`: guarded `b.forArguments`, `b.againstArguments`, `b.argumentTree`, `b.votes`.
+- `LaunchpadBody`: guarded `b.milestones`, `b.changelog`, `b.builtWith`.
+- `CompareBody`: guarded `b.criteriaLabels`, `b.options`, `b.scenarios`.
+- `ShowcaseBody`: guarded `b.media`, `b.feedbackChips`, `b.versions`.
+- `ListBody`: guarded `b.items`, `b.lenses`, `b.criteria`.
+
+**Verification:** `pnpm typecheck` — 0 errors. `pnpm lint` — 0 errors, 6 warnings (pre-existing).
+
+**Apps affected:** `apps/forum`.
+
 ## 2026-04-18 (forum: hero carousel bug fixes — compact image fallback, direction wrap, null guard)
 
 **Bug fixes from code review:**

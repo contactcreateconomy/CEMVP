@@ -6,6 +6,8 @@ interface UIPreferencesStore {
   setFeedSort: (sort: "hot" | "new" | "top" | "fav") => void;
   leftSidebarCollapsed: boolean;
   toggleLeftSidebar: () => void;
+  contentViewMode: "min" | "max";
+  setContentViewMode: (mode: "min" | "max") => void;
 }
 
 export const useUIPreferences = create<UIPreferencesStore>()(
@@ -16,6 +18,8 @@ export const useUIPreferences = create<UIPreferencesStore>()(
       leftSidebarCollapsed: false,
       toggleLeftSidebar: () =>
         set((s) => ({ leftSidebarCollapsed: !s.leftSidebarCollapsed })),
+      contentViewMode: "min",
+      setContentViewMode: (contentViewMode) => set({ contentViewMode }),
     }),
     { name: "ui-preferences" },
   ),

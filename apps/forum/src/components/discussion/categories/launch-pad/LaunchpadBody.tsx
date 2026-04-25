@@ -20,6 +20,9 @@ export function LaunchpadBody({
   author: User | null;
 }) {
   const b = thread.categoryBody;
+  const milestones = b.milestones ?? [];
+  const changelog = b.changelog ?? [];
+  const builtWith = b.builtWith ?? [];
   const stageColor =
     b.stage === "live"
       ? "bg-(--feedback-success)/15 text-(--feedback-success)"
@@ -76,7 +79,7 @@ export function LaunchpadBody({
             <CardContent className="p-4">
               <p className="text-sm font-semibold text-(--text-primary)">Milestones</p>
               <ul className="mt-2 space-y-2 text-sm text-(--text-secondary)">
-                {b.milestones.map((m) => (
+                {milestones.map((m) => (
                   <li key={m.label}>
                     <span className="font-medium text-(--text-primary)">{m.date}</span> — {m.label}{" "}
                     {m.upcoming ? <span className="text-(--text-muted)">(Upcoming)</span> : null}
@@ -89,7 +92,7 @@ export function LaunchpadBody({
             <CardContent className="p-4">
               <p className="text-sm font-semibold text-(--text-primary)">Version log</p>
               <ul className="mt-2 space-y-2 text-sm text-(--text-secondary)">
-                {b.changelog.map((c) => (
+                {changelog.map((c) => (
                   <li key={c.version} className={c.current ? "font-medium text-(--text-primary)" : ""}>
                     {c.version} · {new Date(c.date).toLocaleDateString()} — {c.summary}{" "}
                     {c.current ? <span className="text-(--brand-primary)">Current</span> : null}
@@ -102,7 +105,7 @@ export function LaunchpadBody({
             <CardContent className="p-4">
               <p className="text-sm font-semibold text-(--text-primary)">Built with</p>
               <div className="mt-2 flex flex-wrap gap-2">
-                {b.builtWith.map((t) => (
+                {builtWith.map((t) => (
                   <span key={t} className="rounded-full border border-(--border-default) bg-(--bg-surface) px-3 py-1 text-xs text-(--text-secondary)">
                     {t}
                   </span>

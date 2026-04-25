@@ -41,8 +41,11 @@ export function DebateBody({
   ensureAuthenticated: () => boolean;
 }) {
   const b = thread.categoryBody;
+  const forArguments = b.forArguments ?? [];
+  const againstArguments = b.againstArguments ?? [];
+  const argumentTree = b.argumentTree ?? [];
   const [vote, setVote] = useState<"agree" | "disagree" | "abstain" | null>(null);
-  const [dist, setDist] = useState(b.votes);
+  const [dist, setDist] = useState(b.votes ?? { agree: 0, disagree: 0, abstain: 0 });
   const total = dist.agree + dist.disagree + dist.abstain;
 
   const cast = (v: "agree" | "disagree" | "abstain") => {
@@ -106,7 +109,7 @@ export function DebateBody({
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <p className="text-sm font-semibold text-(--feedback-success)">For</p>
-          {b.forArguments.map((a) => (
+          {forArguments.map((a) => (
             <Card key={a.id} className={cn(a.strength === "strong" ? "border-(--feedback-success)/40" : "border-(--border-default)")}>
               <CardContent className="p-3 text-sm text-(--text-secondary)">
                 <p className="text-(--text-primary)">{a.claim}</p>
@@ -120,7 +123,7 @@ export function DebateBody({
         </div>
         <div className="space-y-2">
           <p className="text-sm font-semibold text-(--feedback-error)">Against</p>
-          {b.againstArguments.map((a) => (
+          {againstArguments.map((a) => (
             <Card key={a.id} className={cn(a.strength === "strong" ? "border-(--feedback-error)/40" : "border-(--border-default)")}>
               <CardContent className="p-3 text-sm text-(--text-secondary)">
                 <p className="text-(--text-primary)">{a.claim}</p>
@@ -134,11 +137,11 @@ export function DebateBody({
         </div>
       </div>
 
-      {isMax && b.argumentTree.length > 0 ? (
+      {isMax && argumentTree.length > 0 ? (
         <Card>
           <CardContent className="p-4">
             <p className="text-sm font-semibold text-(--text-primary)">Argument tree</p>
-            <ArgumentTreeNodes nodes={b.argumentTree} depth={0} />
+            <ArgumentTreeNodes nodes={argumentTree} depth={0} />
           </CardContent>
         </Card>
       ) : null}

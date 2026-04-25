@@ -13,9 +13,12 @@ import { useThreadDiscussion } from "../../thread-discussion-context";
 
 export function ShowcaseBody({ thread, isMax }: { thread: Extract<DiscussionThread, { category: "showcase" }>; isMax: boolean }) {
   const b = thread.categoryBody;
+  const media = b.media ?? [];
+  const feedbackChips = b.feedbackChips ?? [];
+  const versions = b.versions ?? [];
   const [idx, setIdx] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
-  const primary = b.media[idx] ?? b.media[0];
+  const primary = media[idx] ?? media[0];
   const { showcaseMediaPinMode, setShowcaseMediaPinMode, prependMainComposer, focusMainComposer, mediaHighlightCoords, setMediaHighlightCoords } =
     useThreadDiscussion();
 
@@ -72,7 +75,7 @@ export function ShowcaseBody({ thread, isMax }: { thread: Extract<DiscussionThre
         </button>
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] snap-x snap-mandatory md:snap-none">
-        {b.media.map((m, i) => (
+        {media.map((m, i) => (
           <button
             key={m.src}
             type="button"
@@ -101,7 +104,7 @@ export function ShowcaseBody({ thread, isMax }: { thread: Extract<DiscussionThre
       <div>
         <p className="text-xs font-semibold text-(--text-muted)">Feedback requested on</p>
         <div className="mt-2 flex flex-wrap gap-2">
-          {b.feedbackChips.map((c) => (
+          {feedbackChips.map((c) => (
             <span key={c} className="rounded-full border border-(--border-default) bg-(--bg-surface) px-3 py-1 text-xs text-(--text-secondary)">
               {c}
             </span>
@@ -112,7 +115,7 @@ export function ShowcaseBody({ thread, isMax }: { thread: Extract<DiscussionThre
       <div className="space-y-2">
         <p className="text-xs font-semibold text-(--text-muted)">Versions</p>
         <div className="flex flex-wrap gap-2">
-          {b.versions.map((v) => (
+          {versions.map((v) => (
             <span
               key={v.version}
               className={cn(

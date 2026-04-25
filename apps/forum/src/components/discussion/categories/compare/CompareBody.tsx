@@ -12,27 +12,30 @@ import { FormattedBody } from "../../formatted-body";
 
 export function CompareBody({ thread, isMax }: { thread: Extract<DiscussionThread, { category: "compare" }>; isMax: boolean }) {
   const b = thread.categoryBody;
-  const [weights, setWeights] = useState<number[]>(() => b.criteriaLabels.map(() => 1));
-  const [scenario, setScenario] = useState(b.scenarios[0]?.id ?? "");
+  const criteriaLabels = useMemo(() => b.criteriaLabels ?? [], [b.criteriaLabels]);
+  const options = useMemo(() => b.options ?? [], [b.options]);
+  const scenarios = useMemo(() => b.scenarios ?? [], [b.scenarios]);
+  const [weights, setWeights] = useState<number[]>(() => criteriaLabels.map(() => 1));
+  const [scenario, setScenario] = useState(scenarios[0]?.id ?? "");
   const [diffOnly, setDiffOnly] = useState(false);
 
   const weightedTotals = useMemo(() => {
     const sumW = weights.reduce((a, x) => a + x, 0) || 1;
-    return b.options.map((opt) => {
-      const t = b.criteriaLabels.reduce((acc, label, i) => acc + (opt.scores[label] ?? 0) * (weights[i] ?? 1), 0);
+    return options.map((opt) => {
+      const t = criteriaLabels.reduce((acc, label, i) => acc + (opt.scores[label] ?? 0) * (weights[i] ?? 1), 0);
       return t / sumW;
     });
-  }, [b, weights]);
+  }, [criteriaLabels, options, weights]);
 
   const rowSpread = (label: string) => {
-    const vals = b.options.map((o) => o.scores[label] ?? 0);
+    const vals = options.map((o) => o.scores[label] ?? 0);
     const max = Math.max(...vals);
     const min = Math.min(...vals);
     return max - min;
   };
 
   const hiddenRows =
-    diffOnly ? b.criteriaLabels.filter((label) => rowSpread(label) < 0.5) : [];
+    diffOnly ? criteriaLabels.filter((label) => rowSpread(label) < 0.5) : [];
 
   return (
     <div className="space-y-4">
@@ -41,7 +44,7 @@ export function CompareBody({ thread, isMax }: { thread: Extract<DiscussionThrea
           <thead>
             <tr className="border-b border-(--border-default) text-left text-(--text-muted)">
               <th className="sticky left-0 z-[1] bg-(--bg-surface) px-3 py-2 font-medium">Criteria</th>
-              {b.options.map((o) => (
+              {options.map((o) => (
                 <th key={o.id} className="px-3 py-2 font-medium text-(--text-primary)">
                   {o.name}
                 </th>
@@ -52,12 +55,12 @@ export function CompareBody({ thread, isMax }: { thread: Extract<DiscussionThrea
             {b.criteriaLabels
               .filter((label) => !hiddenRows.includes(label))
               .map((label) => {
-                const vals = b.options.map((o) => o.scores[label] ?? 0);
+                const vals = options.map((o) => o.scores[label] ?? 0);
                 const best = Math.max(...vals);
                 return (
                   <tr key={label} className="border-b border-(--border-subtle)">
                     <td className="sticky left-0 bg-(--bg-surface) px-3 py-2 font-medium text-(--text-primary)">{label}</td>
-                    {b.options.map((o) => {
+                    {options.map((o) => {
                       const v = o.scores[label] ?? 0;
                       const win = v === best && vals.filter((x) => x === best).length === 1;
                       return (
@@ -83,7 +86,7 @@ export function CompareBody({ thread, isMax }: { thread: Extract<DiscussionThrea
       {isMax ? (
         <div className="space-y-3 rounded-[12px] border border-(--border-default) bg-(--bg-inset) p-4">
           <p className="text-sm font-semibold text-(--text-primary)">My priorities</p>
-          {b.criteriaLabels.map((label, i) => (
+          {criteriaLabels.map((label, i) => (
             <div key={label} className="flex items-center gap-2">
               <span className="w-24 text-xs text-(--text-secondary)">{label}</span>
               <input
@@ -100,7 +103,7 @@ export function CompareBody({ thread, isMax }: { thread: Extract<DiscussionThrea
               />
             </div>
           ))}
-          <Button type="button" variant="secondary" size="sm" onClick={() => setWeights(b.criteriaLabels.map(() => 1))}>
+          <Button type="button" variant="secondary" size="sm" onClick={() => setWeights(criteriaLabels.map(() => 1))}>
             Reset weights
           </Button>
         </div>
@@ -108,7 +111,7 @@ export function CompareBody({ thread, isMax }: { thread: Extract<DiscussionThrea
 
       {isMax ? (
         <div className="flex flex-wrap gap-2">
-          {b.scenarios.map((s) => (
+          {scenarios.map((s) => (
             <button
               key={s.id}
               type="button"
@@ -124,7 +127,7 @@ export function CompareBody({ thread, isMax }: { thread: Extract<DiscussionThrea
             </button>
           ))}
           <p className="w-full text-sm text-(--text-secondary)">
-            {b.scenarios.find((s) => s.id === scenario)?.rationale}
+            {scenarios.find((s) => s.id === scenario)?.rationale}
           </p>
         </div>
       ) : null}
@@ -140,7 +143,7 @@ export function CompareBody({ thread, isMax }: { thread: Extract<DiscussionThrea
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {b.options.map((o, idx) => (
+        {options.map((o, idx) => (
           <Card key={o.id}>
             <CardContent className="space-y-2 p-4">
               <div className="flex items-center gap-2">

@@ -157,7 +157,7 @@ export function GigsBody({
               </label>
             ))}
             <p className="text-sm text-(--text-primary)">
-              You match {matched} of {b.requiredSkills.length} required skills.
+              You match {matched} of {requiredSkills.length} required skills.
             </p>
             <p className="text-xs text-(--text-muted)">{fitLabel}</p>
           </CardContent>

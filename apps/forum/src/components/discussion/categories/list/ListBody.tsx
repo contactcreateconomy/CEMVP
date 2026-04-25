@@ -10,14 +10,17 @@ import { FormattedBody } from "../../formatted-body";
 
 export function ListBody({ thread, isMax }: { thread: Extract<DiscussionThread, { category: "list" }>; isMax: boolean }) {
   const b = thread.categoryBody;
-  const [lens, setLens] = useState(b.lenses[0]?.id ?? "editors");
+  const lenses = b.lenses ?? [];
+  const criteria = b.criteria ?? [];
+  const [lens, setLens] = useState(lenses[0]?.id ?? "editors");
   const [openRank, setOpenRank] = useState<number | null>(null);
 
   const sorted = useMemo(() => {
-    const items = [...b.items];
+    const items = b.items ?? [];
+    const copy = [...items];
     const lensId = lens;
-    items.sort((a, bItem) => (a.lensRanks[lensId] ?? 99) - (bItem.lensRanks[lensId] ?? 99));
-    return items.map((item, idx) => {
+    copy.sort((a, bItem) => (a.lensRanks[lensId] ?? 99) - (bItem.lensRanks[lensId] ?? 99));
+    return copy.map((item, idx) => {
       const editorRank = item.lensRanks.editors ?? item.rank;
       const lensRank = item.lensRanks[lensId] ?? item.rank;
       return { item, displayRank: idx + 1, delta: lensRank - editorRank };
@@ -37,7 +40,7 @@ export function ListBody({ thread, isMax }: { thread: Extract<DiscussionThread, 
         <CardContent className="p-4">
           <p className="text-sm font-semibold text-(--text-primary)">Criteria</p>
           <ul className="mt-2 space-y-1 text-sm text-(--text-secondary)">
-            {b.criteria.map((c) => (
+            {criteria.map((c) => (
               <li key={c.text}>
                 {c.met ? "✓" : "○"} {c.text}
               </li>
@@ -58,7 +61,7 @@ export function ListBody({ thread, isMax }: { thread: Extract<DiscussionThread, 
 
       {isMax ? (
         <div className="flex flex-wrap gap-2">
-          {b.lenses.map((l) => (
+          {lenses.map((l) => (
             <button
               key={l.id}
               type="button"

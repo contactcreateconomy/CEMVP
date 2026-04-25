@@ -6,6 +6,8 @@ import { motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { track } from "@vercel/analytics/react";
 
+import { useUIPreferences } from "@/stores/ui-preferences-store";
+
 import { api, type Id } from "@/lib/convex";
 import type { ContributionTag, DiscussionThread } from "@/types/discussion";
 import type { Category, User } from "@/types";
@@ -46,7 +48,9 @@ function DiscussionPageInner({
 }: DiscussionPageClientProps) {
   const { authStatus, openAuthModal } = useAuth();
   const { mainComposerText, setMainComposerText } = useThreadDiscussion();
-  const [isMax, setIsMax] = useState(false);
+  const { contentViewMode, setContentViewMode } = useUIPreferences();
+  const isMax = contentViewMode === "max";
+  const setIsMax = (value: boolean) => setContentViewMode(value ? "max" : "min");
   const [toast, setToast] = useState<string | null>(null);
 
   const usersById = useMemo(() => new Map(users.map((u) => [u.id, u])), [users]);

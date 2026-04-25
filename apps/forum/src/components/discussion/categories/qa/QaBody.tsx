@@ -11,6 +11,8 @@ import { FormattedBody } from "../../formatted-body";
 
 export function QaBody({ thread, isMax }: { thread: Extract<DiscussionThread, { category: "qa" }>; isMax: boolean }) {
   const b = thread.categoryBody;
+  const tried = b.tried ?? [];
+  const environment = b.environment ?? [];
   const [repro, setRepro] = useState(b.reproducibilityCount);
 
   return (
@@ -24,7 +26,7 @@ export function QaBody({ thread, isMax }: { thread: Extract<DiscussionThread, { 
           <div>
             <p className="text-xs font-semibold uppercase text-(--text-muted)">What I&apos;ve tried</p>
             <ul className="mt-1 list-inside list-disc text-(--text-secondary)">
-              {b.tried.map((t) => (
+              {tried.map((t) => (
                 <li key={t}>{t}</li>
               ))}
             </ul>
@@ -36,7 +38,7 @@ export function QaBody({ thread, isMax }: { thread: Extract<DiscussionThread, { 
           <div>
             <p className="text-xs font-semibold uppercase text-(--text-muted)">Environment</p>
             <div className="mt-1 flex flex-wrap gap-2">
-              {b.environment.map((e) => (
+              {environment.map((e) => (
                 <span key={e} className="rounded-full border border-(--border-default) bg-(--bg-inset) px-2 py-0.5 text-xs">
                   {e}
                 </span>
