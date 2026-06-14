@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-06-14 (forum: fix Vercel build — add Suspense to 9 page routes)
+
+**Problem:** Vercel build failed with prerender error on `/campaigns` (and would have failed on all similar routes) because `useSearchParams()` inside `TopNav` requires a `Suspense` boundary above the client component tree to allow static prerendering.
+
+**Fix:** Wrapped the client component in `<Suspense fallback={null}>` in the following pages, matching the existing pattern in `feed/page.tsx`:
+- `campaigns/page.tsx`, `discover/page.tsx`, `leaderboard/page.tsx`, `notifications/page.tsx`
+- `profile/page.tsx`, `saved/page.tsx`, `settings/page.tsx`, `drafts/page.tsx`
+- `(compose)/new-post/page.tsx`
+
+**Apps affected:** `apps/forum`.
+
 ## 2026-04-18 (forum: hero carousel bug fixes — compact image fallback, direction wrap, null guard)
 
 **Bug fixes from code review:**

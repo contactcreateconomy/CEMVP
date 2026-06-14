@@ -1,8 +1,14 @@
 /**
  * Route: /settings
  */
+import { Suspense } from "react";
+
 import { SettingsPageClient } from "./settings-page-client";
 
 export default function SettingsPage() {
-  return <SettingsPageClient />;
+  return (
+    <Suspense fallback={null}>
+      <SettingsPageClient />
+    </Suspense>
+  );
 }
