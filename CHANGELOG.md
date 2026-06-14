@@ -1,13 +1,12 @@
 # Changelog
 
-## 2026-06-14 (forum: fix Vercel build — add Suspense to 9 page routes)
+## 2026-06-14 (forum: fix Vercel build — Suspense on TopNav in AppShell + 9 page routes)
 
-**Problem:** Vercel build failed with prerender error on `/campaigns` (and would have failed on all similar routes) because `useSearchParams()` inside `TopNav` requires a `Suspense` boundary above the client component tree to allow static prerendering.
+**Problem:** Vercel build kept failing with `useSearchParams() should be wrapped in a suspense boundary at page "/campaigns"`. The prior fix wrapped the page-level client components in `Suspense`, but the real trigger was `TopNav` (which calls `useSearchParams()`) being rendered in `AppShell` **without** a `Suspense` boundary — making every page in the `(app)` group a prerender failure.
 
-**Fix:** Wrapped the client component in `<Suspense fallback={null}>` in the following pages, matching the existing pattern in `feed/page.tsx`:
-- `campaigns/page.tsx`, `discover/page.tsx`, `leaderboard/page.tsx`, `notifications/page.tsx`
-- `profile/page.tsx`, `saved/page.tsx`, `settings/page.tsx`, `drafts/page.tsx`
-- `(compose)/new-post/page.tsx`
+**Fix:**
+- Wrapped `<TopNav />` in `<Suspense fallback={null}>` inside `app-shell.tsx` — this is the root fix that unblocks all pages.
+- Also wrapped client components in `<Suspense fallback={null}>` in 9 page routes: `campaigns`, `discover`, `leaderboard`, `notifications`, `profile`, `saved`, `settings`, `drafts`, `(compose)/new-post`.
 
 **Apps affected:** `apps/forum`.
 
