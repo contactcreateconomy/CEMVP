@@ -2,6 +2,7 @@
 
 import { useMutation } from "convex/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { track } from "@vercel/analytics/react";
 
 import { PostCard } from "@/components/feed/post-card";
 import { EmptyState } from "@/components/states/empty-state";
@@ -20,10 +21,6 @@ interface FeedClientProps {
   categories: Category[];
   /** When set and there are no posts to show, overrides default empty copy (e.g. search / saved). */
   emptyState?: { title: string; description: string; ctaLabel?: string };
-}
-
-function viralityScore(post: Post) {
-  return post.upvotes * 1.2 + post.commentsCount * 2 + post.views * 0.06;
 }
 
 interface UndoState {
@@ -47,6 +44,7 @@ export function FeedClient({
 
   const toggleFavoriteMutation = useMutation(api.forum.mutations.toggleFavorite);
   const toggleUpvoteMutation = useMutation(api.forum.mutations.toggleUpvote);
+  const reportMutation = useMutation(api.forum.mutations.createReport);
 
   const usersById = useMemo(() => new Map(users.map((user) => [user.id, user])), [users]);
 
@@ -65,30 +63,10 @@ export function FeedClient({
     [hiddenPostIds, initialPosts],
   );
 
-  const sortedPosts = useMemo(() => {
-    const sorted = [...visiblePosts].sort((a, b) => {
-      if (selectedSort === "new") {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-
-      if (selectedSort === "hot") {
-        const hotScoreA = a.upvotes * 2 + a.commentsCount * 3;
-        const hotScoreB = b.upvotes * 2 + b.commentsCount * 3;
-        return hotScoreB - hotScoreA;
-      }
-
-      if (selectedSort === "fav") {
-        if (a.isFavorited === b.isFavorited) {
-          return viralityScore(b) - viralityScore(a);
-        }
-        return Number(b.isFavorited) - Number(a.isFavorited);
-      }
-
-      return viralityScore(b) - viralityScore(a);
-    });
-
-    return selectedSort === "fav" ? sorted.filter((post) => post.isFavorited) : sorted;
-  }, [visiblePosts, selectedSort]);
+  const sortedPosts = useMemo(
+    () => (selectedSort === "fav" ? visiblePosts.filter((post) => post.isFavorited) : visiblePosts),
+    [visiblePosts, selectedSort],
+  );
 
   useEffect(() => {
     return () => {
@@ -169,15 +147,29 @@ export function FeedClient({
   );
 
   const reportPost = useCallback(
-    (reason: string) => {
+    async (reason: string) => {
       if (!reportPostId) {
         return;
       }
-      hidePost(reportPostId);
-      setReportPostId(null);
-      setUndoState((current) => (current ? { ...current, message: `Post reported (${reason}) and hidden` } : current));
+      try {
+        await reportMutation({
+          contentType: "post",
+          contentId: reportPostId,
+          reason: reason as "spam" | "harassment" | "misinformation" | "off_topic" | "other",
+        });
+        hidePost(reportPostId);
+        setReportPostId(null);
+        setUndoState((current) => (current ? { ...current, message: "Post reported and hidden" } : current));
+      } catch (err) {
+        setReportPostId(null);
+        setUndoState((current) =>
+          current
+            ? { ...current, message: err instanceof Error ? err.message : "Could not report post" }
+            : current,
+        );
+      }
     },
-    [hidePost, reportPostId],
+    [hidePost, reportPostId, reportMutation],
   );
   const handleShare = useCallback(async (post: Post) => {
     const shareUrl =
@@ -253,6 +245,7 @@ export function FeedClient({
               onHide={() => hidePost(post.id)}
               onReport={() => setReportPostId(post.id)}
               onShare={() => void handleShare(post)}
+              onPostClick={() => track("post_clicked", { category: post.category })}
             />
           );
         })}

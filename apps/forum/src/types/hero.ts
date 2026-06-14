@@ -1,7 +1,7 @@
 export interface TopPostHeroSlide {
   id: string;
   slug: string;
-  /** Full path for featured links, including `?post=` when overlaying feed copy on an MVP thread. */
+  /** Full path for the featured discussion page. */
   discussionHref: string;
   title: string;
   summary: string;

@@ -27,6 +27,7 @@ const categoryIconMap: Record<CategoryKey, ComponentType<{ className?: string }>
   "launch-pad": Rocket,
   debate: Swords,
   help: HelpCircle,
+  qa: HelpCircle,
   list: LayoutList,
   showcase: Sparkles,
   gigs: Briefcase,
@@ -46,7 +47,7 @@ export function PostInteractionRow({
   const CategoryIcon = category ? (categoryIconMap[category.key] ?? Sparkles) : Sparkles;
 
   return (
-    <div className="flex items-center justify-between gap-2 overflow-hidden rounded-[14px] border border-(--border-subtle) bg-(--bg-overlay)/20 px-2 py-2 sm:px-3">
+    <div className="flex items-center justify-between gap-2 rounded-[14px] border border-(--border-subtle) bg-(--bg-overlay)/20 px-2 py-2 sm:px-3">
       <div className="flex min-w-0 flex-1 items-center gap-1.5 text-xs text-(--text-secondary) sm:gap-3">
         <button
           type="button"
@@ -91,12 +92,11 @@ export function PostInteractionRow({
           name={category?.name ?? "General"}
           direction="top"
           size="sm"
-          icon={<CategoryIcon className="h-5 w-5" style={{ color: "var(--text-primary)", stroke: "var(--text-primary)" }} />}
-          className="relative z-10"
+          icon={<CategoryIcon className="h-5 w-5 text-(--text-primary) stroke-(--text-primary) transition-colors duration-200" />}
+          className="relative z-30 group/cat"
           motionClassName="[&>span]:h-8 [&>span]:w-8 sm:[&>span]:h-9 sm:[&>span]:w-9"
           avatarClassName={cn(
-            "h-8 w-8 border border-(--border-default) bg-(--bg-surface) sm:h-9 sm:w-9",
-            "shadow-[inset_0_1px_1px_rgba(255,255,255,0.16),inset_0_-1px_1px_rgba(0,0,0,0.14)]",
+            "h-8 w-8 bg-(--bg-surface) sm:h-9 sm:w-9",
           )}
           nameClassName="bg-(--bg-surface) text-(--text-primary) border-(--border-default)"
           labelStyle={{ left: "50%", translate: "-50% 0" }}

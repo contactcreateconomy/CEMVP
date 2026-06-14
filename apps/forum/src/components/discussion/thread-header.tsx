@@ -9,6 +9,7 @@ import {
   Briefcase,
   ChevronDown,
   ChevronsUp,
+  Eye,
   GitCompare,
   HelpCircle,
   LayoutList,
@@ -29,8 +30,7 @@ import { ReportPostDialog } from "@/components/feed/report-post-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { formatCompactNumber } from "@/lib/format";
-import { reputationLabel } from "@/lib/discussion/reputation";
+import { formatCompactNumber, formatRelativeDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Category, CategoryKey } from "@/types";
 import type { DiscussionThread } from "@/types/discussion";
@@ -43,6 +43,7 @@ const categoryIconMap: Record<CategoryKey, ComponentType<{ className?: string }>
   "launch-pad": Rocket,
   debate: Swords,
   help: HelpCircle,
+  qa: HelpCircle,
   list: LayoutList,
   showcase: Sparkles,
   gigs: Briefcase,
@@ -104,10 +105,28 @@ export function ThreadHeader({
     onToast("Link copied");
   };
 
+  const statsRow = (
+    <div className="flex flex-wrap items-center gap-3 text-sm text-(--text-secondary)">
+      <span className="inline-flex items-center gap-1.5">
+        <Eye className="h-3.5 w-3.5" />
+        {formatCompactNumber(thread.views)} reads
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <MessageCircle className="h-3.5 w-3.5" />
+        {formatCompactNumber(commentCount ?? thread.comments?.length ?? 0)} comments
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <ArrowUp className="h-3.5 w-3.5" />
+        {formatCompactNumber(upvotes)} upvotes
+      </span>
+    </div>
+  );
+
   return (
     <>
     <Card className="overflow-hidden border-(--border-default) bg-(--bg-surface)">
-      <CardContent className="space-y-4 p-4 sm:p-5">
+      <CardContent className="space-y-4 p-4 sm:p-6">
+        {/* Row 1: Category badge + View toggle */}
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
             {category ? (
@@ -147,53 +166,68 @@ export function ThreadHeader({
           </div>
         </div>
 
-        <h1 className="text-balance text-2xl font-semibold tracking-tight text-(--text-primary) sm:text-3xl">{thread.title}</h1>
+        {/* Row 2: Title */}
+        <h1 className="text-balance text-2xl font-bold tracking-tight text-(--text-primary) sm:text-3xl">{thread.title}</h1>
 
+        {/* Row 3: Subtitle / AI summary */}
+        {thread.aiSummary ? (
+          <p className="text-base leading-relaxed text-(--text-secondary) line-clamp-2">{thread.aiSummary}</p>
+        ) : null}
+
+        {/* Row 4: Author row */}
         <div className="flex flex-wrap items-center gap-3">
           {author ? (
             <Link
               href={`/users/${encodeURIComponent(author.handle)}`}
-              className="flex min-w-0 items-center gap-3 rounded-lg outline-offset-2 transition-colors hover:bg-(--bg-overlay)/50 focus-visible:ring-2 focus-visible:ring-(--border-active)"
+              className="flex min-w-0 items-center gap-2.5 rounded-lg outline-offset-2 transition-colors hover:bg-(--bg-overlay)/50 focus-visible:ring-2 focus-visible:ring-(--border-active)"
             >
               <UserAvatar user={author} size="md" />
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-(--text-primary)">{author.name}</p>
-                <p className="text-xs text-(--text-muted)">
-                  @{author.handle} · {reputationLabel(author.points)}
-                </p>
+                <p className="text-xs text-(--text-muted)">@{author.handle}</p>
               </div>
             </Link>
           ) : (
-            <>
+            <div className="flex min-w-0 items-center gap-2.5">
               <UserAvatar user={author} size="md" />
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-(--text-primary)">Unknown</p>
-                <p className="text-xs text-(--text-muted)">@unknown · Member</p>
+                <p className="text-xs text-(--text-muted)">@unknown</p>
               </div>
-            </>
+            </div>
           )}
-          <span className="text-xs text-(--text-muted) sm:ml-auto">
-            {new Date(thread.createdAt).toLocaleString()} · {formatCompactNumber(thread.views)} views
+          <span className="text-xs text-(--text-muted)">·</span>
+          <span className="text-xs text-(--text-muted)">
+            {formatRelativeDate(thread.createdAt)}
           </span>
+          {thread.updatedAt ? (
+            <>
+              <span className="text-xs text-(--text-muted)">·</span>
+              <span className="text-xs text-(--text-secondary)">Updated {formatRelativeDate(thread.updatedAt)}</span>
+            </>
+          ) : null}
         </div>
 
-        {thread.updatedAt ? (
-          <p className="text-xs text-(--text-secondary)">Updated {new Date(thread.updatedAt).toLocaleString()}</p>
+        {/* Row 5: Stats */}
+        {statsRow}
+
+        {/* Tags */}
+        {(thread.tags ?? []).length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {(thread.tags ?? []).map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                className="rounded-full border border-(--border-default) bg-(--bg-inset) px-3 py-1 text-xs font-medium text-(--text-secondary) transition-colors hover:border-(--border-active)"
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
         ) : null}
 
-        <div className="flex flex-wrap gap-2">
-          {(thread.tags ?? []).map((tag) => (
-            <button
-              key={tag}
-              type="button"
-              className="rounded-full border border-(--border-default) bg-(--bg-inset) px-3 py-1 text-xs font-medium text-(--text-secondary) transition-colors hover:border-(--border-active)"
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
-
-        <div className="rounded-[12px] border border-(--border-default) bg-(--bg-inset)/80 p-3">
+        {/* AI Summary expandable */}
+        <div className="rounded-xl border border-(--border-default) bg-(--bg-inset)/80 p-3">
           <button
             type="button"
             className="flex w-full items-center justify-between gap-2 text-left md:pointer-events-none md:cursor-default"
@@ -211,7 +245,11 @@ export function ThreadHeader({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 border-t border-(--border-subtle) pt-4">
+        {/* Divider */}
+        <div className="border-t border-(--border-default)" />
+
+        {/* Row 6: Action bar */}
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => {
@@ -219,8 +257,10 @@ export function ThreadHeader({
               onToggleUpvote();
             }}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border border-(--border-default) px-3 py-1.5 text-sm font-medium transition-colors hover:bg-(--bg-overlay)",
-              isUpvoted && "border-(--brand-primary)/40 text-(--brand-primary)",
+              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all duration-200",
+              isUpvoted
+                ? "border-(--brand-primary)/50 bg-(--brand-primary)/10 text-(--brand-primary) shadow-[0_0_12px_rgba(14,165,233,0.22)]"
+                : "border-(--border-default) hover:bg-(--bg-overlay)",
             )}
           >
             {isUpvoted ? <ChevronsUp className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />}
@@ -241,45 +281,49 @@ export function ThreadHeader({
               onToggleBookmark();
             }}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border border-(--border-default) px-3 py-1.5 text-sm font-medium transition-colors hover:bg-(--bg-overlay)",
-              isBookmarked && "border-(--brand-primary)/40 text-(--brand-primary)",
+              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all duration-200",
+              isBookmarked
+                ? "border-(--brand-primary)/50 bg-(--brand-primary)/10 text-(--brand-primary) shadow-[0_0_12px_rgba(14,165,233,0.22)]"
+                : "border-(--border-default) hover:bg-(--bg-overlay)",
             )}
           >
             <Bookmark className={cn("h-4 w-4", isBookmarked && "fill-current")} />
             {formatCompactNumber(bookmarks)}
           </button>
-          <Button type="button" variant="secondary" size="sm" className="gap-1.5" onClick={share}>
-            <Share2 className="h-3.5 w-3.5" />
-            Share
-          </Button>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <button
-                type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-(--border-default) text-(--text-secondary) hover:bg-(--bg-overlay)"
-                aria-label="More actions"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content
-                align="end"
-                sideOffset={8}
-                className="z-50 min-w-[160px] rounded-[12px] border border-(--border-default) bg-(--bg-surface) p-1 shadow-(--shadow-lg)"
-              >
-                <DropdownMenu.Item
-                  className="cursor-pointer rounded-[8px] px-2 py-2 text-sm text-(--feedback-error) outline-hidden data-highlighted:bg-(--bg-overlay)"
-                  onSelect={() => setReportOpen(true)}
+          <div className="ml-auto flex items-center gap-1.5">
+            <Button type="button" variant="secondary" size="sm" className="gap-1.5" onClick={share}>
+              <Share2 className="h-3.5 w-3.5" />
+              Share
+            </Button>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-(--border-default) text-(--text-secondary) transition-colors hover:bg-(--bg-overlay)"
+                  aria-label="More actions"
                 >
-                  Report
-                </DropdownMenu.Item>
-                <DropdownMenu.Item className="cursor-pointer rounded-[8px] px-2 py-2 text-sm outline-hidden data-highlighted:bg-(--bg-overlay)" onSelect={share}>
-                  Copy link
-                </DropdownMenu.Item>
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                  align="end"
+                  sideOffset={8}
+                  className="z-50 min-w-[160px] rounded-[12px] border border-(--border-default) bg-(--bg-surface) p-1 shadow-(--shadow-lg)"
+                >
+                  <DropdownMenu.Item
+                    className="cursor-pointer rounded-[8px] px-2 py-2 text-sm text-(--feedback-error) outline-hidden data-highlighted:bg-(--bg-overlay)"
+                    onSelect={() => setReportOpen(true)}
+                  >
+                    Report
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item className="cursor-pointer rounded-[8px] px-2 py-2 text-sm outline-hidden data-highlighted:bg-(--bg-overlay)" onSelect={share}>
+                    Copy link
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -1,6 +1,16 @@
 /** Static seed rows (from former mock-data). */
 
-export const categoryRows = [
+type CategorySeedRow = {
+  key: string;
+  name: string;
+  icon: string;
+  description: string;
+  primaryColor: string;
+  lockedByDefault: boolean;
+  pointsToUnlock?: number;
+};
+
+export const categoryRows: CategorySeedRow[] = [
   {
     key: "news",
     name: "News",
@@ -44,10 +54,10 @@ export const categoryRows = [
     pointsToUnlock: 400,
   },
   {
-    key: "help",
-    name: "Help",
+    key: "qa",
+    name: "Q&A",
     icon: "help-circle",
-    description: "Get unblocked with workflow and setup issues.",
+    description: "Ask questions, share answers, and learn together.",
     primaryColor: "#14B8A6",
     lockedByDefault: false,
   },
@@ -75,7 +85,7 @@ export const categoryRows = [
     primaryColor: "#EAB308",
     lockedByDefault: false,
   },
-] as const;
+];
 
 export const profileSeeds = [
   {
@@ -159,8 +169,8 @@ export const campaignRows = [
     participants: 287,
   },
   {
-    title: "Community Help Week",
-    description: "Answer 10 unresolved Help threads.",
+    title: "Community Q&A Week",
+    description: "Answer 10 unresolved Q&A threads.",
     rewardPoints: 420,
     endsAt: "2026-03-05T00:00:00.000Z",
     participants: 196,
@@ -188,7 +198,7 @@ export const heroSlideRows = [
   { legacyPostKey: "p39", shares: 1204, eyebrow: "Launch Story", ctaLabel: "Read", accentRgb: "168 85 247" },
   { legacyPostKey: "p44", shares: 1572, eyebrow: "Workflow Sprint", ctaLabel: "Read", accentRgb: "249 115 22" },
   { legacyPostKey: "p53", shares: 1108, eyebrow: "Creator Debate", ctaLabel: "Read", accentRgb: "244 63 94" },
-  { legacyPostKey: "p61", shares: 934, eyebrow: "Help Desk Highlight", ctaLabel: "Read", accentRgb: "56 189 248" },
+  { legacyPostKey: "p61", shares: 934, eyebrow: "Q&A Highlight", ctaLabel: "Read", accentRgb: "56 189 248" },
   { legacyPostKey: "p74", shares: 1411, eyebrow: "Top Lists", ctaLabel: "Read", accentRgb: "234 179 8" },
   { legacyPostKey: "p88", shares: 1022, eyebrow: "Talent Spotlight", ctaLabel: "Read", accentRgb: "20 184 166" },
 ];

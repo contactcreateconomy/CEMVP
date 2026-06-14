@@ -1,5 +1,315 @@
 # Changelog
 
+## 2026-06-14 (forum: fix Vercel build — Suspense on TopNav in AppShell + 9 page routes)
+
+**Problem:** Vercel build kept failing with `useSearchParams() should be wrapped in a suspense boundary at page "/campaigns"`. The prior fix wrapped the page-level client components in `Suspense`, but the real trigger was `TopNav` (which calls `useSearchParams()`) being rendered in `AppShell` **without** a `Suspense` boundary — making every page in the `(app)` group a prerender failure.
+
+**Fix:**
+- Wrapped `<TopNav />` in `<Suspense fallback={null}>` inside `app-shell.tsx` — this is the root fix that unblocks all pages.
+- Also wrapped client components in `<Suspense fallback={null}>` in 9 page routes: `campaigns`, `discover`, `leaderboard`, `notifications`, `profile`, `saved`, `settings`, `drafts`, `(compose)/new-post`.
+
+**Apps affected:** `apps/forum`.
+
+## 2026-04-18 (forum: hero carousel bug fixes — compact image fallback, direction wrap, null guard)
+
+**Bug fixes from code review:**
+- Compact cascade `<Image>` now has `onError` handler — broken images fall back to accent gradient instead of blank.
+- Fixed cascade direction wrap: clicking back cards near the end of the carousel no longer plays animations in the wrong direction.
+- Added null guard for `heroRef.current` in the measure effect (was using non-null assertion).
+- Removed stale JSDoc on `discussionHref` that referenced a `?post=` param the implementation never uses.
+
+**Apps affected:** `apps/forum`.
+
+## 2026-04-18 (forum: hero carousel compact — fluid directional animation)
+
+**Compact state — animation direction alignment (Apple macOS-style):**
+- Fixed the core clash: old front card now exits **LEFT** on "next" (sinks into the cascade stack depth), instead of wrongly exiting right while text exited left.
+- Cascade enter/exit is now fully symmetric: "next" and "prev" are exact direction mirrors.
+- `enterFrom`/`exitTo` values tuned for depth-coherent 3D transition (new back card materialises from deep behind the stack; old front sinks into it on next, and the reverse for prev).
+- Text `AnimatePresence` switched from `mode="wait"` (sequential) to `mode="sync"` (parallel exit+enter) — old text slides out as new text slides in simultaneously, matching macOS page-turn behaviour.
+- Text transition replaced with a spring (`stiffness: 280, damping: 28, mass: 0.9`) matching the CASCADE_SPRING feel.
+- Text x-offset increased from ±40 to ±56 for more visible, purposeful motion.
+
+**Apps affected:** `apps/forum`.
+
+## 2026-04-18 (forum: hero carousel — sizing revert + icon-only toggle buttons)
+
+**Default state — sizing reverted to pre-enlargement values:**
+- `cardW` fallback reverted to 549 (was 640); dynamic measure reverted to `sorterRect.width` (no ×1.18 factor).
+- `focusX` reverted to original formula (no −80 offset).
+- `X_STRIDE` reverted to 440 (was 360).
+- Side-card `scale`/`opacity`/`blur`/`brightness` reverted to original dimmer values (0.5/0.35, 0.55/0.14, 8/16, 0.45/0.2).
+
+**Toggle buttons — text removed, icon-only, top-right corner:**
+- "Compact" button replaced with `Minimize2` icon-only circle at top-right of default state.
+- "Expand" button replaced with `Maximize2` icon-only circle at top-right of compact state.
+- Removed `ChevronDown`/`ChevronUp` imports; added `Minimize2`/`Maximize2`.
+
+**Apps affected:** `apps/forum`.
+
+## 2026-04-18 (forum: hero carousel compact-state design fixes)
+
+**Compact state — navigator, Explore button, hover glow:**
+- Removed inline "Read/Explore" link from the animated text block.
+- Added a static **Explore** button next to the navigator (same pill + Explore row as default state); it remains fixed regardless of slide changes.
+- Navigator replaced with the same symmetric pill-container design from default state — both Prev/Next buttons use `ChevronLeft`/`ChevronRight` inside a shared frosted-glass pill with equal hover states.
+- Explore button inherits the same `group-hover/hero` glow and arrow pulse animation as default state.
+- Removed unused `ArrowLeft` and `ArrowRight` imports.
+
+**Apps affected:** `apps/forum`.
+
+## 2026-04-18 (forum: hero carousel default-state positioning tweaks)
+
+**Default state — positioning & visibility:**
+- Focus card is ~18% wider (dynamically derived from sorter width × 1.18) and shifted ~80px left for better left-justification.
+- Side cards now cascade closer together (`X_STRIDE` 440 → 360) with more visibility: larger scale (0.6/0.48), higher opacity (0.65/0.3), less blur and more brightness.
+- Edge mask widened from 10%/90% to 2%/98% so side cards peek out more.
+- Perspective origin adjusted to 42% to match shifted focus.
+
+**Apps affected:** `apps/forum`.
+
+## 2026-04-18 (forum: compact state — 3D cascade animation for image area)
+
+**Compact state — 3D cascade:**
+- Replaced the static left thumbnails + center vertical-slide image with a unified **3D cascade stage** (`col-span-7`).
+- Active slide is the front card; next 2 upcoming slides cascade behind it with `z`, `rotateY`, `scale`, `opacity`, and `blur/brightness` depth transforms.
+- Direction-aware entrance/exit: forward slides enter from back-left and exit right; backward reverses.
+- Premium spring physics (`CASCADE_SPRING`: stiffness 180, damping 25, mass 0.9) for smooth macOS-style motion.
+- Removed `thumbnailSlides` and `imgVariants` — replaced by `cascadeSlides` array and inline animate/initial/exit props.
+- Card dimensions derived from `compactH` (82% usable height, landscape 4:3 ratio).
+
+**Apps affected:** `apps/forum`.
+
+## 2026-04-18 (forum: hero carousel compact state redesign)
+
+**New feature — two-state hero carousel (compact mode):**
+- Hero carousel now has two states: **Default** (existing 3D cinematic cascade, unchanged) and **Compact** (new 3-column portrait layout, ~50% height).
+- Compact dimensions: 220px (mobile/tablet) | 260px (xl ≥ 1280px) — exactly 50% of default heights. Height springs between states via Framer Motion (`stiffness:200, damping:28`).
+- Compact layout — left column: mono slide counter + vertical `eyebrow` category label + 3 thumbnail buttons; center column: portrait-cropped cover image with vertical slide animation per direction; right column: eyebrow, title, summary (line-clamped), Explore link, + circular ArrowLeft/ArrowRight nav buttons. Accent colour drives the "next" button background and shadow.
+- Direction-aware animations: image slides in/out vertically (100% y), text slides in/out horizontally (40px x), both 0.5s cubic-bezier.
+- Toggle: "Compact" pill at bottom-centre of default state (appears on hero hover, cyan glow on direct hover). "Expand" pill at top-right of compact state.
+- Auto-advance (5.2s) and hover-pause work identically in both states. Wheel/drag navigation disabled in compact. `prefers-reduced-motion` collapses all transitions to instant.
+- Ambient background (blurred cover image) shared between states for seamless visual continuity.
+- `top-post-hero-section.tsx`: removed external `h-[440px] xl:h-[520px]` class from `TopPostHeroCarousel` — the component now manages its own height internally.
+
+**Apps affected:** `apps/forum`.
+
+## 2026-04-17 (forum: rename Help category to Q&A)
+
+**Category rename — full key + display name change:**
+- Renamed the "Help" category to "Q&A" across the entire codebase: key `"help"` → `"qa"`, display name `"Help"` → `"Q&A"`.
+- Updated Convex schema, validators, seed data (catalog, discussion threads, generated posts).
+- Updated frontend types (`CategoryKey`, `HelpBody` → `QaBody`), slug utility, category template folder (`categories/help/` → `categories/qa/`).
+- Updated registry, tests, left sidebar icon mapping, shared data context fallbacks, category preview route, thread comments (solution filter), thread header icons, post interaction row icons, new-post composer fields and scaffolds.
+- Seed data: thread slug `help-001` → `qa-001`, campaign "Community Help Week" → "Community Q&A Week", hero slide "Help Desk Highlight" → "Q&A Highlight".
+- **Re-seed required** after deployment to update stored category keys.
+
+**Apps affected:** `apps/forum`, `convex/`.
+
+## 2026-04-17 (forum: category design preview routes)
+
+**New feature — `/category/[slug]` design sandbox:**
+- Added `apps/forum/src/app/(app)/category/[slug]/page.tsx` + `category-preview-loader.tsx`: parameterised route that loads the most recent real thread for any of the 9 categories and renders it using the exact same `DiscussionPageClient` as real thread pages.
+- Added `convex/forum/discussionRoute.ts: getRepresentativeThreadByCategory` query: finds the latest non-removed post by `by_category_createdAt` index and returns a full `DiscussionRouteState`.
+- In development mode a banner shows the category key and the template directory to edit.
+- Design workflow: navigate to `localhost:3000/category/news` (or any of the 9 category slugs), make changes to `src/components/discussion/categories/news/NewsBody.tsx` etc., and they propagate to all real thread pages automatically.
+
+**Files affected:** `apps/forum` (new route), `convex/forum/discussionRoute.ts` (new query).
+
+## 2026-04-16 (forum: bug fixes — 8 confirmed bugs resolved)
+
+**Critical fixes:**
+- **Bug 1** — `thread-composer.tsx`: Fixed postId resolution for rich threads. Now uses `thread.postId ?? thread.id` so comments work on seeded/rich thread pages (previously threw "Post not found").
+- **Bug 2** — `convex/forum/mutations.ts`: Fixed permanently stale upvote counts. `toggleUpvote` now patches `forumPosts.upvotes` in sync with sharded counter writes, so the document field stays accurate for feed/discussion rendering.
+- **Bug 3** — `image-uploader.tsx` + `use-cover-image-url` hook + `queries.ts`: Fixed cover image URLs. Uploader now stores Convex storageId instead of a constructed fake URL. Added `useCoverImageUrl` hook for client-side resolution and server-side resolution in `listHeroSlides`. Cover images render correctly across sessions.
+
+**Medium fixes:**
+- **Bug 4** — `discussionRoute.ts`: Increased comment load cap from 50 to 200 for regular posts.
+- **Bug 5** — Deleted orphaned `stores/composer-store.ts` (Zustand store was never imported; composer uses direct localStorage).
+- **Bug 6** — `GigsComposeForm.tsx`: Added `duration`, `preferredSkills`, `posterNote` fields + auto-generated defaults (`isOpen`, `applicantCount`, `processStage`, `stages`).
+- **Bug 7** — `ReviewComposeForm.tsx` + `ReviewBody.tsx`: Added `reviewerContextNote`, `verdictRationale`, `criteria` (dynamic list with score) fields. Fixed crash in `ReviewBody` where `b.criteria` and `b.reviewerContextMax` were accessed without null guards.
+- **Bug 8** — `convex/schema.ts`: Replaced `v.any()` on `forumCategoryPayloads.payload` with per-category validators (gigs + review + fallback).
+
+**Files affected:** `apps/forum` (frontend), `convex` (backend). New files: `apps/forum/src/hooks/use-cover-image-url.ts`. Deleted: `apps/forum/src/stores/composer-store.ts`.
+
+## 2026-04-16 (forum: scale readiness, performance, ecosystem foundation — Part 5)
+
+- **`convex/schema.ts`**: Added `forumCounterShards` (sharded upvote/view counters), `forumAnalyticsEvents`, `forumDailyStats` tables. Added `searchTags` optional field to `forumPosts` for category-aware search.
+- **`convex/forum/mutations.ts`**: `toggleUpvote` now uses sharded counter writes (10 shards) instead of direct `forumPosts.upvotes` patch — eliminates OCC conflicts on viral posts. Added `incrementViewCount` mutation (5 shards). Added `trackEvent` inline analytics in `createPost`, `createComment`, `toggleUpvote`, `toggleFavorite`. Added `extractSearchTags` helper for denormalizing gigs skills and review product names into `searchTags`.
+- **`convex/forum/queries.ts`**: Added `getPostUpvoteCount` query (sums all upvote shards). Extended `searchPostsAndUsers` with optional `categoryFilter` arg using Convex search index field filters.
+- **`convex/forum/jobs.ts`**: Added `reconcileUpvoteCounts` internal mutation (cursor-based shard sum → post patch, self-chains). Added `aggregateDailyAnalytics` internal mutation (groups past-24h events by type + category, writes to `forumDailyStats`).
+- **`convex/crons.ts`**: Added reconcile cron (10-min interval) and daily analytics cron (3 AM UTC).
+- **`apps/forum/src/components/discussion/thread-comments.tsx`**: Virtual scrolling via `@tanstack/react-virtual` when root comment count exceeds 100 (800px max-height scroll container, 120px estimated row height, 5 overscan).
+- **`apps/forum/src/components/feed/feed-client.tsx`**: Added `@vercel/analytics` `track("post_clicked")` on post card click.
+- **`apps/forum/src/components/discussion/discussion-page-client.tsx`**: Added `incrementViewCount` on mount (ref-gated for StrictMode). Added `track("thread_viewed")` on mount.
+- **`apps/forum/src/components/feed/post-card.tsx`**: Added `onPostClick` optional prop for analytics tracking.
+- **`apps/forum/src/components/layout/top-nav.tsx`**: Search form passes current `category` as hidden field when browsing a category-filtered feed; placeholder updates to show category name.
+- **`apps/forum/src/app/(app)/search/page.tsx`**: Accepts optional `category` search param; passes to `SearchPageClient`.
+- **`apps/forum/src/app/(app)/search/search-page-client.tsx`**: Passes `categoryFilter` to `searchPostsAndUsers` query.
+- **NEW `apps/forum/src/types/platform.ts`**: `PlatformIdentity` and `ContentReference` types for future cross-app identity and content linking.
+- **`apps/forum/src/types/discussion.ts`**: Added `contentReferences?: ContentReference[]` to `DiscussionThreadBase`.
+- **NEW `apps/forum/vitest.config.ts`**: Vitest config with jsdom environment, React plugin, `@` alias.
+- **NEW `apps/forum/src/test/setup.ts`**: Test setup with `@testing-library/jest-dom/vitest`.
+- **NEW `apps/forum/src/components/discussion/categories/__tests__/registry.test.ts`**: Category registry tests — validates all 9 keys return templates, unknown keys return null.
+- **NEW `convex/forum/__tests__/feedCache.test.ts`**: Virality score unit tests — comment weight > upvote weight, zero baseline, linear scaling.
+- **NEW `docs/ecosystem-integration.md`**: Ecosystem integration boundary — identity mapping, content references, single-deployment strategy, table ownership, migration path.
+- **`apps/forum/package.json`**: Added `@tanstack/react-virtual` dependency. Added vitest/testing devDependencies. Added `test` and `test:run` scripts.
+- **`package.json`**: Added `test` and `test:run` root scripts.
+- **Typecheck + lint**: Clean (0 errors, 6 warnings — pre-existing + React Compiler compatibility note for `useVirtualizer`).
+- **Tests**: 2 passing (registry + virality score).
+
+## 2026-04-16 (forum: moderation, notifications, media upload, stores, ISR — Part 4)
+
+- **`convex/schema.ts`**: Added `forumReports` and `forumModActions` tables. Added `moderationStatus` field to `forumPosts`. Added `createReport` kind to `forumWriteBuckets`.
+- **`convex/forum/limits.ts`**: Added `createReport` rate limit (10/hour).
+- **`convex/forum/mutations.ts`**: Added `createReport` (with duplicate check), `moderateContent` (mod/admin), `generateUploadUrl` (storage). Added notification emission in `createComment` and `toggleUpvote`.
+- **`convex/forum/queries.ts`**: Added `getModQueue` (mod/admin, paginated) and `getStorageUrl`.
+- **`convex/forum/feedQueries.ts`**: Filter removed/shadow-removed posts from feed bundles and hot ranking.
+- **`convex/forum/discussionRoute.ts`**: Return `not_found` for removed/shadow-removed posts.
+- **`apps/forum/src/components/feed/report-post-dialog.tsx`**: Updated reasons to match backend enum values.
+- **`apps/forum/src/components/feed/feed-client.tsx`**: Wired `onReport` to `createReport` backend mutation.
+- **`apps/forum/src/components/layout/top-nav.tsx`**: Notification panel now marks notifications as read on click and navigates to `postSlug`.
+- **NEW `apps/forum/src/components/ui/image-uploader.tsx`**: Drag-and-drop image upload with client-side resize, Convex storage integration, preview.
+- **`apps/forum/src/components/new-post/new-post-composer.tsx`**: Integrated `ImageUploader` for cover image. Added `coverImage` state persisted to draft.
+- **NEW `apps/forum/src/stores/composer-store.ts`**: Zustand store with localStorage persist for composer drafts.
+- **NEW `apps/forum/src/stores/ui-preferences-store.ts`**: Zustand store with localStorage persist for feed sort and sidebar state.
+- **`apps/forum/src/components/feed/feed-route-client.tsx`**: Uses `useUIPreferences` for persistent feed sort across sessions.
+- **`apps/forum/src/app/(app)/feed/page.tsx`**: Added `revalidate = 60` for ISR.
+- **Typecheck + lint**: Clean (0 errors, 5 warnings — all pre-existing or `<img>` in uploader preview).
+
+## 2026-04-16 (forum: CategoryTemplate contract — Part 3)
+- **`apps/forum/src/components/discussion/categories/types.ts`**: Added `ComposeForm` and `CardExtras` optional slots to `CategoryTemplate` interface.
+- **`apps/forum/src/components/discussion/categories/registry.ts`**: Kept eager imports for synchronous API compatibility; Suspense boundary added in body rendering.
+- **`apps/forum/src/components/discussion/category-bodies.tsx`**: Wrapped `tpl.Body` in `<Suspense>` with pulse fallback.
+- **NEW `categories/gigs/GigsComposeForm.tsx`**: Structured fields — role title, employment type, location, budget, required skills (tags input).
+- **NEW `categories/review/ReviewComposeForm.tsx`**: Structured fields — product name, URL, verdict selector, star rating.
+- **NEW `categories/help/HelpComposeForm.tsx`**: Structured fields — goal, environment tags, what was tried.
+- **NEW `categories/debate/DebateComposeForm.tsx`**: Structured fields — motion statement, initial position (for/against/neutral).
+- **NEW `categories/gigs/GigsCardExtras.tsx`**: Feed card metadata strip — role + employment + location + budget.
+- **NEW `categories/review/ReviewCardExtras.tsx`**: Feed card verdict badge + star rating.
+- **NEW `categories/debate/DebateCardExtras.tsx`**: Feed card vote counts or motion text.
+- **`categories/{gigs,review,help,debate}/index.tsx`**: Registered `ComposeForm` and `CardExtras` in templates.
+- **`apps/forum/src/components/new-post/new-post-composer.tsx`**: Renders `ComposeForm` below TipTap editor; passes `categoryFields` to `createPost` mutation and localStorage drafts; clears fields on category change.
+- **`apps/forum/src/components/feed/post-card.tsx`**: Added `CardExtras` slot below title/summary (no layout/style changes to existing elements).
+- **`apps/forum/src/types/post.ts`**: Added optional `categoryBody` field to `Post` type.
+- **`convex/schema.ts`**: Added `forumCategoryPayloads` table (`postId`, `category`, `payload`, `version`) with `by_post` index.
+- **`convex/forum/mutations.ts`**: `createPost` accepts optional `categoryFields`; stores structured payload in `forumCategoryPayloads`.
+- **`convex/forum/discussionRoute.ts`**: Loads `categoryPayload` for real posts and merges into `thread.categoryBody`.
+- **`convex/forum/feedQueries.ts`**: `buildFeedBundleFromPosts` loads per-post category payloads for feed card extras.
+- **`convex/forum/helpers.ts`**: `postDocToPost` accepts optional `categoryBody` and includes it in output.
+- **Typecheck + lint**: Clean (0 errors).
+
+## 2026-04-16 (forum: comment threading & interaction wiring — Part 2)
+- **`convex/schema.ts`**: Added `parentId` (optional `forumPostComments` id) + `by_parent` index to `forumPostComments` table for two-tier threading.
+- **`convex/forum/mutations.ts`**: `createComment` accepts optional `parentId`; validates parent exists on same post and enforces max depth 2 (no replies to replies).
+- **`convex/forum/queries.ts`**: New `getCommentReplies` query loads direct replies to a comment via `by_parent` index.
+- **`convex/forum/discussionRoute.ts`**: Returns real `parentId` from DB (no longer hardcoded `null`). Added `viewerHasUpvoted`, `viewerHasBookmarked`, `postId` to thread shape for both regular posts and rich threads.
+- **`apps/forum/src/types/discussion.ts`**: Added `postId`, `viewerHasUpvoted`, `viewerHasBookmarked` to `DiscussionThreadBase`.
+- **`apps/forum/src/components/discussion/thread-comments.tsx`**: Two-tier enforcement — Reply button hidden on replies (comments with `parentId`) for real posts; rich thread rendering unchanged.
+- **`apps/forum/src/components/discussion/thread-composer.tsx`**: Accepts optional `parentId` prop, passes it to `createComment` mutation for inline replies.
+- **`apps/forum/src/components/discussion/discussion-page-client.tsx`**: Wired `toggleUpvote`/`toggleFavorite` mutations with optimistic updates. State initialized from `thread.viewerHasUpvoted`/`thread.viewerHasBookmarked` server data.
+- **Typecheck + lint**: Clean (0 errors).
+
+## 2026-04-16 (forum: backend integrity & performance fixes — Part 1)
+- **`convex/schema.ts`**: Replaced `v.any()` on `forumRichThreads.payload` with discriminated union validator across all 9 categories. Added `richThreadBase` shared validator object.
+- **`convex/forum/feedQueries.ts`**: Replaced unbounded `.collect()` in `viewerFlagsForPostIds` with per-postId targeted lookups via `by_user_post` index (max 96 reads vs thousands).
+- **`convex/forum/queries.ts`**: Changed `getCommentsByPostId` from `.take(50)` to `.paginate()` with cursor support for proper pagination.
+- **`convex/forum/mutations.ts`**: `updateProfile` now schedules batched internal job instead of direct `.collect()` + patch loop (avoids timeout for prolific authors).
+- **`convex/forum/jobs.ts`**: NEW — `syncAuthorDenormalization` internal mutation with cursor-based self-chaining (100 posts per batch).
+- **`apps/forum/src/components/feed/feed-client.tsx`**: Removed client-side virality score secondary sort; posts render in server-delivered order.
+- **`apps/forum/src/providers/shared-data-context.tsx`**: Removed client-side `ensureForumCategories` mutation call; categories are admin-seeded only.
+- **`convex/forum/discussionRouteHelpers.ts`**: Added `unknown` intermediate cast for discriminated union type narrowing.
+- **`convex/forum/seed.ts`**: Added type assertion for remapped payload insert.
+- **`convex/_generated/api.d.ts`**: Added `forum/jobs` module to generated API types.
+- **Typecheck + lint**: Clean.
+
+## 2026-04-15 (forum: category template registry — extract plugin architecture)
+- **`apps/forum/src/components/discussion/categories/`**: New directory with per-category modules — 9 body components, 4 insight components, 9 index files wiring `CategoryTemplate` interface, plus `types.ts`, `registry.ts`, and `GenericBody.tsx`.
+- **`apps/forum/src/components/discussion/category-bodies.tsx`**: Slimmed from 1161 lines to ~20 lines — thin dispatcher using `getCategoryTemplate()` registry lookup.
+- **`apps/forum/src/components/discussion/insight-rail-extras.tsx`**: Slimmed from 129 lines to ~12 lines — thin dispatcher using registry `Insights` slot.
+- **`apps/forum/src/components/discussion/thread-composer.tsx`**: Replaced hardcoded `NUDGES` map with `getCategoryTemplate().nudge` lookup from registry.
+- **`apps/forum/src/components/discussion/discussion-page-client.tsx`**: Replaced inline `feedbackChips` logic with `getCategoryTemplate().getFeedbackChips()` from registry.
+- Adding a new category now requires only: create a body component, create an index.tsx, add one import + registry entry. No core files touched.
+- **Typecheck + build**: Clean.
+
+## 2026-04-15 (forum: unified thread template — every post gets its own page)
+- **`apps/forum/src/lib/discussion/feed-post-discussion-slug.ts`**: Simplified — every post navigates to `/discussions/{slug}` directly (removed MVP thread mapping).
+- **`apps/forum/src/lib/discussion/category-mvp-slugs.ts`**: Deleted — no more canonical MVP thread slug mapping.
+- **`convex/forum/constants.ts`**: Simplified `discussionHrefForPostShape` to always use the post's own slug.
+- **`convex/forum/discussionRoute.ts`**: Both rich threads and regular posts now return a unified `kind: "rich"` response. Regular posts construct a thread-shaped object with comments. Removed `feedOverlay` and redirect logic.
+- **`apps/forum/src/components/discussion/discussion-page-loader.tsx`**: Single render path through `DiscussionPageClient` for all posts. Removed `feedPostSlug`, redirect handling, and simple-post card fallback.
+- **`apps/forum/src/components/discussion/discussion-page-client.tsx`**: Removed `FeedThreadOverlay` type and all overlay-swapping logic.
+- **`apps/forum/src/components/discussion/category-bodies.tsx`**: Added `GenericBody` fallback for posts without category-specific structured data. Added type assertions for category body narrowing.
+- **`apps/forum/src/components/discussion/insight-rail-extras.tsx`**: Added null guards for `categoryBody` access with explicit type casts.
+- **`apps/forum/src/types/discussion.ts`**: Added generic union member `(DiscussionThreadBase & { categoryBody?: Record<string, unknown> })`. Removed `DISCUSSION_MVP_SLUGS` and `DiscussionMvpSlug`.
+- **`apps/forum/src/app/(app)/discussions/mvp/page.tsx`**: Deleted (dev index page for 9 hardcoded slugs).
+- **`apps/forum/src/app/(app)/discussions/[slug]/page.tsx`**: Removed `searchParams` and `feedPostSlug` — clean slug-only routing.
+- **`convex/forum/queries.ts`**: Updated `discussionHrefForPostShape` call to use simplified signature.
+- **Typecheck**: Clean.
+
+## 2026-04-15 (auth-ui: inline email verification flow in signup)
+- **`packages/auth-ui/src/signup-form.tsx`**: Added inline email verification — "Verify" button inside email input, crossfades to 6-digit OTP input with auto-advance, paste support, shake animation on error, verified badge. Frontend-only with placeholder functions for backend wiring. Form submission now requires verified email.
+- **`packages/auth-ui/src/ui/input.tsx`**: Added subtle primary blue outline on focus (`border-brand-primary/50`, `ring-2 ring-brand-primary/20`).
+- **`apps/forum/src/app/globals.css`**: Added `@keyframes auth-otp-shake` for OTP error animation.
+- **`apps/forum/src/components/layout/top-nav.tsx`**: Fixed NavTooltip blur — replaced spring `y` animation with CSS-positioned opacity+scale transition; fixed dark mode border.
+
+## 2026-04-15 (forum: top nav — crisp Create hover)
+- **`top-nav.tsx`**: Removed hover `translate-y` on the Create (new post) control so the icon stays sharp over the glass header; `NavTooltip` no longer animates with `filter: blur()` so the “Create” label stays crisp.
+
+## 2026-04-12 (thread page polish: layout, header, composer, comments, sidebar)
+- **`discussion-page-client.tsx`**: 3-column layout at `lg` (was `xl`); main thread body capped at `max-w-[720px]`.
+- **`thread-header.tsx`**: Restructured header — category badge, bold title, subtitle line, author row with relative time, stats row (reads/comments/upvotes), `--border-default` divider, action bar with cyan glow on active upvote/bookmark, Share/More right-aligned.
+- **`thread-composer.tsx`**: Wired to `createComment` Convex mutation with loading spinner and inline error; expand-on-focus textarea; toolbar shows only on focus; "Login to reply" for unauthenticated users.
+- **`thread-comments.tsx`**: Sort tabs match TrendSorter pill style (sliding cyan indicator); comment cards use `rounded-xl` with author/time row and action divider; nested replies use `border-l-2` thread line at `ml-6/8`; polished empty state.
+- **`thread-sidebar.tsx`**: Three card-wrapped sections — Author (bio, points badge, Follow), Related (max 5), Trending (max 5); breakpoint `xl` → `lg`; Insight sheet button matches.
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` (1 pre-existing warning only).
+
+## 2026-04-11 (audit: Priority 3 — feature completion and polish)
+- **`convex/forum/mutations.ts`**: Added **`updateProfile`** mutation — name, bio, image, handle editing with validation, uniqueness check, and denormalized post author field sync.
+- **`convex/forum/limits.ts`**: Added **`MAX_PROFILE_NAME_LEN`**, **`MAX_PROFILE_BIO_LEN`**, **`MAX_PROFILE_HANDLE_LEN`** constants.
+- **`convex/forum/queries.ts`**: Added **`getViewerProfile`** query for current user's profile data.
+- **`apps/forum/src/app/(app)/settings/settings-page-client.tsx`**: Full rewrite — theme selector (dark/light/system), notification toggles, content filter toggle, all wired to **`updateViewerSettings`** mutation.
+- **`apps/forum/src/app/(app)/profile/profile-page-client.tsx`** (new): Real profile display with avatar, name, handle, bio, stats (points/level/streak), edit mode with inline form.
+- **`apps/forum/src/app/(app)/profile/page.tsx`**: Replaced placeholder with `ProfilePageClient`.
+- **`apps/forum/src/app/(app)/drafts/drafts-page-client.tsx`** (new): Reads localStorage draft, shows real draft with resume/delete actions, or empty state with link to compose.
+- **`apps/forum/src/app/(app)/drafts/page.tsx`**: Replaced hardcoded placeholder with `DraftsPageClient`.
+- **`apps/forum/src/app/not-found.tsx`** (new): Themed 404 page with brand styling and back-to-feed link.
+- **`apps/forum/src/app/(compose)/error.tsx`** (new): Error boundary for compose layout.
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` (pre-existing warning only).
+
+## 2026-04-11 (audit: Priority 1 + 2 fixes from full codebase audit)
+- **`convex/forum/mutations.ts`**: Added **`createComment`** mutation with auth check, rate limiting, body validation, locked-post guard, and `commentsCount` increment.
+- **`convex/forum/limits.ts`**: Added **`MAX_COMMENT_BODY_LEN`** (10,000) and **`createComment`** rate limit (60/hour).
+- **`convex/forum/validators.ts`**: New file — shared Convex return-type validators matching frontend TypeScript types (post, user, comment, category, notification, campaign, leaderboard, vibing-item, hero-slide, settings, feed-page, search-results).
+- **`convex/forum/queries.ts`**: Replaced **13 `v.any()` return types** with explicit validators. Only `getThreadBySlug` and `discussionRoute` queries retain `v.any()` (dynamic payload shapes, validated at read time).
+- **`convex/forum/feedQueries.ts`**: **`viewerFlagsForPostIds`** batched from N+2 queries per post to 2 total queries (fetch all favorites + all upvotes for user, filter in memory). **`loadCommentPreviewsForPostIds`** parallelized with `Promise.all` instead of sequential loop.
+- **`convex/schema.ts`**: Added documentation comment on `forumRichThreads.payload` clarifying it's seed-only data validated at read time.
+- **`apps/forum/src/providers/shared-data-context.tsx`**: Changed `useLayoutEffect` → `useEffect` for non-critical category auto-ensure.
+- **`apps/forum/src/app/(app)/*/loading.tsx`**: Added **9 missing loading skeletons** (profile, settings, drafts, campaigns, leaderboard, discover, saved, notifications, users/[handle]).
+- **Apps affected**: `apps/forum` (primary), `convex/` (backend).
+
+## 2026-04-05 (forum: new-post — no mandatory fields, TipTap category UX)
+- **`category-composer-fields.ts`**: Removed required-field validation and HTML meta merging; exports **`categoryWritingHints`**, **`categoryEditorPlaceholders`**, **`categoryScaffoldHtml`**, **`isEditorDocumentBare`**, and draft payload **without** `extraFields`.
+- **`new-post-composer.tsx`**: Dropped per-category input panel and publish validation for extra fields; **`body`** is TipTap HTML only; category row uses **`flex-wrap`** (all chips visible); hint line above editor; dynamic TipTap placeholder; optional **empty-doc scaffold** when switching category; drafts ignore legacy `extraFields` in JSON.
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` (existing **`thread-comments.tsx`** warning only).
+
+## 2026-04-05 (forum: new-post category strip matches Discover)
+- **`new-post-composer.tsx`**: Category picker at the top inside a **Discover**-style **Card** (uppercase **Category** label, **`rounded-[14px]`** row, **`h-10`** rows, Lucide **`h-4 w-4`** **`strokeWidth={2.5}`**, brand vs primary text); **sliding pill** indicator + horizontal scroll / **`scrollIntoView`** for the active item (parity with feed sidebar).
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint`.
+
+## 2026-04-05 (forum: new-post category UX + drafts)
+- **`category-composer-fields.ts`**: Per-**`CategoryKey`** required/optional fields (aligned with discussion seed **`categoryBody`**), URL validation, escaped HTML meta block prepended to post **`body`** on publish; **`NEW_POST_DRAFT_STORAGE_KEY`** + draft payload type.
+- **`new-post-composer.tsx`**: Discover-style category row (**`h-10`**, **`rounded-full`**, Lucide **`h-4 w-4`** **`strokeWidth={2.5}`**, active border/glow); conditional extra-field form; **`validateComposerFields`** before publish; **localStorage** draft save + one-time restore + toasts; fixed bottom bar (**Save** / **Publish** icons); toast **`bottom-24`** above bar.
+- **`compose-shell.tsx`**: **`main`** **`pb-28`** so content clears the composer bottom bar.
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` (existing **`thread-comments.tsx`** warning only).
+
+## 2026-04-05 (forum: Medium-style distraction-free /new-post)
+- **Route**: Moved **`/new-post`** from **`(app)`** to **`(compose)`** so it no longer uses **`AppShell`** (no main top nav, sidebars, hero, footer, or mobile tab bar).
+- **`compose-shell.tsx`**: Minimal sticky bar — logo → **`/feed`**, close (**`X`**), **Publish** (delegates to **`#compose-publish-btn`**).
+- **`new-post-composer.tsx`**: Category icon pills in a horizontal strip (Discover/feed icons); large title + optional subtitle; divider; TipTap + bubble menu; hidden publish trigger for the shell; removed in-page Publish/Save draft row.
+- **`apps/forum/README.md`**: Note **`(compose)`** layout for **`/new-post`**.
+- **Validation:** `pnpm --filter ./apps/forum typecheck`, `lint` (cleared stale **`.next`** types after route move).
+
 ## 2026-04-05 (forum: restore sort + Discover animations)
 - **`trend-sorter.tsx`**: Restored pre–feed-refresh behavior — **`duration-300`** sliding pill, **`bg-(--bg-surface)/70`** + **`backdrop-blur-md`** track, simpler link styling (matches **`6a842ec`** era).
 - **`left-sidebar.tsx`**: Restored sliding **absolute indicator** for Discover (**`transition-all duration-300`**), prior **GlowingEffect** / CTA shadow tuning; kept **`?? LayoutList`** and focus rings.

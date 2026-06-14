@@ -3,7 +3,7 @@
 import { useMutation } from "convex/react";
 import type { ComponentType, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import TiptapLink from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
@@ -22,37 +22,59 @@ import {
   List,
   Lock,
   Newspaper,
-  PenLine,
   Quote,
   Rocket,
+  Save,
+  Send,
   Sparkles,
   Star,
   Swords,
   Underline as UnderlineIcon,
 } from "lucide-react";
 
+import { COMPOSE_PUBLISH_BTN_ID } from "@/components/compose/compose-shell";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ImageUploader } from "@/components/ui/image-uploader";
+import { getCategoryTemplate } from "@/components/discussion/categories/registry";
 import { api } from "@/lib/convex";
+import {
+  NEW_POST_DRAFT_STORAGE_KEY,
+  categoryEditorPlaceholders,
+  categoryScaffoldHtml,
+  categoryWritingHints,
+  isEditorDocumentBare,
+  type NewPostDraftPayload,
+} from "@/lib/new-post/category-composer-fields";
 import { cn } from "@/lib/utils";
 import type { Category, CategoryKey } from "@/types";
 import { useAuth } from "@cemvp/auth-ui";
 import { isConvexConfigured } from "@cemvp/convex-client";
 
-const categoryIconMap: Record<CategoryKey, ComponentType<{ className?: string }>> = {
+const categoryIconMap: Record<CategoryKey, ComponentType<{ className?: string; strokeWidth?: number }>> = {
   news: Newspaper,
   review: Star,
   compare: GitCompare,
   "launch-pad": Rocket,
   debate: Swords,
   help: HelpCircle,
+  qa: HelpCircle,
   list: LayoutList,
   showcase: Sparkles,
   gigs: Briefcase,
 };
 
-function CategoryLucideIcon({ categoryKey, className }: { categoryKey: CategoryKey; className?: string }) {
+function CategoryLucideIcon({
+  categoryKey,
+  className,
+  strokeWidth = 2.5,
+}: {
+  categoryKey: CategoryKey;
+  className?: string;
+  strokeWidth?: number;
+}) {
   const Icon = categoryIconMap[categoryKey] ?? LayoutList;
-  return <Icon className={className} />;
+  return <Icon className={className} strokeWidth={strokeWidth} />;
 }
 
 interface NewPostComposerProps {
@@ -86,6 +108,14 @@ function MenuBtn({
   );
 }
 
+function setTipTapPlaceholder(editor: NonNullable<ReturnType<typeof useEditor>>, text: string) {
+  const ext = editor.extensionManager.extensions.find((e) => e.name === "placeholder");
+  if (ext && typeof ext === "object" && "options" in ext && ext.options && typeof ext.options === "object") {
+    (ext.options as { placeholder: string }).placeholder = text;
+  }
+  editor.view.dispatch(editor.state.tr);
+}
+
 export function NewPostComposer({ categories }: NewPostComposerProps) {
   const router = useRouter();
   const { authStatus, openAuthModal } = useAuth();
@@ -97,7 +127,37 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
   const [categoryKey, setCategoryKey] = useState<CategoryKey>(defaultCategory);
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
+  const [categoryFields, setCategoryFields] = useState<Record<string, unknown>>({});
+  const [coverImage, setCoverImage] = useState<string | undefined>(undefined);
   const [toast, setToast] = useState<string | null>(null);
+  const draftRestoredRef = useRef(false);
+  const publishingRef = useRef(false);
+  const titleRef = useRef(title);
+  titleRef.current = title;
+  const prevCategoryForScaffoldRef = useRef<CategoryKey | null>(null);
+  const categoryRowRef = useRef<HTMLDivElement>(null);
+  const categoryBtnRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const [categoryIndicator, setCategoryIndicator] = useState({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 40,
+    visible: false,
+  });
+
+  const updateCategoryIndicator = useCallback(() => {
+    const row = categoryRowRef.current;
+    if (!row) return;
+    const btn = categoryBtnRefs.current.get(categoryKey);
+    if (!btn) return;
+    setCategoryIndicator({
+      left: btn.offsetLeft,
+      top: btn.offsetTop,
+      width: btn.offsetWidth,
+      height: btn.offsetHeight,
+      visible: true,
+    });
+  }, [categoryKey]);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -123,7 +183,7 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
         HTMLAttributes: { class: "text-(--brand-primary) underline underline-offset-2" },
       }),
       Placeholder.configure({
-        placeholder: "Tell your story…",
+        placeholder: categoryEditorPlaceholders[defaultCategory],
       }),
     ],
     content: "<p></p>",
@@ -131,10 +191,69 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
     editorProps: {
       attributes: {
         class:
-          "new-post-prose tiptap focus:outline-hidden min-h-[42vh] max-w-none text-lg leading-[1.75] text-(--text-primary)",
+          "new-post-prose tiptap focus:outline-hidden min-h-[50vh] max-w-none text-lg leading-[1.8] text-(--text-primary)",
       },
     },
   });
+
+  useEffect(() => {
+    if (!editor) return;
+    setTipTapPlaceholder(editor, categoryEditorPlaceholders[categoryKey]);
+  }, [categoryKey, editor]);
+
+  useEffect(() => {
+    if (!editor) return;
+    const prev = prevCategoryForScaffoldRef.current;
+    if (prev !== null && prev !== categoryKey && isEditorDocumentBare(editor.getHTML(), editor.getText())) {
+      editor.commands.setContent(categoryScaffoldHtml(categoryKey));
+    }
+    prevCategoryForScaffoldRef.current = categoryKey;
+  }, [categoryKey, editor]);
+
+  useEffect(() => {
+    if (!editor || draftRestoredRef.current) return;
+    try {
+      const raw = localStorage.getItem(NEW_POST_DRAFT_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as NewPostDraftPayload & { categoryFields?: Record<string, unknown>; coverImage?: string };
+      if (!parsed || typeof parsed.editorHtml !== "string") return;
+      if (titleRef.current.trim() !== "" || editor.getText().trim() !== "") return;
+      draftRestoredRef.current = true;
+      if (parsed.categoryKey && categories.some((c) => c.key === parsed.categoryKey)) {
+        setCategoryKey(parsed.categoryKey);
+      }
+      setTitle(typeof parsed.title === "string" ? parsed.title : "");
+      setSummary(typeof parsed.summary === "string" ? parsed.summary : "");
+      if (parsed.coverImage) setCoverImage(parsed.coverImage);
+      if (parsed.categoryFields && typeof parsed.categoryFields === "object") {
+        setCategoryFields(parsed.categoryFields);
+      }
+      editor.commands.setContent(parsed.editorHtml || "<p></p>");
+      showToast("Draft restored");
+    } catch {
+      /* ignore corrupt draft */
+    }
+  }, [categories, editor, showToast]);
+
+  useLayoutEffect(() => {
+    if (!editor) return;
+    updateCategoryIndicator();
+  }, [updateCategoryIndicator, categories, editor]);
+
+  useEffect(() => {
+    if (!editor) return;
+    const row = categoryRowRef.current;
+    if (!row) return;
+    const ro = new ResizeObserver(() => {
+      updateCategoryIndicator();
+    });
+    ro.observe(row);
+    window.addEventListener("resize", updateCategoryIndicator);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", updateCategoryIndicator);
+    };
+  }, [updateCategoryIndicator, editor]);
 
   const setLink = useCallback(() => {
     if (!editor) return;
@@ -148,7 +267,27 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
   }, [editor]);
 
+  const saveDraft = useCallback(() => {
+    if (!editor) return;
+    const payload = {
+      categoryKey,
+      title,
+      summary,
+      editorHtml: editor.getHTML(),
+      updatedAt: Date.now(),
+      categoryFields,
+      coverImage,
+    };
+    try {
+      localStorage.setItem(NEW_POST_DRAFT_STORAGE_KEY, JSON.stringify(payload));
+      showToast("Draft saved");
+    } catch {
+      showToast("Could not save draft.");
+    }
+  }, [categoryKey, categoryFields, coverImage, editor, showToast, summary, title]);
+
   const handlePublish = useCallback(async () => {
+    if (publishingRef.current) return;
     if (!isConvexConfigured()) {
       showToast("Convex is not configured.");
       return;
@@ -167,22 +306,35 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
       return;
     }
     const bodyHtml = editor?.getHTML().trim() ?? "";
+    const body = bodyHtml || `<p>${bodyText}</p>`;
+    publishingRef.current = true;
     try {
       await createPost({
         title: title.trim(),
         summary: summary.trim() || title.trim().slice(0, 160),
-        body: bodyHtml || `<p>${bodyText}</p>`,
+        body,
         category: categoryKey,
+        categoryFields,
+        coverImage,
       });
+      try {
+        localStorage.removeItem(NEW_POST_DRAFT_STORAGE_KEY);
+      } catch {
+        /* ignore */
+      }
       showToast("Published.");
       router.push("/feed");
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Could not publish.");
+    } finally {
+      publishingRef.current = false;
     }
   }, [
     authStatus,
+    categoryFields,
     categoryKey,
     createPost,
+    coverImage,
     editor,
     openAuthModal,
     router,
@@ -191,150 +343,236 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
     title,
   ]);
 
-  const handleDraft = useCallback(() => {
-    showToast("Drafts are not synced yet — use Publish to save to the forum.");
-  }, [showToast]);
-
-  if (!editor) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center text-sm text-(--text-muted)">Loading editor…</div>
-    );
-  }
+  const writingHint = categoryWritingHints[categoryKey];
 
   return (
-    <section className="animate-route-emerge mx-auto w-full max-w-[720px] px-2 pb-28 pt-4 md:px-4">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-sm text-(--text-muted)">
-          <PenLine className="h-4 w-4" />
-          <span>Start a discussion</span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="secondary" size="sm" onClick={handleDraft}>
-            Save draft
-          </Button>
-          <Button type="button" variant="primary" size="sm" onClick={handlePublish}>
-            Publish
-          </Button>
-        </div>
-      </div>
+    <>
+      <button
+        id={COMPOSE_PUBLISH_BTN_ID}
+        type="button"
+        tabIndex={-1}
+        className="sr-only"
+        aria-hidden
+        onClick={() => void handlePublish()}
+      >
+        Publish
+      </button>
 
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-(--text-muted)">Category</p>
-      <div className="mb-8 flex flex-wrap gap-2">
-        {categories.map((cat) => {
-          const selected = cat.key === categoryKey;
-          const locked = cat.lockedByDefault;
-          return (
-            <button
-              key={cat.key}
-              type="button"
-              disabled={locked}
-              title={
-                locked && cat.pointsToUnlock != null
-                  ? `Unlock at ${cat.pointsToUnlock} reputation points`
-                  : cat.description
-              }
-              onClick={() => !locked && setCategoryKey(cat.key)}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
-                locked && "cursor-not-allowed opacity-45",
-                selected && !locked && "border-(--border-active) bg-(--bg-overlay) text-(--text-primary)",
-                !selected &&
-                  !locked &&
-                  "border-(--border-subtle) bg-(--bg-surface) text-(--text-secondary) hover:border-(--border-prominent)",
-              )}
-              style={
-                selected && !locked ? { boxShadow: `inset 0 0 0 1px ${cat.primaryColor}55` } : undefined
-              }
+      {!editor ? (
+        <div className="flex min-h-[50vh] items-center justify-center text-sm text-(--text-muted)">Loading editor…</div>
+      ) : (
+        <div className="animate-route-emerge w-full pb-8">
+          <Card className="mb-6 animate-soft-float">
+            <CardHeader className="p-3 pb-2">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-text-muted">Category</h2>
+            </CardHeader>
+            <CardContent className="relative p-3 pt-0">
+              <div className="-mx-1 pb-0.5" aria-label="Post category">
+                <div ref={categoryRowRef} className="relative flex flex-wrap gap-1 rounded-[14px] p-1">
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute z-0 rounded-full border border-(--border-active)/70 bg-(--bg-overlay)/55 transition-[left,width,top,height,opacity] duration-300 ease-out dark:shadow-[0_0_12px_rgba(14,165,233,0.22)]"
+                    style={{
+                      left: categoryIndicator.left,
+                      top: categoryIndicator.top,
+                      width: categoryIndicator.width,
+                      height: categoryIndicator.height,
+                      opacity: categoryIndicator.visible ? 1 : 0,
+                    }}
+                  />
+                  {categories.map((cat) => {
+                    const selected = cat.key === categoryKey;
+                    const locked = cat.lockedByDefault;
+                    return (
+                      <button
+                        key={cat.key}
+                        ref={(el) => {
+                          if (el) categoryBtnRefs.current.set(cat.key, el);
+                          else categoryBtnRefs.current.delete(cat.key);
+                        }}
+                        type="button"
+                        disabled={locked}
+                        title={
+                          locked && cat.pointsToUnlock != null
+                            ? `Unlock at ${cat.pointsToUnlock} reputation points`
+                            : cat.description
+                        }
+                        onClick={() => {
+                          if (!locked) {
+                            setCategoryKey(cat.key);
+                            setCategoryFields({});
+                          }
+                        }}
+                        className={cn(
+                          "relative z-10 inline-flex h-10 shrink-0 items-center gap-2.5 rounded-full px-3 text-sm font-semibold transition-colors duration-200 outline-offset-2 focus-visible:ring-2 focus-visible:ring-(--border-active) focus-visible:ring-offset-2 focus-visible:ring-offset-(--bg-surface)",
+                          locked && "cursor-not-allowed opacity-40",
+                          !locked && "hover:bg-(--bg-overlay)/55",
+                        )}
+                        style={{
+                          color: selected ? "var(--brand-primary)" : "var(--text-primary)",
+                        }}
+                      >
+                        <CategoryLucideIcon
+                          categoryKey={cat.key}
+                          className={cn("h-4 w-4 shrink-0", selected && "scale-105")}
+                          strokeWidth={2.5}
+                        />
+                        <span>{cat.name}</span>
+                        {locked ? <Lock className="h-3.5 w-3.5 text-(--text-muted)" aria-hidden /> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <input
+            aria-label="Post title"
+            placeholder="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="mb-3 w-full border-0 bg-transparent text-4xl font-bold leading-[1.15] tracking-tight text-(--text-primary) outline-hidden placeholder:text-(--text-muted)/70 md:text-[2.75rem]"
+          />
+
+          <input
+            aria-label="Subtitle or summary"
+            placeholder="Optional subtitle"
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            className="mb-6 w-full border-0 bg-transparent text-xl font-normal leading-snug text-(--text-secondary) outline-hidden placeholder:text-(--text-muted)/65 md:text-2xl"
+          />
+
+          <div className="mb-6">
+            <ImageUploader
+              onUploadComplete={setCoverImage}
+              onClear={() => setCoverImage(undefined)}
+              value={coverImage}
+              aspectRatio="16/9"
+              className="mb-2"
+            />
+            <details className="text-xs text-(--text-muted)">
+              <summary className="cursor-pointer hover:text-(--text-secondary)">Or paste a URL</summary>
+              <input
+                type="url"
+                placeholder="https://example.com/image.png"
+                value={coverImage ?? ""}
+                onChange={(e) => setCoverImage(e.target.value || undefined)}
+                className="mt-1.5 w-full rounded-lg border border-(--border-default) bg-(--bg-surface) px-3 py-1.5 text-sm text-(--text-primary) outline-hidden focus:border-(--border-active)"
+              />
+            </details>
+          </div>
+
+          <div className="mb-8 border-b border-(--border-subtle)" />
+
+          <p className="mb-3 text-sm leading-relaxed text-(--text-muted)">{writingHint}</p>
+
+          <div className="relative">
+            <BubbleMenu
+              editor={editor}
+              className="flex items-center gap-0.5 rounded-lg border border-(--border-default) bg-(--bg-surface-elevated) px-1 py-1 shadow-(--shadow-md)"
             >
-              <span className="flex h-5 w-5 items-center justify-center rounded-full" style={{ color: cat.primaryColor }}>
-                <CategoryLucideIcon categoryKey={cat.key} className="h-3.5 w-3.5" />
-              </span>
-              {cat.name}
-              {locked ? <Lock className="h-3 w-3 text-(--text-muted)" aria-hidden /> : null}
-            </button>
-          );
-        })}
-      </div>
+              <MenuBtn
+                label="Bold"
+                active={editor.isActive("bold")}
+                onClick={() => editor.chain().focus().toggleBold().run()}
+              >
+                <Bold className="h-4 w-4" />
+              </MenuBtn>
+              <MenuBtn
+                label="Italic"
+                active={editor.isActive("italic")}
+                onClick={() => editor.chain().focus().toggleItalic().run()}
+              >
+                <Italic className="h-4 w-4" />
+              </MenuBtn>
+              <MenuBtn
+                label="Underline"
+                active={editor.isActive("underline")}
+                onClick={() => editor.chain().focus().toggleUnderline().run()}
+              >
+                <UnderlineIcon className="h-4 w-4" />
+              </MenuBtn>
+              <span className="mx-1 h-5 w-px bg-(--border-default)" aria-hidden />
+              <MenuBtn
+                label="Heading"
+                active={editor.isActive("heading", { level: 2 })}
+                onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+              >
+                <Heading2 className="h-4 w-4" />
+              </MenuBtn>
+              <MenuBtn
+                label="Bullet list"
+                active={editor.isActive("bulletList")}
+                onClick={() => editor.chain().focus().toggleBulletList().run()}
+              >
+                <List className="h-4 w-4" />
+              </MenuBtn>
+              <MenuBtn
+                label="Quote"
+                active={editor.isActive("blockquote")}
+                onClick={() => editor.chain().focus().toggleBlockquote().run()}
+              >
+                <Quote className="h-4 w-4" />
+              </MenuBtn>
+              <MenuBtn label="Link" active={editor.isActive("link")} onClick={setLink}>
+                <Link2 className="h-4 w-4" />
+              </MenuBtn>
+            </BubbleMenu>
+            <EditorContent editor={editor} />
+          </div>
 
-      <input
-        aria-label="Post title"
-        placeholder="Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="mb-2 w-full border-0 bg-transparent text-4xl font-bold leading-tight tracking-tight text-(--text-primary) outline-hidden placeholder:text-(--text-muted) md:text-5xl"
-      />
+          {(() => {
+            const template = getCategoryTemplate(categoryKey);
+            if (!template?.ComposeForm) return null;
+            return (
+              <div className="mt-4 border-t border-(--border) pt-4">
+                <template.ComposeForm value={categoryFields} onChange={setCategoryFields} />
+              </div>
+            );
+          })()}
+        </div>
+      )}
 
-      <input
-        aria-label="Subtitle or summary"
-        placeholder="Optional subtitle — a one-line hook for the feed"
-        value={summary}
-        onChange={(e) => setSummary(e.target.value)}
-        className="mb-8 w-full border-0 bg-transparent text-xl font-normal leading-snug text-(--text-secondary) outline-hidden placeholder:text-(--text-muted) md:text-2xl"
-      />
-
-      <div className="relative">
-        <BubbleMenu
-          editor={editor}
-          className="flex items-center gap-0.5 rounded-lg border border-(--border-default) bg-(--bg-surface-elevated) px-1 py-1 shadow-(--shadow-md)"
+      {editor ? (
+        <div
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-(--border-subtle) bg-(--bg-canvas)/95 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-sm"
+          role="toolbar"
+          aria-label="Draft and publish"
         >
-          <MenuBtn
-            label="Bold"
-            active={editor.isActive("bold")}
-            onClick={() => editor.chain().focus().toggleBold().run()}
-          >
-            <Bold className="h-4 w-4" />
-          </MenuBtn>
-          <MenuBtn
-            label="Italic"
-            active={editor.isActive("italic")}
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-          >
-            <Italic className="h-4 w-4" />
-          </MenuBtn>
-          <MenuBtn
-            label="Underline"
-            active={editor.isActive("underline")}
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
-          >
-            <UnderlineIcon className="h-4 w-4" />
-          </MenuBtn>
-          <span className="mx-1 h-5 w-px bg-(--border-default)" aria-hidden />
-          <MenuBtn
-            label="Heading"
-            active={editor.isActive("heading", { level: 2 })}
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          >
-            <Heading2 className="h-4 w-4" />
-          </MenuBtn>
-          <MenuBtn
-            label="Bullet list"
-            active={editor.isActive("bulletList")}
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-          >
-            <List className="h-4 w-4" />
-          </MenuBtn>
-          <MenuBtn
-            label="Quote"
-            active={editor.isActive("blockquote")}
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          >
-            <Quote className="h-4 w-4" />
-          </MenuBtn>
-          <MenuBtn label="Link" active={editor.isActive("link")} onClick={setLink}>
-            <Link2 className="h-4 w-4" />
-          </MenuBtn>
-        </BubbleMenu>
-        <EditorContent editor={editor} />
-      </div>
+          <div className="mx-auto flex h-12 w-full max-w-[720px] items-center justify-end gap-2 px-4 md:px-6">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-10 rounded-full px-3 text-(--text-secondary) hover:text-(--text-primary)"
+              onClick={saveDraft}
+              aria-label="Save draft"
+            >
+              <Save className="h-5 w-5" />
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              className="h-10 rounded-full px-4 font-semibold"
+              onClick={() => void handlePublish()}
+              aria-label="Publish"
+            >
+              <Send className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       {toast ? (
         <div
           role="status"
-          className="fixed bottom-24 left-1/2 z-50 max-w-sm -translate-x-1/2 rounded-full border border-(--border-default) bg-(--bg-surface-elevated) px-4 py-2 text-center text-sm text-(--text-primary) shadow-(--shadow-lg) md:bottom-8"
+          className="fixed bottom-24 left-1/2 z-50 max-w-sm -translate-x-1/2 rounded-full border border-(--border-default) bg-(--bg-surface-elevated) px-4 py-2 text-center text-sm text-(--text-primary) shadow-(--shadow-lg)"
         >
           {toast}
         </div>
       ) : null}
-    </section>
+    </>
   );
 }

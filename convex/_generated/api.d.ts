@@ -16,6 +16,7 @@ import type * as forum_discussionRouteHelpers from "../forum/discussionRouteHelp
 import type * as forum_feedCache from "../forum/feedCache.js";
 import type * as forum_feedQueries from "../forum/feedQueries.js";
 import type * as forum_helpers from "../forum/helpers.js";
+import type * as forum_jobs from "../forum/jobs.js";
 import type * as forum_limits from "../forum/limits.js";
 import type * as forum_mutations from "../forum/mutations.js";
 import type * as forum_queries from "../forum/queries.js";
@@ -25,6 +26,7 @@ import type * as forum_seed_catalog from "../forum/seed/catalog.js";
 import type * as forum_seed_discussionThreads from "../forum/seed/discussionThreads.js";
 import type * as forum_seed_ensureCategoryRows from "../forum/seed/ensureCategoryRows.js";
 import type * as forum_seed_generatePosts from "../forum/seed/generatePosts.js";
+import type * as forum_validators from "../forum/validators.js";
 import type * as http from "../http.js";
 import type * as profile from "../profile.js";
 
@@ -43,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   "forum/feedCache": typeof forum_feedCache;
   "forum/feedQueries": typeof forum_feedQueries;
   "forum/helpers": typeof forum_helpers;
+  "forum/jobs": typeof forum_jobs;
   "forum/limits": typeof forum_limits;
   "forum/mutations": typeof forum_mutations;
   "forum/queries": typeof forum_queries;
@@ -52,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   "forum/seed/discussionThreads": typeof forum_seed_discussionThreads;
   "forum/seed/ensureCategoryRows": typeof forum_seed_ensureCategoryRows;
   "forum/seed/generatePosts": typeof forum_seed_generatePosts;
+  "forum/validators": typeof forum_validators;
   http: typeof http;
   profile: typeof profile;
 }>;

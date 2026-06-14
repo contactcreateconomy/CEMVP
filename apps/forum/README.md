@@ -30,4 +30,4 @@ App scripts use **`next dev --webpack`** / **`next build --webpack`** so Convex 
 
 - **`SharedDataProvider`** — single subscription for categories + unread notification count; use **`useSharedData()`** on new pages instead of duplicating **`listCategories`**.
 - **Convex hooks** — components that call **`useQuery`** must run under **`ConvexProvider`**; guard with **`isConvexConfigured()`** where the app must prerender without a Convex URL.
-- **`/new-post`** — TipTap editor is **`React.lazy`**-loaded to keep initial bundles smaller.
+- **`/new-post`** — Distraction-free compose layout (`(compose)` route group); TipTap editor is **`React.lazy`**-loaded to keep initial bundles smaller.

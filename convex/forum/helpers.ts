@@ -36,7 +36,7 @@ export function userFromPostAuthorSnapshot(p: Doc<"forumPosts">) {
 
 export function postDocToPost(
   p: Doc<"forumPosts">,
-  opts: { isFavorited: boolean; viewerHasUpvote: boolean },
+  opts: { isFavorited: boolean; viewerHasUpvote: boolean; categoryBody?: Record<string, unknown> },
 ) {
   return {
     id: p._id as string,
@@ -56,5 +56,6 @@ export function postDocToPost(
     locked: p.locked,
     isRichThread: p.isRichThread,
     viewerHasUpvote: opts.viewerHasUpvote,
+    categoryBody: opts.categoryBody,
   };
 }

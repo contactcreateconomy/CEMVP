@@ -105,7 +105,7 @@ export function Component({
         <Avatar
           className={cn(
             sizeVariants[size],
-            "cursor-pointer ring-2 ring-background shadow-lg",
+            "cursor-pointer transition-[transform,colors,box-shadow] duration-200 group-hover/cat:-translate-y-px group-hover/cat:bg-(--bg-overlay) group-hover/cat:shadow-[0_0_10px_rgba(14,165,233,0.3)]",
             avatarClassName,
           )}
           style={avatarStyle}
@@ -131,7 +131,7 @@ export function Component({
               filter: { duration: 0.2 },
             }}
             className={cn(
-              "pointer-events-none absolute z-10 whitespace-nowrap rounded-md border border-gray-200 bg-popover text-popover-foreground shadow-lg",
+              "pointer-events-none absolute z-50 whitespace-nowrap rounded-md border border-gray-200 bg-popover text-popover-foreground shadow-lg",
               nameSizeVariants[size],
               positionClasses[direction],
               nameClassName,

@@ -4,12 +4,13 @@ import * as Dialog from "@radix-ui/react-dialog";
 
 import { Button } from "@/components/ui/button";
 
-const reportReasons = [
-  "Spam or misleading",
-  "Harassment or abuse",
-  "Unsafe content",
-  "Low quality / irrelevant",
-] as const;
+const reportReasons: { label: string; value: "spam" | "harassment" | "misinformation" | "off_topic" | "other" }[] = [
+  { label: "Spam or misleading", value: "spam" },
+  { label: "Harassment or abuse", value: "harassment" },
+  { label: "Misinformation", value: "misinformation" },
+  { label: "Off topic / irrelevant", value: "off_topic" },
+  { label: "Other", value: "other" },
+];
 
 interface ReportPostDialogProps {
   open: boolean;
@@ -25,7 +26,7 @@ export function ReportPostDialog({
   onOpenChange,
   onSubmit,
   title = "Report post",
-  description = "Select a reason and we will hide this post from your feed.",
+  description = "Select a reason and we will review this content.",
 }: ReportPostDialogProps) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -38,12 +39,12 @@ export function ReportPostDialog({
           <div className="mt-4 grid gap-2">
             {reportReasons.map((reason) => (
               <Button
-                key={reason}
+                key={reason.value}
                 variant="secondary"
                 className="justify-start"
-                onClick={() => onSubmit(reason)}
+                onClick={() => onSubmit(reason.value)}
               >
-                {reason}
+                {reason.label}
               </Button>
             ))}
           </div>

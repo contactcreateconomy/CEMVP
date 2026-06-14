@@ -31,6 +31,7 @@ const categoryIconMap: Record<CategoryKey, LucideIcon> = {
   "launch-pad": Rocket,
   debate: Swords,
   help: HelpCircle,
+  qa: HelpCircle,
   list: LayoutList,
   showcase: Sparkles,
   gigs: Briefcase,
@@ -68,7 +69,7 @@ function LeftSidebarShell({ discoverItems }: { discoverItems: DiscoverItem[] }) 
             <Button
               onClick={() => router.push("/new-post")}
               className="relative z-10 h-9 w-full rounded-full text-base font-semibold shadow-[0_8px_24px_rgba(14,165,233,0.28)] transition-all duration-300 hover:shadow-[0_10px_28px_rgba(14,165,233,0.35)]"
-              style={{ color: "black" }}
+              style={{ color: "var(--text-inverse)" }}
             >
               + Start Discussion
             </Button>
@@ -84,9 +85,9 @@ function LeftSidebarShell({ discoverItems }: { discoverItems: DiscoverItem[] }) 
         <CardContent className="relative p-3 pt-0">
           <nav className="relative space-y-1 rounded-[14px]" aria-label="Discover categories">
             <div
-              className="pointer-events-none absolute left-0 right-0 rounded-full border border-(--border-active)/70 bg-(--bg-overlay)/55 transition-all duration-300 ease-out dark:shadow-[0_0_12px_rgba(14,165,233,0.22)]"
+              className="pointer-events-none absolute left-0 right-0 top-0 rounded-full border border-(--border-active)/70 bg-(--bg-overlay)/55 transition-transform duration-300 ease-out will-change-transform dark:shadow-[0_0_12px_rgba(14,165,233,0.22)]"
               style={{
-                top: `${indicatorTop}px`,
+                transform: `translateY(${indicatorTop}px)`,
                 height: `${itemHeight}px`,
               }}
             />
@@ -99,10 +100,12 @@ function LeftSidebarShell({ discoverItems }: { discoverItems: DiscoverItem[] }) 
                   key={key}
                   href={href}
                   className={cn(
-                    "relative z-10 flex h-10 w-full items-center gap-2.5 rounded-full px-3 text-sm font-semibold transition-colors duration-200 hover:bg-(--bg-overlay)/55",
+                    "relative z-10 flex h-10 w-full items-center gap-2.5 rounded-full px-3 text-sm font-semibold transition-all duration-200",
+                    isActive
+                      ? "text-(--brand-primary)"
+                      : "text-(--text-primary) hover:text-(--brand-primary) hover:drop-shadow-[0_0_8px_rgba(14,165,233,0.45)]",
                     "outline-offset-2 focus-visible:ring-2 focus-visible:ring-(--border-active) focus-visible:ring-offset-2 focus-visible:ring-offset-(--bg-surface)",
                   )}
-                  style={{ color: isActive ? "var(--brand-primary)" : "var(--text-primary)" }}
                 >
                   <Icon className={cn("h-4 w-4 shrink-0", isActive && "scale-105")} strokeWidth={2.5} />
                   <span>{label}</span>

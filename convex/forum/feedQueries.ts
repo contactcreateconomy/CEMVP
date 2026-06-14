@@ -24,20 +24,35 @@ export async function viewerFlagsForPostIds(
     return { favoritePostIds, upvotePostIds };
   }
   const uid = userId as Id<"users">;
-  await Promise.all(
-    postIds.map(async (pid) => {
-      const fav = await ctx.db
+
+  // Bounded per-postId lookups instead of collecting all user favorites/upvotes.
+  // Feed pages have at most 48 posts → at most 96 targeted reads.
+  const favFlags = await Promise.all(
+    postIds.map((pid) =>
+      ctx.db
         .query("forumFavorites")
         .withIndex("by_user_post", (q) => q.eq("userId", uid).eq("postId", pid))
-        .unique();
-      if (fav) favoritePostIds.add(pid);
-      const up = await ctx.db
+        .unique()
+        .then((doc) => doc !== null),
+    ),
+  );
+  for (let i = 0; i < postIds.length; i++) {
+    if (favFlags[i]) favoritePostIds.add(postIds[i]);
+  }
+
+  const upvoteFlags = await Promise.all(
+    postIds.map((pid) =>
+      ctx.db
         .query("forumUpvotes")
         .withIndex("by_user_post", (q) => q.eq("userId", uid).eq("postId", pid))
-        .unique();
-      if (up) upvotePostIds.add(pid);
-    }),
+        .unique()
+        .then((doc) => doc !== null),
+    ),
   );
+  for (let i = 0; i < postIds.length; i++) {
+    if (upvoteFlags[i]) upvotePostIds.add(postIds[i]);
+  }
+
   return { favoritePostIds, upvotePostIds };
 }
 
@@ -46,34 +61,25 @@ export async function loadCommentPreviewsForPostIds(
   postIds: Id<"forumPosts">[],
   limitPerPost: number,
 ) {
-  const out: {
-    id: string;
-    postId: string;
-    authorId: string;
-    body: string;
-    createdAt: string;
-    upvotes: number;
-  }[] = [];
-
-  for (const postId of postIds) {
-    const docs = await ctx.db
-      .query("forumPostComments")
-      .withIndex("by_post_createdAt", (q) => q.eq("postId", postId))
-      .order("desc")
-      .take(limitPerPost);
-    const chronological = [...docs].reverse();
-    for (const c of chronological) {
-      out.push({
+  const results = await Promise.all(
+    postIds.map(async (postId) => {
+      const docs = await ctx.db
+        .query("forumPostComments")
+        .withIndex("by_post_createdAt", (q) => q.eq("postId", postId))
+        .order("desc")
+        .take(limitPerPost);
+      const chronological = [...docs].reverse();
+      return chronological.map((c) => ({
         id: c._id as string,
         postId: c.postId as string,
         authorId: c.authorProfileId as string,
         body: c.body,
         createdAt: new Date(c.createdAt).toISOString(),
         upvotes: c.upvotes,
-      });
-    }
-  }
-  return out;
+      }));
+    }),
+  );
+  return results.flat();
 }
 
 export async function resolveUsersForFeed(
@@ -112,20 +118,43 @@ export async function buildFeedBundleFromPosts(
   postDocs: Doc<"forumPosts">[],
   userId: string | null,
 ) {
+  // Filter out removed / shadow-removed posts
+  const visible = postDocs.filter(
+    (p) => p.moderationStatus !== "removed" && p.moderationStatus !== "shadow_removed",
+  );
+  const postIds = visible.map((p) => p._id);
   const { favoritePostIds, upvotePostIds } = await viewerFlagsForPostIds(
     ctx,
     userId,
-    postDocs.map((p) => p._id),
+    postIds,
   );
-  const posts = postDocs.map((p) =>
+
+  // Load per-category payloads for feed card extras
+  const payloadDocs = await Promise.all(
+    postIds.map((pid) =>
+      ctx.db
+        .query("forumCategoryPayloads")
+        .withIndex("by_post", (q) => q.eq("postId", pid))
+        .unique(),
+    ),
+  );
+  const payloadByPostId = new Map<string, Record<string, unknown>>();
+  for (const pd of payloadDocs) {
+    if (pd) {
+      payloadByPostId.set(pd.postId as string, pd.payload as Record<string, unknown>);
+    }
+  }
+
+  const posts = visible.map((p) =>
     postDocToPost(p, {
       isFavorited: favoritePostIds.has(p._id),
       viewerHasUpvote: upvotePostIds.has(p._id),
+      categoryBody: payloadByPostId.get(p._id as string),
     }),
   );
   const comments = await loadCommentPreviewsForPostIds(
     ctx,
-    postDocs.map((p) => p._id),
+    postIds,
     FEED_COMMENTS_PREVIEW_PER_POST,
   );
   const users = await resolveUsersForFeed(ctx, postDocs, comments);
@@ -147,7 +176,9 @@ export async function loadHotRankedPosts(
     rows = rows.filter((p) => p.category === category);
   }
   rows.sort((a, b) => viralityScoreDoc(b) - viralityScoreDoc(a));
-  return rows.slice(0, limit);
+  return rows
+    .filter((p) => p.moderationStatus !== "removed" && p.moderationStatus !== "shadow_removed")
+    .slice(0, limit);
 }
 
 export function feedPageSize(limit?: number) {

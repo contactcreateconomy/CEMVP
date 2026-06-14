@@ -16,7 +16,9 @@ export function AppShell({ children }: AppShellProps) {
     <div className="relative min-h-screen bg-(--bg-canvas) text-(--text-primary)">
       <div className="canvas-dot-grid pointer-events-none absolute inset-0" />
       <div className="relative z-10">
-        <TopNav />
+        <Suspense fallback={null}>
+          <TopNav />
+        </Suspense>
 
         <section className="mx-auto hidden w-full max-w-[1440px] px-4 pb-2 pt-6 md:px-6 lg:block lg:px-8">
           <TopPostHeroSection />

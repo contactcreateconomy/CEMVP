@@ -5,21 +5,26 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import { useSearchParams } from "next/navigation";
 
 import { FeedClient } from "@/components/feed/feed-client";
+import { PostCardSkeleton } from "@/components/feed/post-card";
 import { TrendSorter } from "@/components/feed/trend-sorter";
 import { api } from "@/lib/convex";
 import { isConvexConfigured } from "@cemvp/convex-client";
 import { useSharedData } from "@/providers/shared-data-context";
+import { useUIPreferences } from "@/stores/ui-preferences-store";
 import type { Comment, Post, User } from "@/types";
 import type { Category } from "@/types";
 
-function parseFeedSearchParams(searchParams: URLSearchParams): {
+function parseFeedSearchParams(
+  searchParams: URLSearchParams,
+  fallbackSort: "top" | "hot" | "new" | "fav",
+): {
   selectedCategory?: string;
   selectedSort: "top" | "hot" | "new" | "fav";
 } {
   const category = searchParams.get("category");
   const rawSort = searchParams.get("sort");
   const selectedSort: "top" | "hot" | "new" | "fav" =
-    rawSort === "hot" || rawSort === "new" || rawSort === "fav" ? rawSort : "top";
+    rawSort === "hot" || rawSort === "new" || rawSort === "top" || rawSort === "fav" ? rawSort : fallbackSort;
   return {
     selectedCategory: category && category.length > 0 ? category : undefined,
     selectedSort,
@@ -121,13 +126,7 @@ function FeedRouteWithConvex({
 
   const initialPosts = useMemo(() => posts, [posts]);
 
-  if (categoriesLoading) {
-    return null;
-  }
-
-  if (page === undefined && !feedPageReady) {
-    return null;
-  }
+  const isFeedLoading = (page === undefined && !feedPageReady) || categoriesLoading;
 
   return (
     <section className="space-y-4">
@@ -137,25 +136,35 @@ function FeedRouteWithConvex({
         </Suspense>
       </header>
 
-      <FeedClient
-        initialPosts={initialPosts}
-        allComments={comments}
-        users={users}
-        selectedSort={selectedSort}
-        categories={categories as Category[]}
-      />
-
-      {canLoadMore ? (
-        <div className="flex justify-center pt-2">
-          <button
-            type="button"
-            className="rounded-full border border-(--border-subtle) px-4 py-2 text-sm font-medium text-(--text-secondary) transition-colors hover:border-(--border-active) hover:text-(--text-primary)"
-            onClick={() => loadMore()}
-          >
-            Load more
-          </button>
+      {isFeedLoading ? (
+        <div className="space-y-4 pt-2">
+          {[1, 2, 3].map((i) => (
+            <PostCardSkeleton key={i} />
+          ))}
         </div>
-      ) : null}
+      ) : (
+        <>
+          <FeedClient
+            initialPosts={initialPosts}
+            allComments={comments}
+            users={users}
+            selectedSort={selectedSort}
+            categories={categories as Category[]}
+          />
+
+          {canLoadMore && (
+            <div className="flex justify-center pt-2">
+              <button
+                type="button"
+                className="rounded-full border border-(--border-subtle) px-4 py-2 text-sm font-medium text-(--text-secondary) transition-colors hover:border-(--border-active) hover:text-(--text-primary)"
+                onClick={() => loadMore()}
+              >
+                Load more
+              </button>
+            </div>
+          )}
+        </>
+      )}
     </section>
   );
 }
@@ -163,10 +172,19 @@ function FeedRouteWithConvex({
 function FeedRouteWithSearchParams() {
   const searchParams = useSearchParams();
   const queryKey = searchParams.toString();
+  const { feedSort, setFeedSort } = useUIPreferences();
   const { selectedCategory, selectedSort } = useMemo(
-    () => parseFeedSearchParams(new URLSearchParams(queryKey)),
-    [queryKey],
+    () => parseFeedSearchParams(new URLSearchParams(queryKey), feedSort),
+    [queryKey, feedSort],
   );
+
+  // Persist the selected sort back to the store
+  useEffect(() => {
+    if (selectedSort !== feedSort) {
+      setFeedSort(selectedSort);
+    }
+  }, [selectedSort, feedSort, setFeedSort]);
+
   return <FeedRouteWithConvex selectedCategory={selectedCategory} selectedSort={selectedSort} />;
 }
 

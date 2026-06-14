@@ -78,7 +78,7 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
   return (
     <form className="space-y-4" onSubmit={handleSubmit} noValidate>
       <div className="space-y-1.5">
-        <label htmlFor="auth-login-email" className="text-xs font-medium text-text-secondary">
+        <label htmlFor="auth-login-email" className="text-[11px] font-semibold text-text-primary">
           Email
         </label>
         <Input
@@ -86,6 +86,7 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
           type="email"
           autoComplete="username"
           placeholder="Enter your email"
+          className="border-border-default bg-bg-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           aria-invalid={Boolean(emailError)}
@@ -100,7 +101,7 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor="auth-login-password" className="text-xs font-medium text-text-secondary">
+        <label htmlFor="auth-login-password" className="text-[11px] font-semibold text-text-primary">
           Password
         </label>
         <div className="relative">
@@ -109,9 +110,9 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             placeholder="Enter your password"
+            className="border-border-default bg-bg-surface pr-11 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="pr-11"
             aria-invalid={Boolean(passwordError)}
             aria-describedby={passwordError ? "auth-login-password-error" : undefined}
             disabled={isSubmitting}
@@ -165,7 +166,7 @@ export function LoginForm({ isSubmitting, authError, onSubmit, onSwitchToSignup 
         </p>
       ) : null}
 
-      <Button type="submit" size="md" className="w-full" disabled={isSubmitting || !isFormValid}>
+      <Button type="submit" size="lg" className="w-full" disabled={isSubmitting || !isFormValid}>
         {isSubmitting ? (
           <span className="inline-flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />

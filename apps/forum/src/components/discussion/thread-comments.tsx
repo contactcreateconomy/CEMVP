@@ -2,7 +2,8 @@
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ArrowBigDown, ArrowBigUp, MessageSquareReply, MoreHorizontal } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { formatRelativeDate } from "@/lib/format";
@@ -83,7 +84,7 @@ export function ThreadComments({
   const commentList = thread.comments ?? [];
 
   const filterChipOptions = useMemo(() => {
-    if (thread.category === "help") return FILTER_OPTIONS;
+    if (thread.category === "help" || thread.category === "qa") return FILTER_OPTIONS;
     return FILTER_OPTIONS.filter((t) => t !== "solution");
   }, [thread.category]);
 
@@ -112,11 +113,11 @@ export function ThreadComments({
   const mapToUse = thread.category === "gigs" && isMax && gigsCommentMode !== "all" ? childrenMapGigs : childrenMap;
 
   const solutionId =
-    thread.category === "help" &&
+    (thread.category === "help" || thread.category === "qa") &&
     thread.categoryBody &&
     "solved" in thread.categoryBody &&
-    thread.categoryBody.solved
-      ? thread.categoryBody.solutionCommentId
+    (thread.categoryBody as Record<string, unknown>).solved
+      ? (thread.categoryBody as Record<string, unknown>).solutionCommentId as string | undefined
       : undefined;
 
   const roots = useMemo(() => {
@@ -136,6 +137,17 @@ export function ThreadComments({
   };
 
   const maxDepth = isMax ? 5 : 3;
+
+  // Virtual scrolling for long comment threads (> 100 comments)
+  const shouldVirtualize = roots.length > 100;
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: roots.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => 120,
+    overscan: 5,
+    enabled: shouldVirtualize,
+  });
 
   const renderShowcaseGrouped = () => {
     const themes = ["ux", "visual", "technical", "other"] as const;
@@ -175,7 +187,7 @@ export function ThreadComments({
   return (
     <section className="space-y-4" aria-label="Comments">
       {solutionId ? (
-        <div className="rounded-[12px] border border-(--feedback-success)/40 bg-(--feedback-success)/10 px-4 py-3 text-sm text-(--feedback-success)">
+        <div className="rounded-xl border border-(--feedback-success)/40 bg-(--feedback-success)/10 px-4 py-3 text-sm text-(--feedback-success)">
           This thread has an accepted solution.{" "}
           <a href={`#comment-${solutionId}`} className="font-semibold underline">
             Jump to solution →
@@ -183,22 +195,29 @@ export function ThreadComments({
         </div>
       ) : null}
 
+      {/* Sort tabs — TrendSorter pill style */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm font-semibold text-(--text-primary)">{commentList.length} comments</p>
-        <div className="flex flex-wrap gap-1 rounded-full border border-(--border-default) bg-(--bg-inset) p-0.5">
-          {(["best", "new", "top"] as const).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => onSortChange(s)}
-              className={cn(
-                "rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors",
-                sort === s ? "bg-(--bg-surface) text-(--text-primary) shadow-sm" : "text-(--text-muted)",
-              )}
-            >
-              {s}
-            </button>
-          ))}
+        <div className="relative rounded-full border border-(--border-default) bg-(--bg-surface)/70 p-1 backdrop-blur-md">
+          <div
+            className="pointer-events-none absolute bottom-1 left-1 top-1 w-[calc(33.333%-0.33rem)] rounded-full bg-(--brand-primary) shadow-[0_8px_24px_rgba(14,165,233,0.28)] transition-transform duration-300 ease-out"
+            style={{ transform: `translateX(${(["best", "new", "top"] as const).indexOf(sort) * 100}%)` }}
+          />
+          <div className="relative z-10 grid grid-cols-3">
+            {(["best", "new", "top"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => onSortChange(s)}
+                className={cn(
+                  "flex h-7 items-center justify-center rounded-full text-xs font-semibold capitalize transition-colors duration-200",
+                  sort === s ? "text-black" : "text-(--text-secondary) hover:text-(--text-primary)",
+                )}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -252,11 +271,52 @@ export function ThreadComments({
       )}
 
       {commentList.length === 0 ? (
-        <div className="rounded-[14px] border border-dashed border-(--border-default) bg-(--bg-inset) px-4 py-8 text-center text-sm text-(--text-secondary)">
-          Be the first to reply. Share your thoughts.
+        <div className="rounded-xl border border-dashed border-(--border-default) bg-(--bg-surface) px-6 py-12 text-center">
+          <p className="text-sm font-medium text-(--text-secondary)">Be the first to reply</p>
+          <p className="mt-1 text-xs text-(--text-muted)">Share your thoughts and start the conversation.</p>
         </div>
       ) : thread.category === "showcase" && isMax && showcaseGroupByTheme ? (
         renderShowcaseGrouped()
+      ) : shouldVirtualize ? (
+        <div ref={scrollContainerRef} className="max-h-[800px] overflow-y-auto">
+          <div
+            style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: "relative" }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const c = roots[virtualRow.index];
+              return (
+                <div
+                  key={c.id}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  <CommentBranch
+                    comment={c}
+                    depth={0}
+                    maxDepth={maxDepth}
+                    isMax={isMax}
+                    authorId={authorId}
+                    usersById={usersById}
+                    votes={votes}
+                    onVote={toggleVote}
+                    replyTo={replyTo}
+                    setReplyTo={setReplyTo}
+                    thread={thread}
+                    ensureAuthenticated={ensureAuthenticated}
+                    solutionId={solutionId}
+                    childrenMap={mapToUse}
+                    activeFilters={activeFilters}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
       ) : (
         <div className="space-y-1">
           {roots.map((c) => (
@@ -325,7 +385,7 @@ function CommentBranch({
   const blockReplies = nextDepth >= maxDepth && filteredReplies.length > 0 && !continued;
 
   return (
-    <div className={cn(depth > 0 && "ml-3 border-l border-(--border-subtle) pl-3 sm:ml-4 sm:pl-4")}>
+    <div className={cn(depth > 0 && "ml-6 border-l-2 border-(--border-default) pl-4 sm:ml-8 sm:pl-5")}>
       <CommentCard
         comment={comment}
         authorId={authorId}
@@ -404,29 +464,33 @@ function CommentCard({
   const up = comment.upvotes + (v.up ? 1 : 0) - (v.down ? 0 : 0);
   const isOp = comment.authorId === authorId;
   const isSolution = solutionId === comment.id || comment.isSolution;
+  // For real posts (thread.postId exists), hide Reply on replies to enforce two-tier depth
+  const canReply = !thread.postId || !comment.parentId;
 
   return (
     <div
       id={`comment-${comment.id}`}
       className={cn(
-        "rounded-[12px] border border-(--border-default) bg-(--bg-surface) p-3",
+        "rounded-xl border border-(--border-default) bg-(--bg-surface) p-3 sm:p-4",
         isSolution && "border-l-4 border-l-(--feedback-success) border-(--feedback-success)/30",
       )}
     >
-      <div className="flex items-start gap-2">
+      <div className="flex items-start gap-2.5">
         <UserAvatar user={user} size="sm" className="shrink-0" />
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="font-semibold text-(--text-primary)">{user?.name ?? "Unknown"}</span>
-            <span className="text-(--text-muted)">@{user?.handle}</span>
-            {user ? <span className="text-(--text-muted)">{reputationLabel(user.points)}</span> : null}
-            {isOp ? <span className="rounded bg-(--brand-primary)/15 px-1.5 py-0.5 text-[10px] font-semibold text-(--brand-primary)">OP</span> : null}
-            {isSolution ? (
-              <span className="rounded bg-(--feedback-success)/15 px-1.5 py-0.5 text-[10px] font-semibold text-(--feedback-success)">Solution</span>
-            ) : null}
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-semibold text-(--text-primary)">{user?.name ?? "Unknown"}</span>
+              <span className="text-(--text-muted)">@{user?.handle}</span>
+              {user ? <span className="text-(--text-muted)">{reputationLabel(user.points)}</span> : null}
+              {isOp ? <span className="rounded bg-(--brand-primary)/15 px-1.5 py-0.5 text-[10px] font-semibold text-(--brand-primary)">OP</span> : null}
+              {isSolution ? (
+                <span className="rounded bg-(--feedback-success)/15 px-1.5 py-0.5 text-[10px] font-semibold text-(--feedback-success)">Solution</span>
+              ) : null}
+            </div>
             <span className="text-(--text-muted)">{formatRelativeDate(comment.createdAt)}</span>
           </div>
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-(--text-secondary)">{comment.body}</p>
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-(--text-primary)">{comment.body}</p>
           {thread.category === "showcase" && isMax && comment.mediaPin ? (
             <button
               type="button"
@@ -462,10 +526,13 @@ function CommentCard({
               ))}
             </div>
           ) : null}
-          <div className="mt-2 flex flex-wrap items-center gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-(--border-subtle) pt-2">
             <button
               type="button"
-              className={cn("inline-flex items-center gap-0.5 text-(--text-muted) hover:text-(--text-primary)", v.up && "text-(--brand-primary)")}
+              className={cn(
+                "inline-flex items-center gap-1 text-xs font-medium transition-colors",
+                v.up ? "text-(--brand-primary)" : "text-(--text-secondary) hover:text-(--text-primary)",
+              )}
               onClick={() => onVote(comment.id, "up")}
             >
               <ArrowBigUp className={cn("h-4 w-4", v.up && "fill-current")} />
@@ -473,26 +540,31 @@ function CommentCard({
             </button>
             <button
               type="button"
-              className={cn("inline-flex items-center gap-0.5 text-(--text-muted) hover:text-(--text-primary)", v.down && "text-(--feedback-error)")}
+              className={cn(
+                "inline-flex items-center gap-0.5 text-xs transition-colors",
+                v.down ? "text-(--feedback-error)" : "text-(--text-secondary) hover:text-(--text-primary)",
+              )}
               onClick={() => onVote(comment.id, "down")}
             >
               <ArrowBigDown className={cn("h-4 w-4", v.down && "fill-current")} />
             </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 text-xs font-medium text-(--text-secondary) hover:text-(--text-primary)"
-              onClick={() => {
-                if (!ensureAuthenticated()) return;
-                setReplyTo(replyTo === comment.id ? null : comment.id);
-              }}
-            >
-              <MessageSquareReply className="h-3.5 w-3.5" />
-              Reply
-            </button>
+            {canReply ? (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 text-xs font-medium text-(--text-secondary) hover:text-(--text-primary)"
+                onClick={() => {
+                  if (!ensureAuthenticated()) return;
+                  setReplyTo(replyTo === comment.id ? null : comment.id);
+                }}
+              >
+                <MessageSquareReply className="h-3.5 w-3.5" />
+                Reply
+              </button>
+            ) : null}
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <button type="button" className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-(--bg-overlay)" aria-label="Comment actions">
-                  <MoreHorizontal className="h-4 w-4 text-(--text-muted)" />
+                <button type="button" className="ml-auto inline-flex h-7 w-7 items-center justify-center rounded-full text-(--text-muted) hover:bg-(--bg-overlay) hover:text-(--text-primary)" aria-label="Comment actions">
+                  <MoreHorizontal className="h-3.5 w-3.5" />
                 </button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
@@ -500,8 +572,8 @@ function CommentCard({
                   className="z-50 min-w-[140px] rounded-[12px] border border-(--border-default) bg-(--bg-surface) p-1 shadow-(--shadow-lg)"
                   align="end"
                 >
-                  <DropdownMenu.Item className="cursor-pointer rounded-[8px] px-2 py-2 text-sm data-highlighted:bg-(--bg-overlay)">Report</DropdownMenu.Item>
-                  <DropdownMenu.Item className="cursor-pointer rounded-[8px] px-2 py-2 text-sm data-highlighted:bg-(--bg-overlay)">Copy link</DropdownMenu.Item>
+                  <DropdownMenu.Item className="cursor-pointer rounded-[8px] px-2 py-2 text-sm outline-hidden data-highlighted:bg-(--bg-overlay)">Report</DropdownMenu.Item>
+                  <DropdownMenu.Item className="cursor-pointer rounded-[8px] px-2 py-2 text-sm outline-hidden data-highlighted:bg-(--bg-overlay)">Copy link</DropdownMenu.Item>
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
@@ -513,6 +585,7 @@ function CommentCard({
                 placeholder={`Reply to @${user?.handle ?? "user"}…`}
                 onSubmit={() => setReplyTo(null)}
                 compact
+                parentId={comment.id}
               />
             </div>
           ) : null}

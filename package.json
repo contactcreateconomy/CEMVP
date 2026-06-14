@@ -8,6 +8,8 @@
     "start": "pnpm --filter ./apps/forum start",
     "lint": "pnpm --filter ./apps/forum lint",
     "typecheck": "pnpm --filter ./apps/forum typecheck",
+    "test": "pnpm --filter ./apps/forum test",
+    "test:run": "pnpm --filter ./apps/forum test:run",
     "dev:seller": "pnpm --filter @cemvp/seller dev",
     "dev:admin": "pnpm --filter @cemvp/admin dev",
     "dev:marketplace": "pnpm --filter @cemvp/marketplace dev",

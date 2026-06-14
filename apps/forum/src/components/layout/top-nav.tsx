@@ -1,15 +1,17 @@
 "use client";
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bell, LogOut, Moon, Plus, Search, Settings, Sun, UserCircle2 } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CreateconomyLogoMark } from "@/components/ui/createconomy-logo-mark";
-import { useQuery } from "convex/react";
+import { GlowingEffect } from "@/components/ui/glowing-effect";
+import { useQuery, useMutation } from "convex/react";
 
 import { api } from "@/lib/convex";
 import { isConvexConfigured } from "@cemvp/convex-client";
@@ -62,6 +64,7 @@ type NotificationRow = {
   message: string;
   createdAt: string;
   read: boolean;
+  postSlug?: string;
 };
 
 function TopNavWithConvexNotifications() {
@@ -71,11 +74,25 @@ function TopNavWithConvexNotifications() {
     api.forum.queries.listNotificationsForViewer,
     authStatus === "authenticated" ? {} : "skip",
   );
+  const markRead = useMutation(api.forum.mutations.markNotificationRead);
+
+  const handleMarkRead = useCallback(
+    async (notificationId: string) => {
+      try {
+        await markRead({ notificationId: notificationId as import("@/lib/convex").Id<"forumNotifications"> });
+      } catch {
+        /* ignore */
+      }
+    },
+    [markRead],
+  );
+
   return (
     <TopNavInner
       convexNotificationsEnabled
       notificationList={notificationList}
       unreadCountOverride={unreadNotificationCount}
+      onMarkRead={handleMarkRead}
     />
   );
 }
@@ -88,12 +105,17 @@ function TopNavInner({
   convexNotificationsEnabled,
   notificationList,
   unreadCountOverride,
+  onMarkRead,
 }: {
   convexNotificationsEnabled: boolean;
   notificationList?: NotificationRow[] | undefined;
   unreadCountOverride?: number;
+  onMarkRead?: (notificationId: string) => void;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentCategory = searchParams.get("category");
   const { resolvedTheme, setTheme } = useTheme();
   const { authStatus, user, openAuthModal, logout } = useAuth();
   const [mounted, setMounted] = useState(false);
@@ -121,24 +143,40 @@ function TopNavInner({
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 bg-(--bg-canvas)">
+    <header className="sticky top-0 z-40">
+      {/* Anti-bleed solid mask above the floating pill */}
+      <div 
+        className={cn(
+          "pointer-events-none absolute inset-x-0 top-0 z-[-1] bg-(--bg-canvas) transition-all duration-300 ease-out",
+          scrolled ? "h-3 opacity-100" : "h-0 opacity-0"
+        )} 
+      />
       <div className="mx-auto w-full max-w-[1440px] px-4 md:px-6 lg:px-8">
         <div
           className={cn(
-            "w-full border border-transparent transition-[transform,background-color,border-color,box-shadow,border-radius] duration-300 ease-out will-change-transform md:translate-y-0",
+            "relative w-full border transition-[transform,background-color,border-color,box-shadow,border-radius] duration-300 ease-out will-change-transform",
             scrolled
-              ? "md:translate-y-2 md:rounded-xl md:border-(--border-subtle) md:bg-(--bg-canvas)/92 md:shadow-(--shadow-sm) md:backdrop-blur-sm"
-              : "border-x-transparent border-t-transparent border-b-(--border-subtle) bg-(--bg-canvas)/90 backdrop-blur-sm",
+              ? "translate-y-2 rounded-xl border-white/40 [.dark_&]:border-white/[0.12] bg-white/45 [.dark_&]:bg-[rgba(20,20,20,0.55)] shadow-[0_8px_32px_rgba(0,0,0,0.08)] [.dark_&]:shadow-[0_8px_32px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-2xl"
+              : "translate-y-1.5 rounded-xl border-white/30 [.dark_&]:border-(--border-subtle) bg-white/25 [.dark_&]:bg-[rgba(20,20,20,0.35)] backdrop-blur-2xl shadow-[0_1px_0_rgba(0,0,0,0.04)] [.dark_&]:shadow-[0_1px_0_rgba(255,255,255,0.04)]",
           )}
         >
-          <div className="flex h-14 w-full items-center gap-3 px-2 sm:px-3 md:px-4">
+          <GlowingEffect
+            spread={50}
+            glow
+            disabled={false}
+            proximity={80}
+            inactiveZone={0.01}
+            borderWidth={1}
+            movementDuration={0.65}
+          />
+          <div className="relative z-10 flex h-14 w-full items-center gap-3 px-2 sm:px-3 md:px-4">
             <Link href="/feed" className="group flex shrink-0 items-center gap-2">
               <CreateconomyLogoMark
-                size={32}
+                size={34}
                 markColor="var(--text-primary)"
-                className="transition-[filter] duration-200 group-hover:drop-shadow-[0_0_8px_rgba(9,9,11,0.42)] dark:group-hover:drop-shadow-[0_0_6px_rgba(250,250,250,0.35)]"
+                className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.12)] [.dark_&]:drop-shadow-[0_1px_3px_rgba(0,0,0,0.3)] transition-[filter] duration-200 group-hover:drop-shadow-[0_0_8px_rgba(9,9,11,0.42)] [.dark_&]:group-hover:drop-shadow-[0_0_6px_rgba(250,250,250,0.35)]"
               />
-              <span className="text-sm font-semibold tracking-tight text-text-primary sm:text-base">Createconomy</span>
+              <span className="text-[0.95rem] font-semibold tracking-tight text-text-primary drop-shadow-[0_1px_2px_rgba(0,0,0,0.1)] [.dark_&]:drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] sm:text-[1.05rem]">Createconomy</span>
             </Link>
 
             <form
@@ -147,36 +185,42 @@ function TopNavInner({
               className="hidden flex-1 justify-center px-2 md:flex"
               role="search"
             >
-              <label className="relative w-full max-w-[480px]" aria-label="Search">
+              {currentCategory ? <input type="hidden" name="category" value={currentCategory} /> : null}
+              <label className="group relative w-full max-w-[480px]" aria-label="Search">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
                 <input
                   name="q"
                   type="search"
-                  placeholder="Search"
-                  className="h-9 w-full appearance-none rounded-full border border-(--border-default) bg-(--bg-surface) pl-9 pr-3 text-sm text-text-primary outline-hidden transition-[border-color] duration-200 placeholder:text-text-muted hover:border-(--border-prominent) focus:border-(--border-active) focus:outline-hidden focus:ring-0 focus-visible:outline-hidden focus-visible:ring-0"
+                  placeholder={currentCategory ? `Search in ${currentCategory}…` : "Search"}
+                  className="search-input h-9 w-full appearance-none rounded-full border border-(--border-default) bg-(--bg-surface) pl-9 pr-3 text-sm text-text-primary outline-hidden transition-[border-color,box-shadow] duration-200 placeholder:text-text-muted hover:shadow-[0_0_8px_rgba(14,165,233,0.08)] focus:outline-hidden"
                 />
               </label>
             </form>
 
             <div className="ml-auto flex items-center gap-1 sm:gap-2">
-              <Link
-                href="/new-post"
-                aria-label="Create"
-                className={cn(
-                  "inline-flex rounded-full p-2 text-text-secondary transition-[transform,colors] duration-200 hover:-translate-y-px hover:bg-(--bg-overlay) hover:text-text-primary",
-                  pathname === "/new-post" && "text-brand-primary",
-                )}
-              >
-                <Plus className="h-4 w-4" />
-              </Link>
+              <NavTooltip label="Create">
+                <Link
+                  href="/new-post"
+                  aria-label="Create"
+                  className={cn(
+                    // Avoid hover translate inside backdrop-blur (subpixel layer = fuzzy SVG/icons)
+                    "inline-flex rounded-full p-2 text-text-secondary transition-[colors,box-shadow] duration-200 hover:bg-(--bg-overlay) hover:text-text-primary hover:shadow-[0_0_10px_rgba(14,165,233,0.3)]",
+                    pathname === "/new-post" && "text-brand-primary",
+                  )}
+                >
+                  <Plus className="h-4 w-4 shrink-0" />
+                </Link>
+              </NavTooltip>
 
-              <button
-                aria-label="Toggle theme"
-                onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-                className="rounded-full p-2 text-text-secondary transition-[transform,colors] duration-200 hover:-translate-y-px hover:bg-(--bg-overlay) hover:text-text-primary"
-              >
-                {!mounted ? <Moon className="h-4 w-4" /> : resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </button>
+              <NavTooltip label={mounted && resolvedTheme === "dark" ? "Light mode" : "Dark mode"}>
+                <button
+                  aria-label="Toggle theme"
+                  onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+                  className="rounded-full p-2 text-text-secondary transition-[transform,colors,box-shadow] duration-200 hover:-translate-y-px hover:bg-(--bg-overlay) hover:text-text-primary hover:shadow-[0_0_10px_rgba(14,165,233,0.3)]"
+                >
+                  {!mounted ? <Moon className="h-4 w-4" /> : resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </button>
+              </NavTooltip>
 
               <DropdownMenu.Root open={notificationsOpen} onOpenChange={setNotificationsOpen}>
                 <DropdownMenu.Trigger asChild>
@@ -188,7 +232,7 @@ function TopNavInner({
                         : "Notifications. Sign in to unlock"
                     }
                     className={cn(
-                      "relative rounded-full p-2 text-text-secondary transition-[transform,colors] duration-200 hover:-translate-y-px hover:bg-(--bg-overlay) hover:text-text-primary",
+                      "relative rounded-full p-2 text-text-secondary transition-[transform,colors,box-shadow] duration-200 hover:-translate-y-px hover:bg-(--bg-overlay) hover:text-text-primary hover:shadow-[0_0_10px_rgba(14,165,233,0.3)]",
                       (pathname === "/notifications" || notificationsOpen) && "text-brand-primary",
                     )}
                   >
@@ -225,6 +269,14 @@ function TopNavInner({
                               <DropdownMenu.Item
                                 key={notification.id}
                                 className="group relative cursor-pointer rounded-[10px] px-3 py-2.5 outline-hidden transition-[background-color,transform] duration-200 data-highlighted:bg-(--bg-overlay) data-highlighted:translate-x-[2px]"
+                                onSelect={() => {
+                                  if (!notification.read && onMarkRead) {
+                                    onMarkRead(notification.id);
+                                  }
+                                  if (notification.postSlug) {
+                                    router.push(`/discussions/${notification.postSlug}`);
+                                  }
+                                }}
                               >
                                 <div className="pr-12">
                                   <div className="flex items-start gap-2">
@@ -366,7 +418,7 @@ function TopNavInner({
                 <button
                   type="button"
                   onClick={() => openAuthModal("login")}
-                  className="inline-flex h-9 items-center rounded-full border border-(--border-default) bg-(--bg-surface) px-4 text-sm font-semibold text-text-primary transition-[transform,colors] duration-200 hover:-translate-y-px hover:border-(--border-active) hover:bg-(--bg-overlay)"
+                  className="inline-flex h-9 items-center rounded-full border border-(--border-default) bg-(--bg-surface) px-4 text-sm font-semibold text-text-primary transition-[transform,colors,box-shadow] duration-200 hover:-translate-y-px hover:border-(--border-active) hover:bg-(--bg-overlay) hover:shadow-[0_0_10px_rgba(14,165,233,0.3)]"
                 >
                   Login
                 </button>
@@ -380,8 +432,42 @@ function TopNavInner({
 }
 
 export function TopNav() {
-  if (!isConvexConfigured()) {
+  const [convexReady, setConvexReady] = useState(false);
+
+  useEffect(() => {
+    setConvexReady(isConvexConfigured());
+  }, []);
+
+  if (!convexReady) {
     return <TopNavInner convexNotificationsEnabled={false} />;
   }
   return <TopNavWithConvexNotifications />;
+}
+
+/* ── Motion tooltip matching the category-icon tooltip ── */
+function NavTooltip({ label, children }: { label: string; children: React.ReactNode }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      className="relative inline-flex"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {children}
+      <AnimatePresence>
+        {hovered && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="pointer-events-none absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-(--border-default) bg-popover px-2 py-1 text-xs shadow-lg"
+          >
+            <span className="font-medium text-popover-foreground">{label}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }

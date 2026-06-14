@@ -119,7 +119,8 @@ export const runForumSeed = internalMutation({
       const remapped = deepRemapUserIds(thread, profileIdMap);
       await ctx.db.insert("forumRichThreads", {
         slug: thread.slug,
-        payload: remapped,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        payload: remapped as any,
       });
     }
 
@@ -287,6 +288,6 @@ export const runForumSeed = internalMutation({
  */
 export const ensureForumCategories = internalMutation({
   args: {},
-  returns: v.object({ inserted: v.number(), skipped: v.number() }),
+  returns: v.object({ inserted: v.number(), skipped: v.number(), updated: v.number() }),
   handler: async (ctx) => insertMissingForumCategories(ctx),
 });
