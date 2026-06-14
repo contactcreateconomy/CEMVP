@@ -74,6 +74,8 @@ export default defineSchema({
     streakDays: v.number(),
     verified: v.optional(v.boolean()),
     role: v.union(v.literal("member"), v.literal("moderator"), v.literal("admin")),
+    /** Internal ops flag — persona managed by automation (not shown in forum UI). */
+    managedByAutomation: v.optional(v.boolean()),
   })
     .index("by_handle", ["handle"])
     .index("by_user", ["userId"])
@@ -366,4 +368,121 @@ export default defineSchema({
   })
     .index("by_date_category", ["date", "category"])
     .index("by_date_eventType", ["date", "eventType"]),
+
+  /** Personality skill templates for automated persona content. */
+  forumPersonaSkills: defineTable({
+    key: v.string(),
+    name: v.string(),
+    expertiseTags: v.array(v.string()),
+    tone: v.string(),
+    writingStyle: v.string(),
+    preferredCategories: v.array(v.string()),
+    postPromptTemplate: v.string(),
+    commentPromptTemplate: v.string(),
+    enabled: v.boolean(),
+  }).index("by_key", ["key"]),
+
+  /** Automation personas linked to forumProfiles. */
+  forumPersonas: defineTable({
+    profileId: v.id("forumProfiles"),
+    seedKey: v.optional(v.string()),
+    displayName: v.string(),
+    skillId: v.id("forumPersonaSkills"),
+    active: v.boolean(),
+    postsTodayCount: v.number(),
+    lastPostAt: v.optional(v.number()),
+    dailyPostLimit: v.number(),
+    lastPostsDayKey: v.optional(v.string()),
+  })
+    .index("by_profile", ["profileId"])
+    .index("by_seed_key", ["seedKey"])
+    .index("by_active", ["active"]),
+
+  /** Admin-supplied or auto-generated topic briefs for content generation. */
+  forumTopicBriefs: defineTable({
+    title: v.string(),
+    keywords: v.array(v.string()),
+    category: v.string(),
+    sourceUrls: v.array(v.string()),
+    status: v.union(
+      v.literal("open"),
+      v.literal("in_use"),
+      v.literal("closed"),
+    ),
+    createdByUserId: v.optional(v.id("users")),
+    createdAt: v.number(),
+  })
+    .index("by_status", ["status"])
+    .index("by_createdAt", ["createdAt"]),
+
+  /** Review queue for persona-generated posts and comments. */
+  forumContentDrafts: defineTable({
+    kind: v.union(v.literal("post"), v.literal("comment")),
+    personaId: v.id("forumPersonas"),
+    targetPostId: v.optional(v.id("forumPosts")),
+    topicBriefId: v.optional(v.id("forumTopicBriefs")),
+    title: v.optional(v.string()),
+    body: v.string(),
+    summary: v.optional(v.string()),
+    category: v.optional(v.string()),
+    researchSnippets: v.array(
+      v.object({
+        title: v.string(),
+        url: v.string(),
+        snippet: v.string(),
+      }),
+    ),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+      v.literal("published"),
+    ),
+    scheduledPublishAt: v.optional(v.number()),
+    publishedPostId: v.optional(v.id("forumPosts")),
+    publishedCommentId: v.optional(v.id("forumPostComments")),
+    reviewedByUserId: v.optional(v.id("users")),
+    reviewedAt: v.optional(v.number()),
+    rejectionReason: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_status", ["status"])
+    .index("by_status_createdAt", ["status", "createdAt"])
+    .index("by_persona", ["personaId"])
+    .index("by_targetPost", ["targetPostId"]),
+
+  /** Singleton automation settings (key = "default"). */
+  forumAutomationConfig: defineTable({
+    key: v.string(),
+    enabled: v.boolean(),
+    maxPostsPerDay: v.number(),
+    maxCommentsPerPost: v.number(),
+    commentDelayMinMinutes: v.number(),
+    commentDelayMaxMinutes: v.number(),
+    defaultCategories: v.array(v.string()),
+    postsGeneratedToday: v.number(),
+    lastPostsDayKey: v.optional(v.string()),
+    updatedAt: v.number(),
+  }).index("by_key", ["key"]),
+
+  /** Audit log for persona automation runs. */
+  forumAutomationRuns: defineTable({
+    runType: v.union(
+      v.literal("generate_post_draft"),
+      v.literal("generate_comment_draft"),
+      v.literal("scheduler_tick"),
+      v.literal("publish_draft"),
+      v.literal("manual_trigger"),
+    ),
+    personaId: v.optional(v.id("forumPersonas")),
+    draftId: v.optional(v.id("forumContentDrafts")),
+    topicBriefId: v.optional(v.id("forumTopicBriefs")),
+    success: v.boolean(),
+    error: v.optional(v.string()),
+    metadata: v.optional(v.any()),
+    createdAt: v.number(),
+  })
+    .index("by_createdAt", ["createdAt"])
+    .index("by_runType", ["runType"]),
 });
