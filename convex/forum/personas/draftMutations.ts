@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 
 import { internalMutation } from "../../_generated/server";
+import { assertContentSafe, checkBlockedKeywords } from "../moderation/contentSafety";
 import { researchSnippetValidator } from "./validators";
 
 export const saveGeneratedDraft = internalMutation({
@@ -19,6 +20,12 @@ export const saveGeneratedDraft = internalMutation({
   returns: v.id("forumContentDrafts"),
   handler: async (ctx, args) => {
     const now = Date.now();
+    const safetyTexts = [args.title, args.summary, args.body].filter(
+      (t): t is string => typeof t === "string" && t.length > 0,
+    );
+    const safety = await checkBlockedKeywords(ctx, safetyTexts);
+    assertContentSafe(safety);
+
     const draftId = await ctx.db.insert("forumContentDrafts", {
       kind: args.kind,
       personaId: args.personaId,
@@ -31,6 +38,8 @@ export const saveGeneratedDraft = internalMutation({
       researchSnippets: args.researchSnippets,
       status: "pending",
       scheduledPublishAt: args.scheduledPublishAt,
+      safetyFlag: safety.flagged,
+      safetyMatchedTerms: safety.matchedTerms,
       createdAt: now,
       updatedAt: now,
     });
@@ -60,6 +69,8 @@ export const logAutomationRun = internalMutation({
       v.literal("scheduler_tick"),
       v.literal("publish_draft"),
       v.literal("manual_trigger"),
+      v.literal("discover_trending"),
+      v.literal("reply_to_humans"),
     ),
     personaId: v.optional(v.id("forumPersonas")),
     draftId: v.optional(v.id("forumContentDrafts")),

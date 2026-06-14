@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-06-14 (admin console: full persona CRUD, trending, safety, moderation)
+
+**Feature:** Expanded admin control plane on branch `013-persona-automation` — skills/personas/topics CRUD, Reddit trending discovery (review-first `suggested` topics), content safety blocklist, posts + moderation pages, analytics, automation extras (active hours, auto-publish, dedupe, seed engagement, reply-to-humans cron).
+
+**Convex:** Schema updates (`forumBlockedKeywords`, topic `suggested` status, automation config fields); modules `contentSafety.ts`, `trendingAction.ts`, `adminModeration.ts`, `replyScanner.ts`; safety wired into human + persona publish paths.
+
+**Admin routes:** `/posts`, `/moderation`, `/safety`, `/analytics` plus enhanced `/skills`, `/personas`, `/topics`.
+
+**Env (Convex):** Optional `REDDIT_CLIENT_ID`, `REDDIT_SECRET`, `REDDIT_USER_AGENT` for trending discovery.
+
+**Checks:** `pnpm typecheck:admin`, `pnpm lint:admin`, `pnpm build:admin` pass; `npx convex codegen` uploaded to dev deployment.
+
+**Apps affected:** `apps/admin`, `convex`. Forum app not modified.
+
 ## 2026-06-14 (admin + Convex: persona automation — admin-only control plane)
 
 **Feature:** Admin-controlled persona content engine for cold-start forum activity. Personas, skills, topic briefs, GLM + Tavily draft generation, review queue, and publish — all managed from **`apps/admin`** only. **`apps/forum` unchanged**; published content appears as normal member posts/comments via internal Convex publish helpers.
@@ -14,7 +28,7 @@
 
 **Prod deploy (local admin test):** `convex deploy` to **energetic-kangaroo-55** (persona tables + APIs). Vercel admin app uses prod `NEXT_PUBLIC_CONVEX_URL`; local `.env.local` uses dev **`watchful-chameleon-570`**. Admin UI: public landing at `/`, console at `/dashboard`, `/personas`, etc. after sign-in.
 
-**Admin UX:** Landing `/` shows login panel on **`console.createconomy.com`** only; local/dev shows “production only” message. Prod **`AUTH_REDIRECT_ORIGINS`** → `https://console.createconomy.com` so Google OAuth returns to console, not forum.
+**Admin access:** Prod **`ADMIN_EMAILS`** grants admin app membership on sign-in (including existing forum accounts). Set on prod Convex, then sign out/in at console.
 
 ## 2026-06-14 (forum: fix Vercel build — Suspense on TopNav in AppShell + 9 page routes)
 

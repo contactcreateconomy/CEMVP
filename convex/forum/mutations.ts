@@ -4,6 +4,7 @@ import { v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { mutation, internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
+import { assertContentSafe, checkBlockedKeywords } from "./moderation/contentSafety";
 import { insertMissingForumCategories } from "./seed/ensureCategoryRows";
 import { categoryRows } from "./seed/catalog";
 import { slugify } from "./seed/generatePosts";
@@ -86,6 +87,9 @@ export const createPost = mutation({
     if (b.length > MAX_POST_BODY_LEN) {
       throw new Error(`Body must be at most ${MAX_POST_BODY_LEN} characters.`);
     }
+
+    const safety = await checkBlockedKeywords(ctx, [t, s, b]);
+    assertContentSafe(safety);
 
     const requestedCategory = category.trim();
     const catKey = requestedCategory === "help" ? "qa" : requestedCategory;
@@ -474,6 +478,9 @@ export const createComment = mutation({
     if (b.length > MAX_COMMENT_BODY_LEN) {
       throw new Error(`Comment must be at most ${MAX_COMMENT_BODY_LEN} characters.`);
     }
+
+    const safety = await checkBlockedKeywords(ctx, [b]);
+    assertContentSafe(safety);
 
     const post = await ctx.db.get(postId);
     if (!post) {

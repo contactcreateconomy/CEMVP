@@ -5,8 +5,7 @@ import { v } from "convex/values";
 import { internal } from "../../_generated/api";
 import type { Id } from "../../_generated/dataModel";
 import { internalAction } from "../../_generated/server";
-
-type ResearchSnippet = { title: string; url: string; snippet: string };
+import { buildResearchContext, searchWeb } from "./research";
 
 type GeneratedPost = {
   title: string;
@@ -18,39 +17,6 @@ type GeneratedPost = {
 type GeneratedComment = {
   body: string;
 };
-
-async function searchWeb(query: string): Promise<ResearchSnippet[]> {
-  const apiKey = process.env.SEARCH_API_KEY;
-  if (!apiKey) {
-    return [];
-  }
-
-  const response = await fetch("https://api.tavily.com/search", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      api_key: apiKey,
-      query,
-      max_results: 5,
-      include_answer: false,
-    }),
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Search API failed: ${response.status} ${text}`);
-  }
-
-  const data = (await response.json()) as {
-    results?: Array<{ title?: string; url?: string; content?: string }>;
-  };
-
-  return (data.results ?? []).map((row) => ({
-    title: row.title ?? "Source",
-    url: row.url ?? "",
-    snippet: (row.content ?? "").slice(0, 500),
-  }));
-}
 
 async function callGlm(systemPrompt: string, userPrompt: string): Promise<string> {
   const apiKey = process.env.GLM_API_KEY;
@@ -94,15 +60,6 @@ async function callGlm(systemPrompt: string, userPrompt: string): Promise<string
   return content;
 }
 
-function buildResearchContext(snippets: ResearchSnippet[]): string {
-  if (snippets.length === 0) {
-    return "No live search results available. Use general knowledge but avoid specific unverifiable claims.";
-  }
-  return snippets
-    .map((s, i) => `[${i + 1}] ${s.title}\nURL: ${s.url}\n${s.snippet}`)
-    .join("\n\n");
-}
-
 export const generatePostDraft = internalAction({
   args: {
     personaId: v.id("forumPersonas"),
@@ -143,6 +100,14 @@ ${researchBlock}`;
       const raw = await callGlm(systemPrompt, userPrompt);
       const parsed = JSON.parse(raw) as GeneratedPost;
 
+      const duplicate = await ctx.runQuery(
+        internal.forum.personas.generateContext.checkPostTitleDuplicate,
+        { title: parsed.title },
+      );
+      if (duplicate) {
+        throw new Error("Generated title duplicates recent content.");
+      }
+
       const draftId = await ctx.runMutation(internal.forum.personas.draftMutations.saveGeneratedDraft, {
         kind: "post",
         personaId,
@@ -153,6 +118,16 @@ ${researchBlock}`;
         category: parsed.category || context.category,
         researchSnippets: snippets,
       });
+
+      const autoPublish = await ctx.runQuery(
+        internal.forum.personas.generateContext.getPersonaAutoPublish,
+        { personaId },
+      );
+      if (autoPublish.autoPublish) {
+        await ctx.runMutation(internal.forum.personas.publishInternal.autoPublishDraftInternal, {
+          draftId,
+        });
+      }
 
       return draftId;
     } catch (error) {

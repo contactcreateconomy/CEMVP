@@ -31,4 +31,18 @@ crons.interval(
   {},
 );
 
+crons.cron(
+  "discover trending topics daily",
+  "0 6 * * *",
+  internal.forum.personas.trendingAction.discoverTrendingTopics,
+  {},
+);
+
+crons.cron(
+  "scan human comments for persona replies",
+  "0 * * * *",
+  internal.forum.personas.replyScanner.scanHumanCommentsForReply,
+  {},
+);
+
 export default crons;

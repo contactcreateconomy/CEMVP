@@ -1,6 +1,8 @@
 import { v } from "convex/values";
 
 import { internalQuery } from "../../_generated/server";
+import { getOrCreateAutomationConfig, mapAutomationConfig } from "./configHelpers";
+import { isDuplicateDraftTitle, isDuplicatePostTitle } from "./dedupeHelpers";
 
 export const getPostGenerationContext = internalQuery({
   args: {
@@ -115,5 +117,44 @@ export const getCommentGenerationContext = internalQuery({
       postSummary: post.summary,
       postBodyExcerpt: post.body.slice(0, 1200),
     };
+  },
+});
+
+export const getTrendingConfig = internalQuery({
+  args: {},
+  returns: v.object({
+    watchedSubreddits: v.array(v.string()),
+    trendingKeywords: v.array(v.string()),
+    trendingAutoCreate: v.boolean(),
+    defaultCategories: v.array(v.string()),
+  }),
+  handler: async (ctx) => {
+    const config = await getOrCreateAutomationConfig(ctx);
+    const mapped = mapAutomationConfig(config);
+    return {
+      watchedSubreddits: mapped.watchedSubreddits,
+      trendingKeywords: mapped.trendingKeywords,
+      trendingAutoCreate: mapped.trendingAutoCreate,
+      defaultCategories: mapped.defaultCategories,
+    };
+  },
+});
+
+export const getPersonaAutoPublish = internalQuery({
+  args: { personaId: v.id("forumPersonas") },
+  returns: v.object({ autoPublish: v.boolean() }),
+  handler: async (ctx, { personaId }) => {
+    const persona = await ctx.db.get(personaId);
+    return { autoPublish: persona?.autoPublish ?? false };
+  },
+});
+
+export const checkPostTitleDuplicate = internalQuery({
+  args: { title: v.string() },
+  returns: v.boolean(),
+  handler: async (ctx, { title }) => {
+    if (await isDuplicatePostTitle(ctx, title)) return true;
+    if (await isDuplicateDraftTitle(ctx, title)) return true;
+    return false;
   },
 });

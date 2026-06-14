@@ -51,6 +51,10 @@ export const publishApprovedDraftInternal = internalMutation({
         .unique();
       if (config) {
         await incrementPostsGeneratedToday(ctx, config._id);
+        if (config.seedInitialEngagement !== false) {
+          const upvotes = Math.floor(Math.random() * 8) + 1;
+          await ctx.db.patch(postId, { upvotes });
+        }
       }
 
       await ctx.db.patch(draftId, {
@@ -80,6 +84,88 @@ export const publishApprovedDraftInternal = internalMutation({
         reviewedByUserId,
         reviewedAt: now,
         updatedAt: now,
+      });
+    }
+
+    await ctx.db.insert("forumAutomationRuns", {
+      runType: "publish_draft",
+      personaId: persona._id,
+      draftId,
+      success: true,
+      createdAt: now,
+    });
+
+    return { postId, commentId };
+  },
+});
+
+export const autoPublishDraftInternal = internalMutation({
+  args: { draftId: v.id("forumContentDrafts") },
+  returns: v.object({
+    postId: v.union(v.id("forumPosts"), v.null()),
+    commentId: v.union(v.id("forumPostComments"), v.null()),
+  }),
+  handler: async (ctx, { draftId }) => {
+    const draft = await ctx.db.get(draftId);
+    if (!draft || draft.status !== "pending") {
+      return { postId: null, commentId: null };
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(draftId, {
+      status: "approved",
+      reviewedAt: now,
+      updatedAt: now,
+    });
+
+    const approved = await ctx.db.get(draftId);
+    if (!approved || approved.status !== "approved") {
+      return { postId: null, commentId: null };
+    }
+
+    const persona = await ctx.db.get(approved.personaId);
+    if (!persona) {
+      throw new Error("Persona not found.");
+    }
+
+    let postId = approved.publishedPostId ?? null;
+    let commentId = approved.publishedCommentId ?? null;
+
+    if (approved.kind === "post") {
+      if (!approved.title || !approved.category) {
+        throw new Error("Post draft missing title or category.");
+      }
+      postId = await insertPostAsProfile(ctx, {
+        profileId: persona.profileId,
+        title: approved.title,
+        summary: approved.summary ?? approved.title,
+        body: approved.body,
+        category: approved.category,
+      });
+      await incrementPersonaPostCount(ctx, persona._id);
+
+      const config = await ctx.db
+        .query("forumAutomationConfig")
+        .withIndex("by_key", (q) => q.eq("key", "default"))
+        .unique();
+      if (config) {
+        await incrementPostsGeneratedToday(ctx, config._id);
+        if (config.seedInitialEngagement !== false) {
+          const upvotes = Math.floor(Math.random() * 8) + 1;
+          await ctx.db.patch(postId, { upvotes });
+        }
+      }
+
+      await ctx.db.patch(draftId, {
+        status: "published",
+        publishedPostId: postId,
+        reviewedAt: now,
+        updatedAt: now,
+      });
+
+      await ctx.scheduler.runAfter(0, internal.forum.personas.scheduler.scheduleCommentDraftsForPost, {
+        postId,
+        authorPersonaId: persona._id,
       });
     }
 

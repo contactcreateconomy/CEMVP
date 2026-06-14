@@ -1,5 +1,6 @@
 import type { Id } from "../../_generated/dataModel";
 import type { MutationCtx } from "../../_generated/server";
+import { assertContentSafe, checkBlockedKeywords } from "../moderation/contentSafety";
 import { insertMissingForumCategories } from "../seed/ensureCategoryRows";
 import { slugify } from "../seed/generatePosts";
 import {
@@ -42,6 +43,9 @@ export async function insertPostAsProfile(
   if (b.length > MAX_POST_BODY_LEN) {
     throw new Error(`Body must be at most ${MAX_POST_BODY_LEN} characters.`);
   }
+
+  const safety = await checkBlockedKeywords(ctx, [t, s, b]);
+  assertContentSafe(safety);
 
   const requestedCategory = args.category.trim();
   const catKey = requestedCategory === "help" ? "qa" : requestedCategory;
@@ -92,7 +96,7 @@ export async function insertPostAsProfile(
     trending: "recent",
     locked: false,
     isRichThread: false,
-    moderationStatus: "visible",
+    moderationStatus: safety.flagged ? "flagged" : "visible",
   });
 
   await ctx.db.insert("forumAnalyticsEvents", {
@@ -130,6 +134,9 @@ export async function insertCommentAsProfile(
   if (b.length > MAX_COMMENT_BODY_LEN) {
     throw new Error(`Comment must be at most ${MAX_COMMENT_BODY_LEN} characters.`);
   }
+
+  const safety = await checkBlockedKeywords(ctx, [b]);
+  assertContentSafe(safety);
 
   const post = await ctx.db.get(args.postId);
   if (!post) {
