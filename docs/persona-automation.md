@@ -43,7 +43,26 @@ Run locally: `pnpm dev:admin` (port **3001**).
 - **`/`** — public landing page (sign in)
 - After auth + admin role: **`/dashboard`**, **`/personas`**, **`/skills`**, **`/topics`**, **`/queue`**, **`/runs`**
 
-Sign in with an account in `ADMIN_EMAILS` (Convex env) or a forum profile with `admin`/`moderator` role. For Google OAuth on Vercel, add the deployed admin origin to Convex **`AUTH_REDIRECT_ORIGINS`**.
+Sign in with an account in `ADMIN_EMAILS` (Convex env) or a forum profile with `admin`/`moderator` role.
+
+### Google OAuth redirect (admin stays on console)
+
+**`SITE_URL`** on prod is the forum (`https://discuss.createconomy.com`). After Google sign-in, Convex only returns you to a URL whose origin is allowed. Without **`AUTH_REDIRECT_ORIGINS`**, any login from **`console.createconomy.com`** falls back to the forum.
+
+**Prod Convex** (already required for console):
+
+```bash
+npx convex env set AUTH_REDIRECT_ORIGINS "https://console.createconomy.com" --prod
+```
+
+**Google Cloud Console** → OAuth client → **Authorized JavaScript origins**:
+
+- `https://discuss.createconomy.com` (forum)
+- `https://console.createconomy.com` (admin)
+
+Callback URL stays on Convex only: `https://energetic-kangaroo-55.convex.site/api/auth/callback/google`
+
+**Local / dev:** Admin sign-in is disabled on localhost and dev Convex. Use **`https://console.createconomy.com`** in production only. Do not set `AUTH_REDIRECT_ORIGINS` on the dev deployment for OAuth testing.
 
 ### 4. Bootstrap personas (prod-safe)
 

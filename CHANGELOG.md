@@ -14,7 +14,7 @@
 
 **Prod deploy (local admin test):** `convex deploy` to **energetic-kangaroo-55** (persona tables + APIs). Vercel admin app uses prod `NEXT_PUBLIC_CONVEX_URL`; local `.env.local` uses dev **`watchful-chameleon-570`**. Admin UI: public landing at `/`, console at `/dashboard`, `/personas`, etc. after sign-in.
 
-**Admin UX:** Minimal centered landing at `/` (owner-only copy). Vercel-style sidebar console after auth. Local dev on port **3001** (`pnpm dev:admin`).
+**Admin UX:** Landing `/` shows login panel on **`console.createconomy.com`** only; local/dev shows “production only” message. Prod **`AUTH_REDIRECT_ORIGINS`** → `https://console.createconomy.com` so Google OAuth returns to console, not forum.
 
 ## 2026-06-14 (forum: fix Vercel build — Suspense on TopNav in AppShell + 9 page routes)
 

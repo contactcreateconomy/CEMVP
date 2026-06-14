@@ -3,7 +3,7 @@ import localFont from "next/font/local";
 
 import "./globals.css";
 import { isConvexConfigured } from "@cemvp/convex-client";
-import { AppAuthProvider, AuthModal, OfflineAuthProvider } from "@cemvp/auth-ui";
+import { AppAuthProvider, OfflineAuthProvider } from "@cemvp/auth-ui";
 import { ConvexProvider } from "@/providers/convex-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 
@@ -37,15 +37,9 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <ConvexProvider>
             {convexConfigured ? (
-              <AppAuthProvider>
-                {children}
-                <AuthModal />
-              </AppAuthProvider>
+              <AppAuthProvider>{children}</AppAuthProvider>
             ) : (
-              <OfflineAuthProvider>
-                {children}
-                <AuthModal />
-              </OfflineAuthProvider>
+              <OfflineAuthProvider>{children}</OfflineAuthProvider>
             )}
           </ConvexProvider>
         </ThemeProvider>
