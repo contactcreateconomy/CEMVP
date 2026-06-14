@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { internal } from "../../_generated/api";
 import { internalMutation } from "../../_generated/server";
 import { utcDayKey } from "./auth";
-import { getOrCreateAutomationConfig, resetDailyCountersIfNeeded } from "./configHelpers";
+import { getOrCreateAutomationConfig, isWithinActiveWindow, resetDailyCountersIfNeeded } from "./configHelpers";
 
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -17,6 +17,10 @@ export const runPersonaScheduler = internalMutation({
     await resetDailyCountersIfNeeded(ctx, config._id);
     const refreshed = await ctx.db.get(config._id);
     if (!refreshed?.enabled) {
+      return null;
+    }
+
+    if (!isWithinActiveWindow(refreshed)) {
       return null;
     }
 

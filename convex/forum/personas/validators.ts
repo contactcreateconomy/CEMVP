@@ -26,12 +26,18 @@ export const personaValidator = v.object({
   displayName: v.string(),
   handle: v.string(),
   image: v.string(),
+  bio: v.string(),
   skillId: v.string(),
   skillName: v.string(),
   active: v.boolean(),
+  autoPublish: v.boolean(),
   postsTodayCount: v.number(),
   dailyPostLimit: v.number(),
   lastPostAt: v.union(v.number(), v.null()),
+  level: v.number(),
+  points: v.number(),
+  streakDays: v.number(),
+  verified: v.boolean(),
 });
 
 export const topicBriefValidator = v.object({
@@ -40,7 +46,15 @@ export const topicBriefValidator = v.object({
   keywords: v.array(v.string()),
   category: v.string(),
   sourceUrls: v.array(v.string()),
-  status: v.union(v.literal("open"), v.literal("in_use"), v.literal("closed")),
+  status: v.union(
+    v.literal("suggested"),
+    v.literal("open"),
+    v.literal("in_use"),
+    v.literal("closed"),
+  ),
+  source: v.union(v.literal("manual"), v.literal("reddit"), v.literal("tavily"), v.null()),
+  score: v.union(v.number(), v.null()),
+  sourceMeta: v.union(v.any(), v.null()),
   createdAt: v.number(),
 });
 
@@ -63,6 +77,8 @@ export const draftValidator = v.object({
     v.literal("rejected"),
     v.literal("published"),
   ),
+  safetyFlag: v.boolean(),
+  safetyMatchedTerms: v.array(v.string()),
   scheduledPublishAt: v.union(v.number(), v.null()),
   publishedPostId: v.union(v.string(), v.null()),
   createdAt: v.number(),
@@ -77,6 +93,76 @@ export const automationConfigValidator = v.object({
   commentDelayMaxMinutes: v.number(),
   defaultCategories: v.array(v.string()),
   postsGeneratedToday: v.number(),
+  watchedSubreddits: v.array(v.string()),
+  trendingKeywords: v.array(v.string()),
+  trendingAutoCreate: v.boolean(),
+  activeHoursStart: v.union(v.number(), v.null()),
+  activeHoursEnd: v.union(v.number(), v.null()),
+  timezoneOffsetMinutes: v.number(),
+  seedInitialEngagement: v.boolean(),
+  replyToHumansEnabled: v.boolean(),
+});
+
+export const blockedKeywordValidator = v.object({
+  id: v.string(),
+  term: v.string(),
+  severity: v.union(v.literal("block"), v.literal("flag")),
+  category: v.string(),
+  createdAt: v.number(),
+});
+
+export const adminPostValidator = v.object({
+  id: v.string(),
+  slug: v.string(),
+  title: v.string(),
+  summary: v.string(),
+  category: v.string(),
+  authorName: v.string(),
+  authorHandle: v.string(),
+  moderationStatus: v.union(
+    v.literal("visible"),
+    v.literal("flagged"),
+    v.literal("removed"),
+    v.literal("shadow_removed"),
+  ),
+  upvotes: v.number(),
+  commentsCount: v.number(),
+  views: v.number(),
+  createdAt: v.number(),
+  managedByAutomation: v.boolean(),
+});
+
+export const adminReportValidator = v.object({
+  id: v.string(),
+  contentType: v.union(v.literal("post"), v.literal("comment")),
+  contentId: v.string(),
+  reason: v.string(),
+  details: v.union(v.string(), v.null()),
+  status: v.string(),
+  createdAt: v.number(),
+  reporterName: v.union(v.string(), v.null()),
+  contentPreview: v.union(v.string(), v.null()),
+});
+
+export const analyticsSummaryValidator = v.object({
+  totalDrafts: v.number(),
+  pendingDrafts: v.number(),
+  publishedDrafts: v.number(),
+  rejectedDrafts: v.number(),
+  postsByPersona: v.array(
+    v.object({
+      personaId: v.string(),
+      personaName: v.string(),
+      publishedCount: v.number(),
+    }),
+  ),
+  runsByType: v.array(
+    v.object({
+      runType: v.string(),
+      count: v.number(),
+      successRate: v.number(),
+    }),
+  ),
 });
 
 export const automationRunValidator = v.object({
@@ -87,6 +173,8 @@ export const automationRunValidator = v.object({
     v.literal("scheduler_tick"),
     v.literal("publish_draft"),
     v.literal("manual_trigger"),
+    v.literal("discover_trending"),
+    v.literal("reply_to_humans"),
   ),
   personaId: v.union(v.string(), v.null()),
   draftId: v.union(v.string(), v.null()),

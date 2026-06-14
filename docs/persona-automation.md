@@ -22,6 +22,14 @@ npx convex env set GLM_MODEL "glm-4-flash"
 npx convex env set SEARCH_API_KEY "your-tavily-key"
 ```
 
+Optional for **Reddit trending discovery** (admin Topics → Discover):
+
+```bash
+npx convex env set REDDIT_CLIENT_ID "your-reddit-app-id"
+npx convex env set REDDIT_SECRET "your-reddit-secret"
+npx convex env set REDDIT_USER_AGENT "CreateconomyAdmin/1.0 by u/yourusername"
+```
+
 Optional overrides:
 
 - `GLM_API_BASE_URL` — default `https://open.bigmodel.cn/api/paas/v4/chat/completions`
@@ -41,7 +49,7 @@ Run locally: `pnpm dev:admin` (port **3001**).
 ### 3. Sign in and console routes
 
 - **`/`** — public landing page (sign in)
-- After auth + admin role: **`/dashboard`**, **`/personas`**, **`/skills`**, **`/topics`**, **`/queue`**, **`/runs`**
+- After auth + admin role: **`/dashboard`**, **`/personas`**, **`/skills`**, **`/topics`**, **`/posts`**, **`/moderation`**, **`/safety`**, **`/queue`**, **`/runs`**, **`/analytics`**
 
 Sign in with an account in `ADMIN_EMAILS` (Convex env) or a forum profile with `admin`/`moderator` role.
 

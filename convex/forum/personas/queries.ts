@@ -1,17 +1,23 @@
 import { v } from "convex/values";
 
 import { query } from "../../_generated/server";
-import { requirePersonaAdmin, utcDayKey } from "./auth";
-import { getOrCreateAutomationConfig } from "./configHelpers";
 import {
+  ensureStarterBlockedKeywords,
+  listBlockedKeywordsForAdmin,
+} from "../moderation/contentSafety";
+import { requirePersonaAdmin, utcDayKey } from "./auth";
+import {
+  analyticsSummaryValidator,
   automationConfigValidator,
   automationRunValidator,
+  blockedKeywordValidator,
   dashboardStatsValidator,
   draftValidator,
   personaSkillValidator,
   personaValidator,
   topicBriefValidator,
 } from "./validators";
+import { getOrCreateAutomationConfig, mapAutomationConfig } from "./configHelpers";
 
 export const getDashboardStats = query({
   args: {},
@@ -51,15 +57,7 @@ export const getAutomationConfig = query({
   handler: async (ctx) => {
     await requirePersonaAdmin(ctx);
     const config = await getOrCreateAutomationConfig(ctx);
-    return {
-      enabled: config.enabled,
-      maxPostsPerDay: config.maxPostsPerDay,
-      maxCommentsPerPost: config.maxCommentsPerPost,
-      commentDelayMinMinutes: config.commentDelayMinMinutes,
-      commentDelayMaxMinutes: config.commentDelayMaxMinutes,
-      defaultCategories: config.defaultCategories,
-      postsGeneratedToday: config.postsGeneratedToday,
-    };
+    return mapAutomationConfig(config);
   },
 });
 
@@ -102,12 +100,18 @@ export const listPersonas = query({
         displayName: row.displayName,
         handle: profile.handle,
         image: profile.image,
+        bio: profile.bio,
         skillId: row.skillId as string,
         skillName: skill.name,
         active: row.active,
+        autoPublish: row.autoPublish ?? false,
         postsTodayCount: row.postsTodayCount,
         dailyPostLimit: row.dailyPostLimit,
         lastPostAt: row.lastPostAt ?? null,
+        level: profile.level,
+        points: profile.points,
+        streakDays: profile.streakDays,
+        verified: profile.verified ?? false,
       });
     }
     return out;
@@ -116,7 +120,14 @@ export const listPersonas = query({
 
 export const listTopicBriefs = query({
   args: {
-    status: v.optional(v.union(v.literal("open"), v.literal("in_use"), v.literal("closed"))),
+    status: v.optional(
+      v.union(
+        v.literal("suggested"),
+        v.literal("open"),
+        v.literal("in_use"),
+        v.literal("closed"),
+      ),
+    ),
   },
   returns: v.array(topicBriefValidator),
   handler: async (ctx, { status }) => {
@@ -136,6 +147,9 @@ export const listTopicBriefs = query({
       category: row.category,
       sourceUrls: row.sourceUrls,
       status: row.status,
+      source: row.source ?? null,
+      score: row.score ?? null,
+      sourceMeta: row.sourceMeta ?? null,
       createdAt: row.createdAt,
     }));
   },
@@ -185,6 +199,8 @@ export const listDrafts = query({
         category: row.category ?? null,
         researchSnippets: row.researchSnippets,
         status: row.status,
+        safetyFlag: row.safetyFlag ?? false,
+        safetyMatchedTerms: row.safetyMatchedTerms ?? [],
         scheduledPublishAt: row.scheduledPublishAt ?? null,
         publishedPostId: row.publishedPostId ? (row.publishedPostId as string) : null,
         createdAt: row.createdAt,
@@ -216,6 +232,55 @@ export const listAutomationRuns = query({
       error: row.error ?? null,
       createdAt: row.createdAt,
     }));
+  },
+});
+
+export const listBlockedKeywords = query({
+  args: {},
+  returns: v.array(blockedKeywordValidator),
+  handler: async (ctx) => {
+    await requirePersonaAdmin(ctx);
+    return await listBlockedKeywordsForAdmin(ctx);
+  },
+});
+
+export const getAnalyticsSummary = query({
+  args: {},
+  returns: analyticsSummaryValidator,
+  handler: async (ctx) => {
+    await requirePersonaAdmin(ctx);
+    const drafts = await ctx.db.query("forumContentDrafts").collect();
+    const personas = await ctx.db.query("forumPersonas").collect();
+    const runs = await ctx.db.query("forumAutomationRuns").take(500);
+
+    const postsByPersona = personas.map((p) => ({
+      personaId: p._id as string,
+      personaName: p.displayName,
+      publishedCount: drafts.filter((d) => d.personaId === p._id && d.status === "published").length,
+    }));
+
+    const runTypeMap = new Map<string, { total: number; success: number }>();
+    for (const run of runs) {
+      const entry = runTypeMap.get(run.runType) ?? { total: 0, success: 0 };
+      entry.total += 1;
+      if (run.success) entry.success += 1;
+      runTypeMap.set(run.runType, entry);
+    }
+
+    const runsByType = [...runTypeMap.entries()].map(([runType, stats]) => ({
+      runType,
+      count: stats.total,
+      successRate: stats.total > 0 ? stats.success / stats.total : 0,
+    }));
+
+    return {
+      totalDrafts: drafts.length,
+      pendingDrafts: drafts.filter((d) => d.status === "pending").length,
+      publishedDrafts: drafts.filter((d) => d.status === "published").length,
+      rejectedDrafts: drafts.filter((d) => d.status === "rejected").length,
+      postsByPersona,
+      runsByType,
+    };
   },
 });
 

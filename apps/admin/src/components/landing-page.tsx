@@ -32,7 +32,9 @@ function AccessDeniedPanel() {
       <CardContent className="space-y-4 p-6 text-center">
         <h1 className="text-lg font-semibold">Access restricted</h1>
         <p className="text-sm text-[var(--text-secondary)]">
-          Your account does not have permission to use this workspace.
+          This workspace is limited to authorized app owners. If you manage Createconomy, ask the operator to add
+          your sign-in email to <code className="font-mono text-xs">ADMIN_EMAILS</code> on the production Convex
+          deployment, then sign out and sign in again.
         </p>
         <Button variant="secondary" className="w-full" onClick={() => void logout()}>
           Sign out

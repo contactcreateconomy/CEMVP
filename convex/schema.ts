@@ -389,6 +389,7 @@ export default defineSchema({
     displayName: v.string(),
     skillId: v.id("forumPersonaSkills"),
     active: v.boolean(),
+    autoPublish: v.optional(v.boolean()),
     postsTodayCount: v.number(),
     lastPostAt: v.optional(v.number()),
     dailyPostLimit: v.number(),
@@ -405,10 +406,16 @@ export default defineSchema({
     category: v.string(),
     sourceUrls: v.array(v.string()),
     status: v.union(
+      v.literal("suggested"),
       v.literal("open"),
       v.literal("in_use"),
       v.literal("closed"),
     ),
+    source: v.optional(
+      v.union(v.literal("manual"), v.literal("reddit"), v.literal("tavily")),
+    ),
+    score: v.optional(v.number()),
+    sourceMeta: v.optional(v.any()),
     createdByUserId: v.optional(v.id("users")),
     createdAt: v.number(),
   })
@@ -444,6 +451,8 @@ export default defineSchema({
     reviewedByUserId: v.optional(v.id("users")),
     reviewedAt: v.optional(v.number()),
     rejectionReason: v.optional(v.string()),
+    safetyFlag: v.optional(v.boolean()),
+    safetyMatchedTerms: v.optional(v.array(v.string())),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -451,6 +460,15 @@ export default defineSchema({
     .index("by_status_createdAt", ["status", "createdAt"])
     .index("by_persona", ["personaId"])
     .index("by_targetPost", ["targetPostId"]),
+
+  /** Content safety blocklist — admin-managed banned/flagged terms. */
+  forumBlockedKeywords: defineTable({
+    term: v.string(),
+    severity: v.union(v.literal("block"), v.literal("flag")),
+    category: v.string(),
+    createdByUserId: v.optional(v.id("users")),
+    createdAt: v.number(),
+  }).index("by_term", ["term"]),
 
   /** Singleton automation settings (key = "default"). */
   forumAutomationConfig: defineTable({
@@ -463,6 +481,14 @@ export default defineSchema({
     defaultCategories: v.array(v.string()),
     postsGeneratedToday: v.number(),
     lastPostsDayKey: v.optional(v.string()),
+    watchedSubreddits: v.optional(v.array(v.string())),
+    trendingKeywords: v.optional(v.array(v.string())),
+    trendingAutoCreate: v.optional(v.boolean()),
+    activeHoursStart: v.optional(v.number()),
+    activeHoursEnd: v.optional(v.number()),
+    timezoneOffsetMinutes: v.optional(v.number()),
+    seedInitialEngagement: v.optional(v.boolean()),
+    replyToHumansEnabled: v.optional(v.boolean()),
     updatedAt: v.number(),
   }).index("by_key", ["key"]),
 
@@ -474,6 +500,8 @@ export default defineSchema({
       v.literal("scheduler_tick"),
       v.literal("publish_draft"),
       v.literal("manual_trigger"),
+      v.literal("discover_trending"),
+      v.literal("reply_to_humans"),
     ),
     personaId: v.optional(v.id("forumPersonas")),
     draftId: v.optional(v.id("forumContentDrafts")),

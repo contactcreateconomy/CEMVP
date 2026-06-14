@@ -11,6 +11,14 @@ export const DEFAULT_AUTOMATION_CONFIG = {
   commentDelayMinMinutes: 30,
   commentDelayMaxMinutes: 240,
   defaultCategories: ["news", "review", "qa", "showcase", "list"],
+  watchedSubreddits: ["artificial", "MachineLearning", "Entrepreneur"],
+  trendingKeywords: ["AI", "creator", "startup", "automation", "SaaS"],
+  trendingAutoCreate: false,
+  activeHoursStart: 8,
+  activeHoursEnd: 22,
+  timezoneOffsetMinutes: 0,
+  seedInitialEngagement: true,
+  replyToHumansEnabled: false,
 };
 
 export async function getOrCreateAutomationConfig(ctx: QueryCtx | MutationCtx) {
@@ -40,6 +48,25 @@ export async function getOrCreateAutomationConfig(ctx: QueryCtx | MutationCtx) {
     throw new Error("Failed to create automation config.");
   }
   return created;
+}
+
+export function isWithinActiveWindow(
+  config: {
+    activeHoursStart?: number;
+    activeHoursEnd?: number;
+    timezoneOffsetMinutes?: number;
+  },
+  nowMs: number = Date.now(),
+): boolean {
+  const start = config.activeHoursStart ?? DEFAULT_AUTOMATION_CONFIG.activeHoursStart;
+  const end = config.activeHoursEnd ?? DEFAULT_AUTOMATION_CONFIG.activeHoursEnd;
+  const offset = config.timezoneOffsetMinutes ?? 0;
+  const local = new Date(nowMs + offset * 60 * 1000);
+  const hour = local.getUTCHours();
+  if (start <= end) {
+    return hour >= start && hour < end;
+  }
+  return hour >= start || hour < end;
 }
 
 export async function resetDailyCountersIfNeeded(
@@ -102,4 +129,25 @@ export async function incrementPersonaPostCount(
     lastPostsDayKey: today,
     lastPostAt: Date.now(),
   });
+}
+
+export function mapAutomationConfig(config: Awaited<ReturnType<typeof getOrCreateAutomationConfig>>) {
+  return {
+    enabled: config.enabled,
+    maxPostsPerDay: config.maxPostsPerDay,
+    maxCommentsPerPost: config.maxCommentsPerPost,
+    commentDelayMinMinutes: config.commentDelayMinMinutes,
+    commentDelayMaxMinutes: config.commentDelayMaxMinutes,
+    defaultCategories: config.defaultCategories,
+    postsGeneratedToday: config.postsGeneratedToday,
+    watchedSubreddits: config.watchedSubreddits ?? DEFAULT_AUTOMATION_CONFIG.watchedSubreddits,
+    trendingKeywords: config.trendingKeywords ?? DEFAULT_AUTOMATION_CONFIG.trendingKeywords,
+    trendingAutoCreate: config.trendingAutoCreate ?? false,
+    activeHoursStart: config.activeHoursStart ?? DEFAULT_AUTOMATION_CONFIG.activeHoursStart,
+    activeHoursEnd: config.activeHoursEnd ?? DEFAULT_AUTOMATION_CONFIG.activeHoursEnd,
+    timezoneOffsetMinutes:
+      config.timezoneOffsetMinutes ?? DEFAULT_AUTOMATION_CONFIG.timezoneOffsetMinutes,
+    seedInitialEngagement: config.seedInitialEngagement ?? true,
+    replyToHumansEnabled: config.replyToHumansEnabled ?? false,
+  };
 }

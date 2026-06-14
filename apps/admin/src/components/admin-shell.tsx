@@ -5,9 +5,12 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import {
   Activity,
+  BarChart3,
   FileText,
   Inbox,
   LayoutDashboard,
+  MessageSquare,
+  Shield,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -21,8 +24,12 @@ const NAV = [
   { href: "/personas", label: "Personas", icon: Users },
   { href: "/skills", label: "Skills", icon: Sparkles },
   { href: "/topics", label: "Topics", icon: FileText },
+  { href: "/posts", label: "Posts", icon: MessageSquare },
+  { href: "/moderation", label: "Moderation", icon: Inbox },
+  { href: "/safety", label: "Safety", icon: Shield },
   { href: "/queue", label: "Review queue", icon: Inbox },
   { href: "/runs", label: "Runs", icon: Activity },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {

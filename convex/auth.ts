@@ -4,6 +4,9 @@ import Google from "@auth/core/providers/google";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth } from "@convex-dev/auth/server";
 
+import type { Id } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
+
 /** Convex Dashboard paste can include trailing newlines; GitHub rejects client_id with %0A. */
 function oauthEnv(idKey: string, secretKey: string) {
   const clientId = (process.env[idKey] ?? "").trim() || undefined;
@@ -58,6 +61,33 @@ function deriveHandle(email: string, name?: string): string {
   const local = email.split("@")[0] ?? "user";
   const fromEmail = local.toLowerCase().replace(/[^a-z0-9._-]/g, "-").slice(0, 40);
   return fromEmail || "user";
+}
+
+/** Grant admin app membership when email is in ADMIN_EMAILS (new or existing accounts). */
+async function ensureAdminMembershipForEmail(
+  ctx: { db: MutationCtx["db"] },
+  userId: Id<"users">,
+  email: string,
+): Promise<void> {
+  const admins = parseAdminEmails();
+  if (!email || !admins.has(email)) {
+    return;
+  }
+
+  const existing = await ctx.db
+    .query("memberships")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .filter((q) => q.eq(q.field("app"), "admin"))
+    .first();
+
+  if (!existing) {
+    await ctx.db.insert("memberships", {
+      userId,
+      app: "admin",
+      role: "admin",
+      createdAt: Date.now(),
+    });
+  }
 }
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
@@ -146,17 +176,10 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
           createdAt: now,
         });
 
-        const admins = parseAdminEmails();
-        if (email && admins.has(email)) {
-          await ctx.db.insert("memberships", {
-            userId,
-            app: "admin",
-            role: "admin",
-            createdAt: now,
-          });
-        }
+        await ensureAdminMembershipForEmail(ctx, userId, email);
       } else {
         await ctx.db.patch(userId, { updatedAt: now });
+        await ensureAdminMembershipForEmail(ctx, userId, email);
       }
     },
   },
