@@ -3,18 +3,37 @@
 import { useAuth } from "@cemvp/auth-ui";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function AuthEntryButtons() {
+interface AuthEntryButtonsProps {
+  showSignup?: boolean;
+  fullWidth?: boolean;
+}
+
+export function AuthEntryButtons({ showSignup = false, fullWidth = false }: AuthEntryButtonsProps) {
   const { openAuthModal } = useAuth();
 
   return (
-    <div className="flex flex-wrap gap-2">
-      <Button type="button" onClick={() => openAuthModal("login")}>
+    <div className={cn("flex flex-wrap gap-2", fullWidth && "w-full flex-col")}>
+      <Button
+        type="button"
+        size={fullWidth ? "lg" : "md"}
+        className={cn(fullWidth && "w-full")}
+        onClick={() => openAuthModal("login")}
+      >
         Log in
       </Button>
-      <Button type="button" variant="secondary" onClick={() => openAuthModal("signup")}>
-        Sign up
-      </Button>
+      {showSignup ? (
+        <Button
+          type="button"
+          variant="secondary"
+          size={fullWidth ? "lg" : "md"}
+          className={cn(fullWidth && "w-full")}
+          onClick={() => openAuthModal("signup")}
+        >
+          Sign up
+        </Button>
+      ) : null}
     </div>
   );
 }

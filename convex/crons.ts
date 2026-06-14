@@ -24,4 +24,11 @@ crons.cron(
   {},
 );
 
+crons.interval(
+  "persona automation scheduler",
+  { hours: 1 },
+  internal.forum.personas.scheduler.runPersonaScheduler,
+  {},
+);
+
 export default crons;

@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-06-14 (admin + Convex: persona automation — admin-only control plane)
+
+**Feature:** Admin-controlled persona content engine for cold-start forum activity. Personas, skills, topic briefs, GLM + Tavily draft generation, review queue, and publish — all managed from **`apps/admin`** only. **`apps/forum` unchanged**; published content appears as normal member posts/comments via internal Convex publish helpers.
+
+**Convex:** New tables `forumPersonaSkills`, `forumPersonas`, `forumTopicBriefs`, `forumContentDrafts`, `forumAutomationConfig`, `forumAutomationRuns`; module `convex/forum/personas/`; hourly persona scheduler cron.
+
+**Admin routes:** Public `/` landing; authenticated console at `/dashboard`, `/personas`, `/skills`, `/topics`, `/queue`, `/runs`.
+
+**Docs:** [`docs/persona-automation.md`](docs/persona-automation.md). Env: `GLM_API_KEY`, `GLM_MODEL`, `SEARCH_API_KEY` on Convex deployment.
+
+**Apps affected:** `apps/admin`, `convex` (shared backend). Forum app not modified.
+
+**Prod deploy (local admin test):** `convex deploy` to **energetic-kangaroo-55** (persona tables + APIs). Vercel admin app uses prod `NEXT_PUBLIC_CONVEX_URL`; local `.env.local` uses dev **`watchful-chameleon-570`**. Admin UI: public landing at `/`, console at `/dashboard`, `/personas`, etc. after sign-in.
+
+**Admin UX:** Minimal centered landing at `/` (owner-only copy). Vercel-style sidebar console after auth. Local dev on port **3001** (`pnpm dev:admin`).
+
 ## 2026-06-14 (forum: fix Vercel build — Suspense on TopNav in AppShell + 9 page routes)
 
 **Problem:** Vercel build kept failing with `useSearchParams() should be wrapped in a suspense boundary at page "/campaigns"`. The prior fix wrapped the page-level client components in `Suspense`, but the real trigger was `TopNav` (which calls `useSearchParams()`) being rendered in `AppShell` **without** a `Suspense` boundary — making every page in the `(app)` group a prerender failure.
