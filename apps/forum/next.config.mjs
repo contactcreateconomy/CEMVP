@@ -24,6 +24,12 @@ const nextConfig = {
     };
     return config;
   },
+  async redirects() {
+    return [
+      /** Prefer config redirect over RSC `redirect()` so `/` does not depend on the app-page pipeline (fewer stale-`.next` dev failures). */
+      { source: "/", destination: "/feed", permanent: false },
+    ];
+  },
   async headers() {
     return [
       {

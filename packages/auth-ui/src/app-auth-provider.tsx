@@ -35,6 +35,18 @@ function forumRoleFromMemberships(
   return "member";
 }
 
+/** Convex Auth surfaces cryptic machine strings; map to actionable copy for password flow. */
+function formatPasswordAuthError(err: unknown, fallback: string): string {
+  const raw = err instanceof Error ? err.message : fallback;
+  if (raw.includes("InvalidAccountId")) {
+    return "No password account exists for this email. Switch to “Sign up” to create one, or check that this app uses the same Convex deployment where you registered.";
+  }
+  if (raw.includes("Invalid credentials") || raw.includes("InvalidSecret")) {
+    return "Wrong email or password.";
+  }
+  return raw;
+}
+
 function mapProfileToUser(profile: ProfileView): AuthUser {
   const email = profile.email ?? "";
   const handle =
@@ -101,8 +113,7 @@ export function AppAuthProvider({ children }: { children: ReactNode }) {
         });
         closeAuthModal();
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Sign in failed.";
-        setAuthError(message);
+        setAuthError(formatPasswordAuthError(err, "Sign in failed."));
       } finally {
         setIsSubmitting(false);
       }
@@ -123,8 +134,7 @@ export function AppAuthProvider({ children }: { children: ReactNode }) {
         });
         closeAuthModal();
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Could not create account.";
-        setAuthError(message);
+        setAuthError(formatPasswordAuthError(err, "Could not create account."));
       } finally {
         setIsSubmitting(false);
       }

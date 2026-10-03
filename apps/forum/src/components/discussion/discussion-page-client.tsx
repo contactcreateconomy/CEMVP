@@ -145,7 +145,7 @@ function DiscussionPageInner({
         <motion.div
           layout
           transition={{ type: "spring", stiffness: 380, damping: 32 }}
-          className="min-w-0 flex-1 max-w-[720px] space-y-6 animate-route-emerge"
+          className="min-w-0 flex-1 space-y-6 animate-route-emerge"
         >
           <ThreadHeader
             thread={thread}

@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
+import type * as dev_ensureTestUser from "../dev/ensureTestUser.js";
 import type * as forum_constants from "../forum/constants.js";
 import type * as forum_discussionRoute from "../forum/discussionRoute.js";
 import type * as forum_discussionRouteHelpers from "../forum/discussionRouteHelpers.js";
@@ -39,6 +40,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   crons: typeof crons;
+  "dev/ensureTestUser": typeof dev_ensureTestUser;
   "forum/constants": typeof forum_constants;
   "forum/discussionRoute": typeof forum_discussionRoute;
   "forum/discussionRouteHelpers": typeof forum_discussionRouteHelpers;

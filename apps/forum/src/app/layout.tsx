@@ -10,6 +10,8 @@ import { ConvexProvider } from "@/providers/convex-provider";
 import { ForumProfileEnsurer } from "@/providers/forum-profile-ensurer";
 import { SharedDataProvider } from "@/providers/shared-data-context";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { NavigationProgressProvider } from "@/providers/navigation-progress-provider";
+import { NavigationProgressBar } from "@/components/ui/navigation-progress-bar";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -39,7 +41,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <ConvexProvider>
+          <NavigationProgressProvider>
+            <NavigationProgressBar />
+            <ConvexProvider>
             {convexConfigured ? (
               <AppAuthProvider>
                 <SharedDataProvider>
@@ -57,6 +61,7 @@ export default function RootLayout({
               </OfflineAuthProvider>
             )}
           </ConvexProvider>
+          </NavigationProgressProvider>
         </ThemeProvider>
         <Analytics />
         <SpeedInsights />

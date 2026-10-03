@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 
 import { CreateconomyLogoMark } from "@/components/ui/createconomy-logo-mark";
 import { Button } from "@/components/ui/button";
+import { signalNavigationStart } from "@/providers/navigation-progress-provider";
 
 const COMPOSE_PUBLISH_BTN_ID = "compose-publish-btn";
 
@@ -41,7 +42,7 @@ export function ComposeShell({ children }: { children: React.ReactNode }) {
                 variant="ghost"
                 size="sm"
                 className="h-9 rounded-full px-3 text-(--text-secondary) hover:text-(--text-primary)"
-                onClick={() => router.push("/feed")}
+                onClick={() => { signalNavigationStart(); router.push("/feed"); }}
                 aria-label="Close editor"
               >
                 <X className="h-5 w-5" />

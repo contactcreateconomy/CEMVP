@@ -47,6 +47,7 @@ import {
   type NewPostDraftPayload,
 } from "@/lib/new-post/category-composer-fields";
 import { cn } from "@/lib/utils";
+import { signalNavigationStart } from "@/providers/navigation-progress-provider";
 import type { Category, CategoryKey } from "@/types";
 import { useAuth } from "@cemvp/auth-ui";
 import { isConvexConfigured } from "@cemvp/convex-client";
@@ -323,6 +324,7 @@ export function NewPostComposer({ categories }: NewPostComposerProps) {
         /* ignore */
       }
       showToast("Published.");
+      signalNavigationStart();
       router.push("/feed");
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Could not publish.");

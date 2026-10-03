@@ -126,7 +126,7 @@ function FeedRouteWithConvex({
 
   const initialPosts = useMemo(() => posts, [posts]);
 
-  const isFeedLoading = (page === undefined && !feedPageReady) || categoriesLoading;
+  const isFeedLoading = page === undefined && !feedPageReady;
 
   return (
     <section className="space-y-4">

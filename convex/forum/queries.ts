@@ -88,7 +88,35 @@ export const listFeedPage = query({
     }
 
     if (sort === "hot" || sort === "top") {
-      const postDocs = await loadHotRankedPosts(ctx, category, limit);
+      let postDocs: Doc<"forumPosts">[];
+
+      if (!category) {
+        // Cache-first: read precomputed hot IDs (~48 reads) instead of scanning 400 posts
+        const cached = await ctx.db
+          .query("forumFeedCache")
+          .withIndex("by_key", (q) => q.eq("cacheKey", "hot:all"))
+          .unique();
+
+        if (cached && cached.postIds.length > 0) {
+          const fetched = await Promise.all(
+            cached.postIds.map((id) => ctx.db.get(id as Id<"forumPosts">)),
+          );
+          postDocs = fetched
+            .filter((p): p is Doc<"forumPosts"> =>
+              p !== null
+              && p.moderationStatus !== "removed"
+              && p.moderationStatus !== "shadow_removed",
+            )
+            .slice(0, limit);
+        } else {
+          // Cold start — fall back to full computation
+          postDocs = await loadHotRankedPosts(ctx, category, limit);
+        }
+      } else {
+        // Per-category cache not yet implemented
+        postDocs = await loadHotRankedPosts(ctx, category, limit);
+      }
+
       const bundle = await buildFeedBundleFromPosts(ctx, postDocs, userId);
       return { ...bundle, continueCursor: null, isDone: true };
     }

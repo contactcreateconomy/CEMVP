@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { signalNavigationStart } from "@/providers/navigation-progress-provider";
 import {
   Briefcase,
   GitCompare,
@@ -67,7 +68,7 @@ function LeftSidebarShell({ discoverItems }: { discoverItems: DiscoverItem[] }) 
               movementDuration={0.65}
             />
             <Button
-              onClick={() => router.push("/new-post")}
+              onClick={() => { signalNavigationStart(); router.push("/new-post"); }}
               className="relative z-10 h-9 w-full rounded-full text-base font-semibold shadow-[0_8px_24px_rgba(14,165,233,0.28)] transition-all duration-300 hover:shadow-[0_10px_28px_rgba(14,165,233,0.35)]"
               style={{ color: "var(--text-inverse)" }}
             >

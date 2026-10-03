@@ -1,8 +1,9 @@
 /**
  * Route: /category/[slug]
- * Design preview sandbox — renders the most recent real thread for a given category.
- * Changes to any category template component (Body, Insights, ComposeForm, CardExtras)
- * are reflected here AND on every real /discussions/[slug] page automatically.
+ * Static design preview — renders the shared mother `ContentPage` template with seed data.
+ * No Convex / DB. The `slug` is validated only; a per-category polymorphic block can be
+ * wired in `CategoryPreviewLoader` when those designs exist. Production discussions live
+ * under `/discussions/[slug]` and are separate from this sandbox.
  */
 import { notFound } from "next/navigation";
 

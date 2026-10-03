@@ -19,6 +19,7 @@ import { useSharedData } from "@/providers/shared-data-context";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@cemvp/auth-ui";
 import { useScroll } from "@/components/ui/use-scroll";
+import { signalNavigationStart } from "@/providers/navigation-progress-provider";
 
 const TYPE_ACCENT_CLASS: Record<"comment" | "upvote" | "follow" | "system", string> = {
   comment: "bg-(--brand-primary)",
@@ -274,6 +275,7 @@ function TopNavInner({
                                     onMarkRead(notification.id);
                                   }
                                   if (notification.postSlug) {
+                                    signalNavigationStart();
                                     router.push(`/discussions/${notification.postSlug}`);
                                   }
                                 }}

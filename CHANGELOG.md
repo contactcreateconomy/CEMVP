@@ -1,5 +1,134 @@
 # Changelog
 
+## 2026-05-09 (forum: Distribution Network hover card on /content)
+
+- **New component** `apps/forum/src/components/ui/network-hover-card.tsx` — inline hover trigger that expands into a network info card using `motion/react` (AnimatePresence, spring physics).
+- **Card layout**: network avatar (Unsplash demo photo) + network name + Join (UserPlus/UserCheck toggle) + Notify (Bell/BellOff toggle) in row 1; Post / Reach / Signal / Strength stats grid in row 2.
+- **Wired into** `apps/forum/src/components/content/post-block.tsx`: replaces hardcoded `"Social School"` span with `<NetworkHoverCard name="Social School" />`.
+- **Overflow fix**: removed `overflow-hidden` from PostBlock's root div so the absolute-positioned card can extend beyond the card boundary (vertical spacing).
+- Added `relative` to the author metadata `<div>` to anchor the absolute card correctly.
+- Scoped to `/content` sandbox only — feed post cards are unchanged.
+- **Apps affected:** `apps/forum`.
+
+## 2026-05-08 (forum: fix feed reload latency — Turbopack + loading gate)
+
+- **Removed `--webpack` flag** from `dev` and `build` scripts in `apps/forum/package.json`. Next.js 15+ defaults to Turbopack; the flag was forcing slow Webpack compilation (~10-13s cold-compile → ~1-2s).
+- **Fixed premature feed skeleton** in `feed-route-client.tsx`: `isFeedLoading` no longer blocks on `categoriesLoading` since `SharedDataProvider` always exposes fallback categories — feed now renders as soon as Convex returns data.
+- **Apps affected:** `apps/forum`.
+
+## 2026-05-08 (forum: MIN/MAX toggle revamp — horizontal split pill)
+
+- **Complete rewrite** of `src/components/ui/toggle-switch.tsx` — replaced vertical spring-physics slider (96px tall, framer-motion drag) with a horizontal split-pill toggle (86×32px, CSS-only).
+- **Anatomy**: two halves side-by-side. Left = MIN (icon "M"), Right = MAX (icon "X"). Sliding indicator pill moves between halves via `transform: translateX()` — GPU only, zero reflow.
+- **Icon → label morph**: both elements always in DOM (`position: absolute`). Icon scales/fades out → label slides up in with 40ms stagger. Properties animated: `opacity` + `transform` only.
+- **Animation tokens** added to `globals.css`: `--toggle-ease-spring`, `--toggle-enter-duration: 320ms`, `--toggle-exit-duration: 220ms`, `--toggle-stagger: 40ms`.
+- **Full CSS** via `.toggle-*` classes + `[data-state]` rules. JS only sets `data-state` and ARIA.
+- **Accessibility**: `role="radiogroup"` + `role="radio"` + `aria-checked` + Arrow key navigation.
+- **Reduced motion**: all durations/delays 0ms via `prefers-reduced-motion: reduce`.
+- `post-block.tsx`: updated import, `value`/`onChange` API, wrapper alignment for 32px height.
+- **Verification:** `pnpm typecheck` — 0 errors.
+- **Apps affected:** `apps/forum`.
+
+## 2026-05-08 (convex: hot feed cache-first optimization)
+
+- **Feed performance fix** — `listFeedPage` (hot/top sort) now reads precomputed post IDs from `forumFeedCache` table instead of scanning 400 documents via `loadHotRankedPosts`. Reduces DB reads from ~900 to ~250 per hot feed request.
+- Cache is populated every 5 min by `recomputeHotFeed` cron. Falls back to full computation on cold start.
+- Per-category hot queries still use `loadHotRankedPosts` (no per-category cache yet).
+- `pnpm typecheck` — 0 errors. **Apps affected:** `convex/forum`.
+
+## 2026-04-26 (forum: min/max toggle switch on content page)
+
+- **Toggle switch component** added at `src/components/ui/toggle-switch.tsx` — compact industrial-style vertical slider using `motion/react` spring physics. Brand primary glow when toggled to MAX.
+- **Placement** in `PostBlock` — toggle sits to the right of the author row (avatar, name, badges, date), opposite the profile info.
+- **Mode wiring** — `ContentPageClient` now manages mode as local state; `ContentPage` and `PostBlock` forward `onModeChange` so the toggle live-switches between min and max modes.
+- Labels: OFF = "MIN", ON = "MAX". Colors adapted from emerald to brand primary (`hsl(199 89% 48%)`).
+- `pnpm typecheck` — 0 errors. **Apps affected:** `apps/forum`.
+
+## 2026-04-26 (forum: content page design review — remediation pass)
+
+### Killed / removed
+- **AI Host Suggestions** removed from `ThreadIntelligencePanel` — premature feature requiring real analytics.
+- **Star rating** in `EngagementPanel` replaced with binary helpful/not-helpful toggle.
+- **Impact Score** (Zap metric) removed from `PostBlock` stats row — undefined vanity metric.
+- **Duplicate CTAs** removed from `PostBlock` — "View Products" and "Follow Creator" (sidebar has both).
+
+### P0 — critical UX fixes
+- **Rich text renderer** rewritten: `RichBody` now supports bold, italic, inline code, numbered lists, bullet lists, and heading-style bold labels. No new dependency.
+- **Comment entrance animations** added via `animate-soft-float-up` class on every `CommentCard`.
+- **Action feedback toasts** added: like, bookmark, follow, reminder all show brief toast confirmations (auto-dismiss 2s).
+
+### P1 — structural fixes
+- **Comment nesting depth** raised from 1 to 3 levels — removed `depth === 0` guard, added `MAX_VISIBLE_DEPTH = 3`.
+- **Reading progress bar** added under sticky header — thin brand-colored bar showing scroll position.
+- **Scroll-to-top FAB** appears after 600px scroll.
+
+### Minimal mode fully implemented
+- **Compact creator card** — no stats grid, no products, no live session; just avatar + name + bio + follow.
+- **Compact reply composer** — no stance selector, no AI tools; just textarea + post button.
+- **Thread Map hidden** — minimal mode uses read-only comment view with basic sort.
+- **AI features hidden** — no key takeaways, no AI theme chips, no intelligence panel, no engagement panel.
+- **No sidebar** on desktop or mobile — single-column reading experience.
+
+### Shared utilities extracted
+- `fmtCount` and `avatarBg` (duplicated in 3 files each) consolidated into `src/lib/format.ts`.
+
+### Verification
+- `pnpm typecheck` — 0 errors. `pnpm lint` — no new warnings.
+- **Apps affected:** `apps/forum`.
+
+## 2026-04-26 (forum: content sandbox remediation)
+
+- **Comment count:** Sticky header now uses the same recursive comment total as the Thread Map; `seedThread.stats.comments` aligned to the tree (28). Spark seed uses its own short thread + 5 comments.
+- **Thread Map filters:** Chips show only in Read and Insights; Insights mode respects theme + filter chips together; switching modes clears theme + filter.
+- **Spark (`/content/spark`):** Dedicated `seedSparkThread` / `seedSparkComments`; `PostBlock` and `EngagementPanel` hide funnel extras in minimal mode; `ContentPageClient` accepts optional `thread` / `comments`.
+- **Creator sidebar:** `CreatorPanel` renders `liveSession` + reminder CTA; removed duplicate live card from `EngagementPanel`.
+- **Docs:** Category preview route comment updated to describe static sandbox vs `/discussions`.
+- **Verification:** `pnpm --filter ./apps/forum typecheck` — 0 errors.
+- **Apps affected:** `apps/forum`.
+
+## 2026-04-26 (forum: mother content page + static sandbox)
+
+- Created mother content page at `/content` (max mode) and `/content/spark` (minimal mode — uncategorized "Spark" posts).
+- Built full component family under `src/components/content/`: `ContentPage`, `PostBlock`, `AIKeyTakeaways`, `ThreadModeBar`, `CommentThread`, `CommentCard`, `ReplyComposer`, `CreatorPanel`, `ThreadIntelligencePanel`, `EngagementPanel`.
+- All pages use 100% static seed data (`_seed.ts`) — zero Convex, zero DB connections.
+- `category-preview-loader.tsx` rewritten to drop all Convex queries; now renders `ContentPage` with the same seed data. All `/category/[slug]` previews (news, review, compare, debate, etc.) now render the mother template automatically.
+- Seed data: Maya Chan article with 20 top-level + nested reply comments across 4 AI themes.
+- Thread Map supports 4 modes: READ, INSIGHTS, Q&A, TIMELINE — all functional with static data.
+- **Verification:** `pnpm typecheck` — 0 errors. Routes `/content`, `/content/spark`, `/category/news` all render with no Convex calls.
+- **Apps affected:** `apps/forum`.
+
+## 2026-04-26 (auth-ui: friendlier password errors)
+
+- Map Convex Auth’s `InvalidAccountId` and invalid-secret style errors to short user-facing copy in `AppAuthProvider` (password sign-in was failing when no `authAccounts` row exists—usually “sign in before sign up” or wrong deployment).
+- **Verification:** `pnpm typecheck` — 0 errors.
+- **Apps affected:** `packages/auth-ui` (consumed by `apps/forum`).
+
+## 2026-04-26 (convex: optional dev test user provisioning)
+
+- There is no checked-in demo login; forum seed authors are data-only, not password accounts. Added `convex/dev/ensureTestUser.ts`: gated by `ALLOW_DEV_TEST_USER` on the Convex deployment, idempotently creates password auth for `devtest@example.com` (display name Devtest) — see `convex/.env.example` for the one-off CLI command. Alternatively, sign up in the app with the same email and password (login form is email + password, not a bare username).
+- **Verification:** `pnpm typecheck` — 0 errors; `pnpm exec convex dev --once` — Convex functions ready.
+- **Apps affected:** `convex` (backend), `convex/.env.example`.
+
+## 2026-04-26 (forum: navigation progress bar)
+
+- Added a thin gradient progress bar (2px, metallic shimmer using brand-primary colors) fixed at the top of the viewport during client-side page transitions.
+- Created `NavigationProgressProvider` (detects link clicks, browser back/forward, and imperative `router.push()`) and `NavigationProgressBar` (motion-animated bar with shimmer CSS).
+- Wired provider into root layout; added `signalNavigationStart()` to all 4 imperative navigation call sites (top-nav, left-sidebar, compose-shell, new-post-composer).
+- **Verification:** `pnpm typecheck` — 0 errors. `pnpm build` — clean.
+- **Apps affected:** `apps/forum`.
+
+## 2026-04-26 (forum: home redirect via next.config)
+
+- Added `/` → `/feed` in [`apps/forum/next.config.mjs`](apps/forum/next.config.mjs) `redirects()` so most hits skip the RSC root page (fewer dev-only internal errors when `.next` has stale route data after refactors). [`apps/forum/src/app/page.tsx`](apps/forum/src/app/page.tsx) still calls `redirect("/feed")` as a fallback.
+- **Apps affected:** `apps/forum`.
+
+## 2026-04-26 (forum: category design preview uses ContentShell)
+
+- Moved `/category/[slug]` out of the `(shell)` `AppShell` group into `(content)` with the same `ContentShell` wrapper as `/discussions/*`, so the sandbox mirrors real discussion chrome (no feed hero, no left sidebar, no global right sidebar from `AppShell`).
+- Added `apps/forum/src/app/(app)/(content)/layout.tsx`; preview files live under `apps/forum/src/app/(app)/(content)/category/[slug]/`.
+- **Verification:** `pnpm typecheck` — 0 errors (if a prior dev build left stale route types under `apps/forum/.next`, delete that folder and re-run). `pnpm lint` — 0 errors, 6 warnings (pre-existing).
+- **Apps affected:** `apps/forum`.
+
 ## 2026-04-25 (forum: content page foundation — ContentShell, persistent Min/Max, YouTube-style comments)
 
 **New architecture:**

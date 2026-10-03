@@ -16,6 +16,9 @@ pnpm-debug.log*
 # local env files
 .env*.local
 
+# Convex local backend data (sqlite db, storage, instance secret)
+.convex/
+
 # OS / misc
 .DS_Store
 *.pem

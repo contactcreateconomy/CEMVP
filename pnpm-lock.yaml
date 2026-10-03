@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  convex: 1.34.1
+
 importers:
 
   .:
@@ -16,7 +19,7 @@ importers:
         version: 0.0.91(@auth/core@0.37.0)(convex@1.34.1(react@19.2.4))(react@19.2.4)
     devDependencies:
       convex:
-        specifier: ^1.34.1
+        specifier: 1.34.1
         version: 1.34.1(react@19.2.4)
       jose:
         specifier: ^6.2.2
@@ -32,7 +35,7 @@ importers:
         version: link:../../packages/convex-client
       '@convex-dev/auth':
         specifier: ^0.0.91
-        version: 0.0.91(@auth/core@0.37.0)(convex@1.34.0(react@19.2.4))(react@19.2.4)
+        version: 0.0.91(@auth/core@0.37.0)(convex@1.34.1(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-avatar':
         specifier: ^1.1.11
         version: 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -55,8 +58,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       convex:
-        specifier: ^1.34.0
-        version: 1.34.0(react@19.2.4)
+        specifier: 1.34.1
+        version: 1.34.1(react@19.2.4)
       lucide-react:
         specifier: ^0.575.0
         version: 0.575.0(react@19.2.4)
@@ -96,7 +99,7 @@ importers:
         version: 9.39.2(jiti@2.6.1)
       eslint-config-next:
         specifier: 16.1.6
-        version: 16.1.6(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
+        version: 16.1.6(@typescript-eslint/parser@8.57.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
       postcss:
         specifier: ^8
         version: 8.5.8
@@ -117,7 +120,7 @@ importers:
         version: link:../../packages/convex-client
       '@convex-dev/auth':
         specifier: ^0.0.91
-        version: 0.0.91(@auth/core@0.37.0)(convex@1.34.0(react@19.2.4))(react@19.2.4)
+        version: 0.0.91(@auth/core@0.37.0)(convex@1.34.1(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-avatar':
         specifier: ^1.1.11
         version: 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -153,10 +156,10 @@ importers:
         version: 3.22.1
       '@vercel/analytics':
         specifier: ^2.0.1
-        version: 2.0.1(next@16.1.6(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+        version: 2.0.1(next@16.1.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
       '@vercel/speed-insights':
         specifier: ^2.0.0
-        version: 2.0.0(next@16.1.6(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+        version: 2.0.0(next@16.1.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -164,8 +167,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       convex:
-        specifier: ^1.34.0
-        version: 1.34.0(react@19.2.4)
+        specifier: 1.34.1
+        version: 1.34.1(react@19.2.4)
       lucide-react:
         specifier: ^0.575.0
         version: 0.575.0(react@19.2.4)
@@ -220,7 +223,7 @@ importers:
         version: 9.39.2(jiti@2.6.1)
       eslint-config-next:
         specifier: 16.1.6
-        version: 16.1.6(@typescript-eslint/parser@8.57.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
+        version: 16.1.6(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
       jsdom:
         specifier: ^29.0.2
         version: 29.0.2
@@ -247,7 +250,7 @@ importers:
         version: link:../../packages/convex-client
       '@convex-dev/auth':
         specifier: ^0.0.91
-        version: 0.0.91(@auth/core@0.37.0)(convex@1.34.0(react@19.2.4))(react@19.2.4)
+        version: 0.0.91(@auth/core@0.37.0)(convex@1.34.1(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-avatar':
         specifier: ^1.1.11
         version: 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -270,8 +273,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       convex:
-        specifier: ^1.34.0
-        version: 1.34.0(react@19.2.4)
+        specifier: 1.34.1
+        version: 1.34.1(react@19.2.4)
       lucide-react:
         specifier: ^0.575.0
         version: 0.575.0(react@19.2.4)
@@ -332,7 +335,7 @@ importers:
         version: link:../../packages/convex-client
       '@convex-dev/auth':
         specifier: ^0.0.91
-        version: 0.0.91(@auth/core@0.37.0)(convex@1.34.0(react@19.2.4))(react@19.2.4)
+        version: 0.0.91(@auth/core@0.37.0)(convex@1.34.1(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-avatar':
         specifier: ^1.1.11
         version: 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -355,8 +358,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       convex:
-        specifier: ^1.34.0
-        version: 1.34.0(react@19.2.4)
+        specifier: 1.34.1
+        version: 1.34.1(react@19.2.4)
       lucide-react:
         specifier: ^0.575.0
         version: 0.575.0(react@19.2.4)
@@ -422,7 +425,7 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
       convex:
-        specifier: ^1.34.0
+        specifier: 1.34.1
         version: 1.34.1(react@19.2.4)
       lucide-react:
         specifier: ^0.575.0
@@ -567,7 +570,7 @@ packages:
     hasBin: true
     peerDependencies:
       '@auth/core': ^0.37.0
-      convex: ^1.17.0
+      convex: 1.34.1
       react: ^18.2.0 || ^19.0.0-0
     peerDependenciesMeta:
       react:
@@ -2379,22 +2382,6 @@ packages:
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
-
-  convex@1.34.0:
-    resolution: {integrity: sha512-TbC509Z4urZMChZR2aLPgalQ8gMhAYSz2VMxaYsCvba8YqB0Uxma7zWnXwRn7aEGXuA8ro5/uHgD1IJ0HhYYPg==}
-    engines: {node: '>=18.0.0', npm: '>=7.0.0'}
-    hasBin: true
-    peerDependencies:
-      '@auth0/auth0-react': ^2.0.1
-      '@clerk/clerk-react': ^4.12.8 || ^5.0.0
-      react: ^18.0.0 || ^19.0.0-0 || ^19.0.0
-    peerDependenciesMeta:
-      '@auth0/auth0-react':
-        optional: true
-      '@clerk/clerk-react':
-        optional: true
-      react:
-        optional: true
 
   convex@1.34.1:
     resolution: {integrity: sha512-ooyFnZVVq0u6b5zt0Ptq8QB2ixhf/2vXe+PIcUtdtrs0lq/TwpkmmruHdqkFmWgMd6N+Tmfy8AGkz6QnZUYZBA==}
@@ -4226,23 +4213,6 @@ snapshots:
     dependencies:
       css-tree: 3.2.1
 
-  '@convex-dev/auth@0.0.91(@auth/core@0.37.0)(convex@1.34.0(react@19.2.4))(react@19.2.4)':
-    dependencies:
-      '@auth/core': 0.37.0
-      '@oslojs/crypto': 1.0.1
-      '@oslojs/encoding': 1.1.0
-      convex: 1.34.0(react@19.2.4)
-      cookie: 1.1.1
-      is-network-error: 1.3.1
-      jose: 5.10.0
-      jwt-decode: 4.0.0
-      lucia: 3.2.2
-      oauth4webapi: 3.8.5
-      path-to-regexp: 6.3.0
-      server-only: 0.0.1
-    optionalDependencies:
-      react: 19.2.4
-
   '@convex-dev/auth@0.0.91(@auth/core@0.37.0)(convex@1.34.1(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@auth/core': 0.37.0
@@ -5560,12 +5530,12 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
 
-  '@vercel/analytics@2.0.1(next@16.1.6(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)':
+  '@vercel/analytics@2.0.1(next@16.1.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)':
     optionalDependencies:
       next: 16.1.6(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
 
-  '@vercel/speed-insights@2.0.0(next@16.1.6(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)':
+  '@vercel/speed-insights@2.0.0(next@16.1.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)':
     optionalDependencies:
       next: 16.1.6(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
@@ -5806,17 +5776,6 @@ snapshots:
   concat-map@0.0.1: {}
 
   convert-source-map@2.0.0: {}
-
-  convex@1.34.0(react@19.2.4):
-    dependencies:
-      esbuild: 0.27.0
-      prettier: 3.8.1
-      ws: 8.18.0
-    optionalDependencies:
-      react: 19.2.4
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
 
   convex@1.34.1(react@19.2.4):
     dependencies:
